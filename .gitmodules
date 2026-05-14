@@ -1,0 +1,6 @@
+[submodule "shiny-computing-machine"]
+	path = shiny-computing-machine
+	url = https://github.com/signal-node-t527/shiny-computing-machine
+[submodule "resolution-engine"]
+	path = resolution-engine
+	url = https://github.com/signal-node-t527/resolution-engine
