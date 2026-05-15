@@ -1,0 +1,68 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ere-db
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=StrongPassword123!
+    ports:
+      - "1433:1433"
+    networks:
+      - ere-network
+    volumes:
+      - mssql_data:/var/opt/mssql
+      - ./backups:/var/opt/mssql/backup
+
+  backend:
+    build:
+      context: ./resolution-engine
+      dockerfile: Dockerfile
+    container_name: resolution-engine
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=db;Database=ResolutionEngineDb;User Id=sa;Password=StrongPassword123!;TrustServerCertificate=True
+    ports:
+      - "5250:8080"
+    depends_on:
+      - db
+    networks:
+      - ere-network
+
+  # PRODUCTION FRONTEND
+  frontend-prod:
+    profiles: ["prod"]
+    build:
+      context: ./shiny-computing-machine
+      dockerfile: Dockerfile
+    container_name: shiny-ui-prod
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - ere-network
+
+  # DEVELOPMENT FRONTEND (Use with: docker-compose --profile dev up)
+  frontend-dev:
+    profiles: ["dev"]
+    build:
+      context: ./shiny-computing-machine
+      dockerfile: Dockerfile.dev
+    container_name: shiny-ui-dev
+    ports:
+      - "4250:4250"
+    volumes:
+      - ./shiny-computing-machine:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - ere-network
+
+networks:
+  ere-network:
+    driver: bridge
+
+volumes:
+  mssql_data:
