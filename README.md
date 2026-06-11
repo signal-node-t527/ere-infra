@@ -2,6 +2,8 @@
 
 Explicit Resolution Engine (ERE) is a comprehensive system designed to model and resolve complex real-life problems represented as graph data structures. It employs a dialectic approach, utilizing **Thesis** and **Antithesis** nodes to represent structures and processes, respectively.
 
+Recommended browser zoom: 80% - 67%
+
 ## Project Structure
 
 The project consists of two main components:
