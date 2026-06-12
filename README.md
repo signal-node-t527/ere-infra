@@ -2,11 +2,9 @@
 
 Explicit Resolution Engine (ERE) is a comprehensive system designed to model and resolve complex real-life problems represented as graph data structures. It employs a dialectic approach, utilizing **Thesis** and **Antithesis** nodes to represent structures and processes, respectively.
 
-Recommended browser zoom: 80% - 67%
-
 ## Project Structure
 
-*The source code is intentionally private because it has not yet been audited for public release.*
+The project consists of two main components:
 
 -   **[Resolution Engine](./resolution-engine)**: A .NET 8 based backend API for managing graph data and persistence.
 -   **[Shiny Computing Machine (SCM)](./shiny-computing-machine)**: An Angular 18 based frontend GUI for visualizing, editing, and exploring the resolution graphs.
