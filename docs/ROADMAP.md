@@ -79,8 +79,8 @@ Remaining work is product, not docs — see `PRODUCTION_CHECKLIST.md`.
 | P7 | Root docs reconciliation (`README.md`, then-`DOCUMENTATION.md`) | 1/1 | done |
 | P8 | Consistency audit + final state | 2/2 | done |
 | P9 | ARCHITECTURE (full) — foundations & schemas | 4/4 | done |
-| P10 | ARCHITECTURE (full) — backend reference | 1/4 | in_progress |
-| P11 | ARCHITECTURE (full) — frontend core reference | 0/4 | todo |
+| P10 | ARCHITECTURE (full) — backend reference | 4/4 | done |
+| P11 | ARCHITECTURE (full) — frontend core reference | 2/4 | in_progress |
 | P12 | ARCHITECTURE (full) — frontend feature reference | 0/8 | todo |
 | P13 | ARCHITECTURE (full) — infra & operations reference | 0/3 | todo |
 | P14 | ARCHITECTURE (full) — assurance & consistency | 0/4 | todo |
@@ -394,8 +394,8 @@ works*, to the depth where a new engineer can navigate, extend, and operate any 
 documentation alone. The output is a single, much deeper `docs/ARCHITECTURE.md` (§1–§7 grown, plus
 new sections), keeping every load-bearing claim cited by `file:line` (decision 7).
 
-**Part II is in progress (P10).** Tickets are taken one at a time `[ ] todo → [x] done` (§ next
-ticket is T10.1); this section remains the plan of record (decision 8).
+**Part II is in progress (P11).** Tickets are taken one at a time `[ ] todo → [x] done` (§ next
+ticket is T11.3); this section remains the plan of record (decision 8).
 When a ticket is taken, it follows the same one-at-a-time workflow as Part I.
 
 **Scope inventory (what "full coverage" must eventually touch).**
@@ -491,53 +491,63 @@ Notes: Done — §3.6 gives each of the 11 `.cs` files its own subsection (purpo
        and the historical build logs. Values are cross-linked to §3.1–§3.5 and §5, not duplicated.
 
 ### T10.2  Endpoint reference — request/response schemas & status codes
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [x] done
 Blocked by: T10.1
 Files: `docs/ARCHITECTURE.md` (§3.2 grown)
 Verify: each body/response shape matches the controller code + model serialization
-Notes: turn the endpoint table into per-endpoint subsections: path/query params, request-body JSON
-       (referencing T9.1 for `content`), response JSON, and every status code
-       (200/204/400/404/409/500) with the exact message strings from the code.
+Notes: Done — §3.2 now has a route index for both controllers plus a per-endpoint reference (15
+       endpoints): route params/query, request body, response JSON, and every status code
+       (200/204/400/404/409/500) with the exact message strings. Notes the node/edge serialized
+       shapes, the PascalCase `layer` keys, the null-`graph` filter behaviour, and `ping`'s
+       always-200 contract.
 
 ### T10.3  Persistence & schema reference (+ full seed dataset)
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [x] done
 Blocked by: T10.1
 Files: `docs/ARCHITECTURE.md` (§3.3 grown)
 Verify: EF column/table facts match the model annotations; seed listings match `DbInitializer.cs`
-Notes: document `HtnNodes`/`HtnEdges`/`HtnCategoryDoc` (columns/types per EF conventions +
-       annotations, PKs, no FKs/indexes, controller-side cascade). Enumerate the **complete seed
-       dataset** — 17 thesis + 8 counterthesis nodes and 17 + 8 edges — as id/label/edge tables.
+Notes: Done — §3.3 now has a "Tables & columns" reference (`HtnNodes`/`HtnEdges`/`HtnCategoryDoc`
+       with CLR + SQL Server types, PKs, no FKs/indexes, no DB defaults, controller-side cascade,
+       and the `HtnCategoryDoc` table-name override), a "Seed dataset" section enumerating the
+       full 17 thesis + 8 counterthesis nodes and 17 + 8 edges as id/label/edge tables, and the
+       seed's two schema-drift keys (`logicalConnector`, `description`).
 
 ### T10.4  Cross-cutting backend behaviors
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [x] done
 Blocked by: T10.1
 Files: `docs/ARCHITECTURE.md` (§3.4 grown)
 Verify: matches `HttpConnectionProvider`, `Program.cs`, and the controller try/catch blocks
-Notes: the full per-request connection **algorithm** (pseudocode) and fallback matrix
-       (header/config/LocalDB); JSON round-trip rules for `ContentJson`/`LayerJson` and
-       case-insensitivity; per-endpoint exception→HTTP mapping; diagnostics (`debug-connection`,
-       `ping`) behavior.
+Notes: Done — §3.4 now has four subsections: the connection `resolve()` pseudocode + a
+       header/config/LocalDB fallback matrix; JSON round-trip rules for `ContentJson`/`LayerJson`
+       and global case-insensitivity; an exception→HTTP mapping grouped by rule (CRUD 500,
+       `migrate-graph`, the unguarded `UpdateNodeContent`, automatic 400 ProblemDetails, no global
+       handler, `ping` always-200); and diagnostics (`ping` schema-creation side effect,
+       `debug-connection` masking).
 
 ## Phase 11 — Full ARCHITECTURE: frontend core reference
 
 ### T11.1  Domain layer reference
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [x] done
 Blocked by: —
-Files: `docs/ARCHITECTURE.md` (new §4.x "Core domain")
+Files: `docs/ARCHITECTURE.md` (§4.7 "Core domain")
 Verify: matches `core/domain/{types, models, constants, htn}.ts`
-Notes: every exported type/interface/constant with its meaning; the `Thesis`/`Counterthesis`
-       constructors + normalization/defaults; `NODE_TYPES`/`STATE_OPTIONS`/
-       `EXECUTION_ORDER_OPTIONS`; the `constants.ts` validation key sets; the `htn.ts` barrel.
+Notes: Done — §4.7 documents every exported type/interface/constant with its meaning (flagging the
+       module-local `Edge`/`Adjacency`/`NodeId`), the `Thesis`/`Counterthesis` construction +
+       normalization rules, the `constants.ts` validation key-sets (`RuntimeRequiredKeys` /
+       `NODE_ROOT_STANDARD_KEYS` are the same array), and the `htn.ts` barrel lines (with
+       `graph.utils` re-exports pointing to §4.6).
 
 ### T11.2  Graph algorithms deep-dive
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [x] done
 Blocked by: T11.1
 Files: `docs/ARCHITECTURE.md` (§4.6 grown)
 Verify: algorithm behavior matches `core/domain/graph.utils.ts`
-Notes: step-by-step for `rebuildAdjacency`; `computeTopology` (layering + trigger/effect synthesis
-       + the cycle guard); `populateCrossReferences` (both directions + referencer pass);
-       `addEdge`/`removeEdge`; `refreshGraph`; `navigationRequest$`. Include a worked example over
-       the seed graph.
+Notes: Done — §4.6 now documents `rebuildAdjacency`, `computeTopology` (two phases, the cycle guard,
+       unreached sentinels, `avg` always-0 and the trigger/effect overwrite realities),
+       `refreshGraph`, `populateCrossReferences` (three passes, additive-only, shared id map),
+       `addEdge`/`removeEdge` and `navigationRequest$`, each with `:line` cites; a worked example
+       over the seed thesis graph (including its one merge node, `634e76d4` → longest 3 / shortest 1)
+       and a minimal diamond.
 
 ### T11.3  Services reference
 Status: [ ] todo  [ ] in_progress  [ ] done

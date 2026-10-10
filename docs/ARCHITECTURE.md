@@ -336,7 +336,9 @@ by the committed placeholder. The container overrides the value via
 
 ### 3.2 API surface
 
-Two controllers, both `[ApiController]`, controller-routed. All endpoints are unauthenticated.
+Two controllers, both `[ApiController]`, controller-routed (base `api/[controller]`). All endpoints
+are unauthenticated (D5/D13). Each controller's source file and members are catalogued in §3.6;
+this section documents the wire contract (params, bodies, status codes and exact message strings).
 
 **`HtnController` — base `api/htn`** (`resolution-engine/Controllers/HtnController.cs`):
 
@@ -357,10 +359,12 @@ Two controllers, both `[ApiController]`, controller-routed. All endpoints are un
 | GET | `debug-connection` | Returns the connection string (password regex-masked) + all request headers | `HtnController.cs:89-98` |
 
 **`HtnCategoriesController` — base `api/htn-categories`**
-(`resolution-engine/Controllers/HtnCategoriesController.cs`): `GET /` returns the JSON blob for
-`Id == "main"` (default `"[]"` when absent, `:18-27`); `POST /` upserts that single row,
-re-serializing the bound body to a string (`:29-59`). There is exactly one category document
-keyed `"main"` (`Models/HtnCategoryDoc.cs:10`).
+(`resolution-engine/Controllers/HtnCategoriesController.cs`):
+
+| Method | Route | Purpose | Evidence |
+|---|---|---|---|
+| GET | `/` | The `"main"` category document's JSON string (default `"[]"`) | `HtnCategoriesController.cs:18-27` |
+| POST | `/` | Upsert the single `"main"` row; re-serializes the body to a string | `HtnCategoriesController.cs:29-59` |
 
 Cross-cutting endpoint behaviour:
 
@@ -372,6 +376,107 @@ Cross-cutting endpoint behaviour:
 - **No resource-level validation** beyond edge endpoint existence; node `content` is accepted
   as-is.
 - **No plan/role gates, no pagination, no filtering** beyond the `graph` query parameter.
+
+#### Endpoint reference
+
+Serialized shapes (JSON names come from the model attributes, §3.3):
+
+- **Node** (`HtnNodeModel`) — `{ "id": string, "graph": "thesis"|"counterthesis", "content": <object|null>, "layer": <object|null> }`. `content` is the untyped payload (§3.5/T9.1); `layer` uses
+  **PascalCase** keys `{"LongestPath": int, "ShortestPath": int, "Avg": number}` because
+  `LayerMetrics` has no `JsonPropertyName` and no global camelCase policy is set (`Program.cs:18-22`).
+- **Edge** (`HtnEdgeModel`) — `{ "id": number, "fromId": string, "toId": string, "graph": string }`.
+
+All 500 responses below use the entity CRUD catch-all
+`"Internal server error: {ex.Message}"` (`HtnController.cs:132` etc.); the two exceptions are
+`ping` (never 500 — it catches internally) and `migrate-graph`
+(`"Migration failed: {ex.Message}"`, `:271`).
+
+**`GET api/htn/thesis-nodes`** (`:18-23`) — read all thesis nodes.
+Params: none. Body: none. Response: **200** `HtnNodeModel[]` (may be `[]`).
+
+**`GET api/htn/counterthesis-nodes`** (`:25-30`) — read all counterthesis nodes.
+Params: none. Body: none. Response: **200** `HtnNodeModel[]` where
+`Graph == "counterthesis" || Graph == "antithesis"`.
+
+**`GET api/htn/edges?graph=`** (`:32-37`) — read edges.
+Params: `graph` (query, `string`). Body: none. Response: **200** `HtnEdgeModel[]` where
+`Graph == graph || (graph == "counterthesis" && Graph == "antithesis")`. If `graph` is omitted the
+bound value is `null`, so the filter matches only `Graph == null` (effectively `[]`) — there is
+**no 400** for a missing parameter.
+
+**`GET api/htn/nodes/{id}?graph=`** (`:100-109`) — read one node.
+Params: `id` (route), `graph` (query) — matched with the `counterthesis`/`antithesis` alias rule.
+Response: **200** `HtnNodeModel`, or **404** with an **empty body** (`return NotFound();`).
+
+**`POST api/htn/nodes`** (`:111-134`) — create a node.
+Body: a `HtnNodeModel`; `content` may be omitted (`ContentJson` defaults `"{}"`). If `id` is null
+or empty a GUID is generated.
+- **200** — the created `HtnNodeModel` (with the final `id`).
+- **409** — `Node with ID {id} already exists.`
+- **500** — `Internal server error: {ex.Message}`.
+
+**`POST api/htn/nodes/{id}/content`** (`:39-53`) — replace a node's `content`.
+Params: `id` (route). Body: any JSON object; the `Content` setter serializes it into `ContentJson`.
+- **200** — empty body (`Ok()`).
+- **404** — **empty body** when the id is unknown.
+- **500** — `Internal server error: {ex.Message}` (not wrapped in a try/catch here, so an EF
+  failure surfaces as the framework 500; the setter can still throw on non-serializable input).
+
+**`DELETE api/htn/nodes/{id}?graph=`** (`:136-159`) — delete a node + its edges.
+Params: `id` (route), `graph` (query, alias rules apply).
+- **204** — no content.
+- **404** — `Node {id} not found in graph {graph}.`
+- **500** — `Internal server error: {ex.Message}`.
+
+**`POST api/htn/nodes/batch-delete?graph=`** (`:161-192`) — delete many nodes + their edges.
+Params: `graph` (query). Body: `string[]` of node ids.
+- **400** — `No IDs provided.` (null or empty list).
+- **200** — `No matching nodes found to delete.` (no id matched the graph).
+- **200** — `Deleted {n} nodes and associated edges.`
+- **500** — `Internal server error: {ex.Message}`.
+
+**`POST api/htn/edges`** (`:194-220`) — create an edge.
+Body: a `HtnEdgeModel` (`fromId`, `toId`, `graph`).
+- **200** — the created `HtnEdgeModel`.
+- **409** — `Edge already exists.` (same `fromId`/`toId`/`graph`).
+- **400** — `Source node {fromId} does not exist in graph {graph}.`
+- **400** — `Target node {toId} does not exist in graph {graph}.`
+- **500** — `Internal server error: {ex.Message}`.
+
+**`DELETE api/htn/edges?from=&to=&graph=`** (`:222-241`) — delete one edge.
+Params: `from`, `to`, `graph` (all query).
+- **204** — no content.
+- **404** — `Edge not found.`
+- **500** — `Internal server error: {ex.Message}`.
+
+**`POST api/htn/migrate-graph`** (`:243-273`) — rewrite `"antithesis"` → `"counterthesis"`.
+Params: none. Body: none. Counts are read before the `ExecuteUpdate` calls, so
+`*Updated` equals `*Scanned`.
+- **200** — `{ "nodesScanned": n, "nodesUpdated": n, "edgesScanned": n, "edgesUpdated": n }`.
+- **500** — `Migration failed: {ex.Message}`.
+
+**`GET api/htn/ping`** (`:55-87`) — health probe; calls `EnsureCreated()` + `CanConnect()`.
+Always **200** (exceptions are caught); the error case reports the message, not a 5xx.
+- Connected: `{ "Backend": "Online", "Database": "Online", "Message": "System operational and schema verified." }`
+- Reachable but refused: `{ "Backend": "Online", "Database": "Offline", "Message": "Database is reachable but connection was refused or failed." }`
+- Exception: `{ "Backend": "Online", "Database": "Error", "Message": "Database initialization failed: {ex.Message}" }`
+(The local `result` object with `Database = "Unknown"` is never returned — dead code, `:58-63`.)
+
+**`GET api/htn/debug-connection`** (`:89-98`) — diagnostics.
+Response: **200**
+`{ "currentConnectionString": <string with "Password=****">, "headers": { <name>: <value>, … } }`.
+`Password=…` is masked by regex `Password=[^;]*` → `Password=****`; **every** request header is
+echoed (production risk B4).
+
+**`GET api/htn-categories`** (`HtnCategoriesController.cs:18-27`) — read the category document.
+Response: **200** — the `JsonData` string of the `"main"` row, or the literal `"[]"` when absent
+(the body is a **JSON string**, so a client must parse it twice to reach the array).
+
+**`POST api/htn-categories`** (`HtnCategoriesController.cs:29-59`) — upsert the category document.
+Body: any JSON; re-serialized with `JsonSerializer.Serialize(jsonContent)` and stored on the
+`"main"` row (insert or update).
+- **200** — empty body (`Ok()`).
+- **500** — `Internal server error: {ex.Message}`.
 
 ### 3.3 Domain model & persistence
 
@@ -419,20 +524,229 @@ is created empty by `ping`, and **no demo data appears unless `Initialize` is ru
 Because `EnsureCreated()` never alters an existing schema, the repo carries
 `cleanup_weight_column.sql` — evidence that a legacy `Weight` column had to be dropped by hand.
 
+#### Tables & columns
+
+With no `OnModelCreating`, EF uses the `DbSet` property name as the table name and the model's
+data annotations for keys — except `HtnCategoryDoc`, whose `[Table(...)]` overrides it. Column
+types are EF Core 9 SQL Server conventions for this `net9.0` project (`HtnNode.cs`,
+`HtnEdge.cs`, `HtnCategoryDoc.cs`, `ApplicationDbContext.cs:12-14`).
+
+`HtnNodes` — entity `HtnNodeModel`:
+
+| Column | CLR / annotation | SQL Server | Notes |
+| --- | --- | --- | --- |
+| `Id` | `string` `[Key]` | `nvarchar(450)` | PK (the 450 = EF's max key width); JSON name `id`. |
+| `Graph` | `string` | `nvarchar(max)` | NOT NULL by convention; `"thesis"` / `"counterthesis"` (never `"antithesis"` after migration). |
+| `ContentJson` | `string` | `nvarchar(max)` | NOT NULL; the `"{}"` default is a CLR initializer, **not** a DB default. |
+| `LayerJson` | `string` | `nvarchar(max)` | NOT NULL; CLR default `"{}"`. |
+
+`Content` and `Layer` are `[NotMapped]` and are never columns. `LayerJson` stores `LayerMetrics`
+as text with **PascalCase** keys (`{"LongestPath":0,"ShortestPath":0,"Avg":0}`, §3.2).
+
+`HtnEdges` — entity `HtnEdgeModel`:
+
+| Column | CLR / annotation | SQL Server | Notes |
+| --- | --- | --- | --- |
+| `Id` | `int` `[Key]` | `int IDENTITY` | PK. |
+| `FromId` | `string` | `nvarchar(max)` | NOT NULL; no FK. |
+| `ToId` | `string` | `nvarchar(max)` | NOT NULL; no FK. |
+| `Graph` | `string` | `nvarchar(max)` | NOT NULL. |
+
+`HtnCategoryDoc` — entity `HtnCategoryDoc` (note: the `DbSet` is named `HtnCategories` but the
+explicit `[Table("HtnCategoryDoc")]` wins, so the physical table is **`HtnCategoryDoc`**):
+
+| Column | CLR / annotation | SQL Server | Notes |
+| --- | --- | --- | --- |
+| `Id` | `string` `[Key]` | `nvarchar(450)` | PK; CLR default `"main"`. |
+| `JsonData` | `string` | `nvarchar(max)` | NOT NULL; CLR default `"[]"`. |
+
+Schema properties to note:
+
+- **No foreign keys and no indexes** beyond the primary keys: there are no navigation
+  properties and no fluent configuration, so `HtnEdges` is disconnected from `HtnNodes` despite
+  `FromId`/`ToId` looking like references. Referential integrity is enforced only in the
+  controller (§3.2) and by the seed's orphan-edge cleanup.
+- **No DB-level defaults / computed columns**; the string defaults live only as C# initializers.
+- **Controller-side cascade** only (manual `RemoveRange`, §3.2) — the DB has no `ON DELETE CASCADE`.
+
+#### Seed dataset (`Data/DbInitializer.cs`)
+
+Three idempotence gates (`if (!_context…Any(…))`, `:26`, `:71`, `:108`) guard thesis nodes,
+counterthesis nodes, and edges respectively; the whole method still never runs unless `Initialize`
+is invoked (§3.3 above). Every seeded node is created with `layer` = `{LongestPath:0,
+ShortestPath:0,Avg:0}` (the `layer` argument is `0` throughout, `:31-101`) and content
+`logicalConnector: "AND"` + `description`. The **full** dataset (17 + 8 nodes, 17 + 8 edges,
+`DbInitializer.cs:26-147`):
+
+**Thesis nodes (17)** — `id` / `label` / `description`:
+
+| id | label | description |
+| --- | --- | --- |
+| `2bb33b4d` | Agent Resolution | The root state... |
+| `aeae87c3` | Resolution Loops - variable | S0 |
+| `if1s1g4` | Resolution Network - constant | Hive Mind |
+| `35ea1337` | Core Resolution Loop | S0 |
+| `bba04a1d` | stable resolution loop | S0 |
+| `3fa6c3b2` | dynamic resolution loop | S0 |
+| `ar12kal23` | Core Iteration | Slow iteration... |
+| `asd9aj294` | Functional Iteration | Iteration Loops... |
+| `0as99jj11` | Sensitive Iteration | Fast iteration... |
+| `634e76d4` | Resolution Scheduler (HTN) | Funnel |
+| `59d75979` | Resolution Engine - constant | Everything is a problem... |
+| `d6e789ae` | Unknown Problems | S1 |
+| `f5bd70be` | Known Problems | S1 |
+| `36fa5286` | Bad Defined Problems | S1 |
+| `b8f59c02` | Ontological Failure | I cannot name it... |
+| `a403d17a` | Interpretation Failure | I explain it badly... |
+| `30711547` | Causal Failure | I cannot explain it... |
+
+`logicalConnector` is `"AND"` and no thesis seed uses the optional `informal` field here. Every
+thesis also seeds `countertheses` (cross-graph ids) and a `flow` map, except the leaf failure nodes
+(`b8f59c02`, `a403d17a`, `30711547`) which seed neither (`DbInitializer.cs:31-64`).
+
+**Counterthesis nodes (8)**:
+
+| id | label | `theses` (cross-graph) | `informal` |
+| --- | --- | --- | --- |
+| `7ef4e6da` | Agent Core Solving | `2bb33b4d` | `A queue is a line of people...` |
+| `l0asd142` | Functional Iteration HTN/Chain Triggered Loops (CTL) | `if1s1g4`, `asd9aj294` | — |
+| `8aj27askl` | Sensitive Iteration (CL/adaptable/implicit/AEP/VBA) | `if1s1g4`, `0as99jj11` | — |
+| `de12vask0` | Core Iteration, (IL/Compounding) | `ar12kal23`, `35ea1337` | — |
+| `4a24c84b` | System Incubation (Resolution Engine) IL-1.0 | `59d75979`, `634e76d4` | — |
+| `2e5e5e1a` | System Analysis IL-0 (protocol) | `59d75979`, `d6e789ae` | — |
+| `aaa81ccf` | System Evaluation IL-1.2 | `f5bd70be` | — |
+| `fcb2f489` | System Synthesis IL-1.3 | `36fa5286` | — |
+
+Counterthesis `flow` entries carry `completed: false` and integer `priority` values 1–5
+(`DbInitializer.cs:78-101`).
+
+**Thesis edges (17)** — `fromId → toId`:
+
+| From | To |
+| --- | --- |
+| `2bb33b4d` | `aeae87c3` |
+| `2bb33b4d` | `if1s1g4` |
+| `aeae87c3` | `bba04a1d` |
+| `aeae87c3` | `3fa6c3b2` |
+| `aeae87c3` | `35ea1337` |
+| `35ea1337` | `ar12kal23` |
+| `3fa6c3b2` | `0as99jj11` |
+| `bba04a1d` | `asd9aj294` |
+| `2bb33b4d` | `634e76d4` |
+| `2bb33b4d` | `59d75979` |
+| `59d75979` | `d6e789ae` |
+| `59d75979` | `f5bd70be` |
+| `59d75979` | `36fa5286` |
+| `36fa5286` | `634e76d4` |
+| `d6e789ae` | `b8f59c02` |
+| `d6e789ae` | `a403d17a` |
+| `d6e789ae` | `30711547` |
+
+**Counterthesis edges (8)**:
+
+| From | To |
+| --- | --- |
+| `7ef4e6da` | `l0asd142` |
+| `7ef4e6da` | `8aj27askl` |
+| `7ef4e6da` | `de12vask0` |
+| `de12vask0` | `4a24c84b` |
+| `de12vask0` | `2e5e5e1a` |
+| `de12vask0` | `aaa81ccf` |
+| `de12vask0` | `fcb2f489` |
+| `fcb2f489` | `4a24c84b` |
+
+Two seed keys are **not** in the SPA content schema (§3.5): `logicalConnector` (`"AND"`) and
+`description`; `informal` appears only on `7ef4e6da`. All seeded nodes carry `layer` 0, and an
+orphan-edge cleanup pass runs before seeding (`DbInitializer.cs:12-23`). Seeding is **never
+invoked from `Program.cs`** (§3.1), so none of this data exists in a fresh container DB unless
+`DbInitializer.Initialize` is called by hand.
+
 ### 3.4 Cross-cutting (backend)
 
-- **Per-request connection resolution** (`Services/HttpConnectionProvider.cs`):
-  `GetConnectionString()` returns the config `DefaultConnection` when there is no HTTP context
-  (`:20-21`); otherwise it reads header `X-Connection-String`, tries base64-decode → UTF-8 and
-  falls back to the raw header text on failure (`:23-39`); finally falls back to
-  `DefaultConnection` (`:41`). The DbContext delegate substitutes LocalDB when this is empty
-  (`Program.cs:34-37`). This is what lets the SPA point the API at an arbitrary SQL Server
-  (end-to-end exchange traced in §2.4).
-- **Serialization**: global `PropertyNameCaseInsensitive` (`Program.cs:21`); content
-  round-trips as a JSON DOM (`JsonElement` on read, re-serialized on write); no discriminators.
-- **Diagnostics / security**: `debug-connection` masks `Password=…` but still returns the
-  connection string and echoes **every request header** (`HtnController.cs:89-98`) — a
-  production-checklist item (B4).
+#### Per-request connection resolution
+
+The defining multi-database seam: every request's `ApplicationDbContext` is built from a
+connection string resolved per scope. `HttpConnectionProvider.GetConnectionString()`:
+
+```text
+resolve():                                   # HttpConnectionProvider.GetConnectionString()
+  if no HttpContext:   return config["DefaultConnection"]     # :20-21
+  raw = Headers["X-Connection-String"]
+  if raw present and non-empty:
+      try:  return UTF8( base64-decode(raw) )                 # :30-31
+      catch: return raw                                       # :35-36  (not valid base64)
+  return config["DefaultConnection"]                          # :41
+
+# Program.cs AddDbContext delegate — evaluated per scope (per request) (:28-40):
+s = resolve()
+if s is empty: s = "<LocalDB connection string>"
+UseSqlServer(s)
+```
+
+Fallback matrix (first match wins):
+
+| Source | Condition | Result |
+| --- | --- | --- |
+| `X-Connection-String` header | present, non-empty, valid base64 | decoded UTF-8 string |
+| `X-Connection-String` header | present, non-empty, **not** base64 | the raw header text |
+| config `DefaultConnection` | header absent/empty (or no HTTP context) | the config value |
+| in-code LocalDB | resolved string is empty | `Data Source=(localdb)\…` (`Program.cs:34-37`) |
+
+Precedence is **header > config `DefaultConnection` > LocalDB**. The committed placeholder
+(`appsettings.json:10`) is non-empty, so LocalDB only triggers when the config value is empty
+(§3.1); the container supplies the config value via `ConnectionStrings__DefaultConnection` (§5.2).
+The SPA attaches the header on every call (`connection.interceptor.ts:5-25`); the end-to-end
+exchange is traced in §2.4. Because the context is **scoped**, the header is read once per request
+and the whole request uses one connection string.
+
+#### JSON round-trip
+
+- **`ContentJson`** (untyped payload, D8). Read: `Content` getter runs
+  `JsonSerializer.Deserialize<object>(ContentJson)` → a `JsonElement` DOM (`"{}"` → `{}`; empty
+  string → `null`, `HtnNode.cs:24-26`). Write: the request body binds as `object` (an already-parsed
+  `JsonElement`), and the setter `JsonSerializer.Serialize(value)` **replaces `ContentJson`
+  wholesale** — there is no merge or field diff (`HtnNode.cs:27`). `content` keys are stored
+  **verbatim** (case-sensitive), preserving whatever the client sent.
+- **`LayerJson`** (`LayerMetrics`). Read: deserialized **case-insensitively**
+  (`PropertyNameCaseInsensitive = true`, `HtnNode.cs:38`) so `longestPath`/`LongestPath` both bind;
+  empty string → `null`. Write: serialized with the type's own property names, i.e. **PascalCase**
+  (`{"LongestPath":…,"ShortestPath":…,"Avg":…}`) — see the §3.2 node shape.
+- **Global setting**: `Program.cs:18-22` sets only `PropertyNameCaseInsensitive = true`; there is
+  **no** naming policy, so *output* names are the attribute names (camelCase on the entity, via
+  `[JsonPropertyName]`) while `LayerMetrics` stays PascalCase. There are **no** `JsonConverter`s,
+  discriminators, or type registries anywhere (D8). The schema contract is §3.3/§3.5.
+
+#### Exception → HTTP mapping
+
+- **CRUD catch-all (500).** `CreateNode`, `DeleteNode`, `BatchDeleteNodes`, `AddEdge` and
+  `RemoveEdge` each wrap their body in `try/catch (Exception ex)` and return
+  `StatusCode(500, $"Internal server error: {ex.Message}")` (`HtnController.cs:130-133` etc.);
+  `HtnCategoriesController.SaveMain` uses the same string (`:57`). `MigrateGraph` uses
+  `"Migration failed: {ex.Message}"` (`:271`).
+- **Unguarded action**: `UpdateNodeContent` has **no** try/catch (`:39-53`); an EF failure there
+  escapes to the framework. There is **no** `UseExceptionHandler`/`UseDeveloperExceptionPage` in
+  the pipeline (`Program.cs:42-58`), so in Development it surfaces as the default developer
+  exception page (HTML stack trace) and in Production as a bare 500.
+- **Automatic 400**: `[ApiController]` model validation returns **400 ProblemDetails** *before* the
+  action runs, for a missing/unbindable `[FromBody]` (e.g. a malformed `nodes` or `edges` body).
+  These bypass the messages above.
+- **Explicit codes** (see §3.2 for exact strings): 404 / 400 / 409 are returned deliberately from
+  inside the try blocks; nothing else maps to a status.
+- **`ping` is special**: it catches its own exceptions and **always returns 200** (never 500).
+
+#### Diagnostics
+
+- **`GET api/htn/ping`** (`HtnController.cs:55-87`) calls `EnsureCreated()` then `CanConnect()`. The
+  `EnsureCreated()` is a **side effect**: hitting `ping` on a new connection string creates the
+  schema (§3.3). It always returns **200** with one of three bodies (connected / reachable-but-
+  refused / error message) — no 5xx, so a monitoring probe cannot tell a DB failure from success by
+  status alone (message strings in §3.2). The local `result` object with `Database = "Unknown"` is
+  dead code.
+- **`GET api/htn/debug-connection`** (`:89-98`) returns the **resolved** connection string
+  (`_context.Database.GetConnectionString()`, i.e. the per-request value) with `Password=…` masked
+  by regex `Password=[^;]*` → `Password=****`, plus **every** request header echoed verbatim. The
+  masking is cosmetic (the string and headers still leak) — production row **B4**.
+
 - **No tests** exist in this project (contrast the frontend's 21 specs) — a gap (§6).
 - Non-runtime artifacts at the backend root: `build_log.txt` / `build_output.txt` (historical
   `MSB3026` file-lock build failures from a running `ResolutionEngine.exe`), and
@@ -804,12 +1118,134 @@ Domain types live in `core/domain/types.ts` — `GraphType`, `NODE_TYPES` (`data
 Vocabulary for the terms used here (graph, adjacency, layer, trigger, effect, referencer) is
 mapped to code in §2.6.
 
-**Graph algorithms live here** (D6): `core/domain/graph.utils.ts` implements `rebuildAdjacency`
-(`:6-17`), `computeTopology` — longest/shortest-path layering + trigger/effect synthesis
-(`:19-85`), `refreshGraph` (`:87-92`), `populateCrossReferences` — bidirectional
-thesis↔counterthesis linking (`:94-140`), `addEdge`/`removeEdge` (`:142-153`), and the
-`navigationRequest$` subject (`:4`). `core/domain/models.ts` `Thesis`/`Counterthesis` normalize
-`layer` and default content fields (`models.ts:3-46`).
+#### Graph algorithms (`graph.utils.ts`)
+
+All graph computation runs in the **frontend** (D6); the backend stores only nodes and the edge list
+(§3.3). `core/domain/graph.utils.ts` exports the six symbols below. Types are in §4.7, vocabulary in
+§2.6, and the load/save pipeline that calls these is §2.2/§4.3.
+
+**`rebuildAdjacency(g)` (`:6-17`).** Clears the two Maps on `g`, then walks `g.edges` (`[from, to]`
+pairs) appending to `ady[from]` (forward) and `inv[to]` (inverse):
+
+```text
+ady.clear(); inv.clear()
+for (from, to) in g.edges:
+    ady[from].push(to); inv[to].push(from)
+```
+
+Edges are **not** deduplicated, and isolated nodes never appear as keys — hence the pervasive
+`g.ady.get(id) || []` / `g.inv.get(id) || []` idiom. O(E).
+
+**`computeTopology(g)` (`:19-85`).** Returns immediately when `g.nodes` is undefined (`:20`);
+otherwise two phases.
+
+*Phase A — layer seeding + trigger/effect synthesis (`:24-53`).* `parents`/`children` come from
+`inv`/`ady`:
+
+```text
+parents = inv.get(id) or []; children = ady.get(id) or []
+if parents is empty:  layer = {longestPath:0, shortestPath:0, avg:0}; enqueue(id)  # root
+else:                 layer = {longestPath:-1, shortestPath:Infinity, avg:0}      # sentinels
+# rewrite content from adjacency (externalTrigger = stored trigger whose id is NOT a node here, :43,:49):
+thesis:        effects = externalTriggers + parents;  triggers = children
+counterthesis: triggers = externalTriggers + parents; effects  = children
+```
+
+*Phase B — longest/shortest worklist (`:55-84`).* A BFS-like loop (`totalNodes = g.nodes.size`):
+
+```text
+while queue not empty:
+    current = dequeue(); for child in ady[current]:
+        if current.longestPath+1 <= totalNodes and > child.longestPath:
+            child.longestPath = current.longestPath+1; changed
+        if current.shortestPath+1 < child.shortestPath:
+            child.shortestPath = current.shortestPath+1; changed
+        if changed: enqueue(child)
+```
+
+`proposedLongest <= totalNodes` is the **cycle guard**: in a DAG the longest path can never exceed
+`V-1`, so the bound only bites when a cycle would otherwise grow unbounded (capping it at `V`);
+`shortestPath` converges from above. Roots are enqueued first, so a node in a cycle with **no inbound
+root is never visited** and keeps its sentinels (`longestPath:-1`, `shortestPath:Infinity`).
+
+> **Reality.** `avg` is seeded to `0` (`:28`,`:31`) but **never assigned** by this algorithm, so every
+> node's `avg` stays `0` unless it was loaded as a number (the model constructors, §4.7) — yet it is
+> rendered (`features/graph/graph.ts:261`, `htn-explorer.html:281,312`).
+>
+> **Reality.** Phase A **overwrites** `content.triggers`/`content.effects` on every refresh. A stored
+> out-of-graph trigger is moved into `effects` (thesis) or kept in `triggers` (counterthesis) on the
+> first refresh, but since the stored array it was read from is itself replaced by the in-graph
+> children, it is **dropped on the second refresh**.
+
+**`refreshGraph(g)` (`:87-92`).** The single recompute entry point:
+
+```text
+rebuildAdjacency(g); computeTopology(g); g.update$?.next(true)
+```
+
+`update$?.next(true)` broadcasts to subscribers (a no-op when the graph carries no subject). Called by
+`addEdge`/`removeEdge` below and by the state-service refresh pipeline (`htn-state.service.ts:142-144`,
+§2.2/§4.3).
+
+**`populateCrossReferences(thesisGraph, counterthesisGraph)` (`:94-140`).** Reconciles both graphs in
+three passes plus a dedup helper `addRef` (`:95-99`):
+
+1. **Reset** — set `content.referencers = []` for **every** node in both graphs (`:101-102`).
+2. **Counterthesis → thesis** — for each counterthesis, every `content.theses` id that exists in
+   `thesisGraph` gets the counterthesis id appended to its `content.countertheses` (`:104-115`).
+3. **Thesis → counterthesis** — the mirror pass; every `content.countertheses` id that exists gets the
+   thesis id appended to `content.theses` (`:117-128`).
+4. **Referencers** — the two graphs are merged into one `Map` (`:130`; the ids share a **single
+   namespace**, so a duplicate id across graphs would overwrite), then every node with `type:
+   'referencer'` and a resolving `refId` appends its id to the target's `content.referencers`
+   (`:132-139`).
+
+Passes 2–3 make the thesis↔counterthesis links consistent from *either* stored side (a union); they
+are **additive only** and never prune a stale link (removal is `performComplexRemoval`, §4.3/T11.3).
+
+**`addEdge` / `removeEdge` (`:142-153`).** `addEdge` pushes `[from, to]` (no validation or dedup) then
+`refreshGraph`; `removeEdge` splices the first matching pair (no-op if absent) — also followed by
+`refreshGraph` when something was removed.
+
+**`navigationRequest$` (`:4`).** `Subject<{view: GraphType; id: string}>`, the cross-component
+"navigate to node" bus. Emitters: `htn-categories.component.ts:268`,
+`htn-metadata-menu.component.ts:29`, `console/handlers/navigation.handler.ts:36`. Consumer:
+`htn-explorer.component.ts:247` (also §4.5).
+
+##### Worked example over the seed graph
+
+Induced adjacency for a slice of the 17 seed thesis edges (§3.3, `DbInitializer.cs`):
+
+| Node | `ady` (children) | `inv` (parents) |
+| --- | --- | --- |
+| `2bb33b4d` | `59d75979`, `634e76d4`, `aeae87c3`, `if1s1g4` | — (root) |
+| `59d75979` | `36fa5286`, `d6e789ae`, `f5bd70be` | `2bb33b4d` |
+| `36fa5286` | `634e76d4` | `59d75979` |
+| `634e76d4` | — | `2bb33b4d`, `36fa5286` |
+
+`634e76d4` is the seed's only **merge** node (two parents), so Phase B gives it
+`longestPath = max(0,2)+1 = 3` but `shortestPath = min(0,2)+1 = 1`. The full computed layering
+(`avg` = 0 throughout):
+
+| Nodes | Longest | Shortest |
+| --- | --- | --- |
+| `2bb33b4d` | 0 | 0 |
+| `aeae87c3`, `if1s1g4`, `59d75979` | 1 | 1 |
+| `bba04a1d`, `3fa6c3b2`, `35ea1337`, `d6e789ae`, `f5bd70be`, `36fa5286` | 2 | 2 |
+| `634e76d4` | 3 | **1** |
+| `ar12kal23`, `0as99jj11`, `asd9aj294`, `b8f59c02`, `a403d17a`, `30711547` | 3 | 3 |
+
+Synthesis for the leaf `634e76d4` (thesis): `parents = [2bb33b4d, 36fa5286]`, `children = []`, so
+`effects = [...external, 2bb33b4d, 36fa5286]` and `triggers = []`. The root `2bb33b4d` gets
+`effects = []` and `triggers = [59d75979, 634e76d4, aeae87c3, if1s1g4]` (its children). A minimal
+diamond makes the longest/shortest split explicit:
+
+```text
+A ──▶ X        A=(0,0)  B=(1,1)  C=(2,2)  X=(3,1)
+│     ▲        X's parents: A (depth 0) and C (depth 2)
+▼     │        longest(X) = max(0,2)+1 = 3   (A→B→C→X)
+B ──▶ C        shortest(X)= min(0,2)+1 = 1   (A→X)
+```
 
 - **PWA**: `public/manifest.json` (name "ResolutionEngine", standalone, `#111` background);
   `public/sw.js` with cache `resolution-engine-v3` — cache-first static, network-first
@@ -826,6 +1262,96 @@ thesis↔counterthesis linking (`:94-140`), `addEdge`/`removeEdge` (`:142-153`),
   htn-graph.service, htn-explorer, htn-editor, htn-categories, graph, app.component.
 - **Dead scaffolding to record**: `verify_graph.ts` (+ `tsconfig.verify.json`), top-level
   `build_error*.log` / `pure.txt` artifacts, and a stray marker in `.eslintrc.js`.
+
+### 4.7 Core domain model (`core/domain`)
+
+The lowest frontend layer: plain TypeScript (no Angular, no DI, no HTTP). Four files —
+`types.ts`, `models.ts`, `constants.ts` and the `htn.ts` barrel — plus `graph.utils.ts` (the graph
+algorithms, covered in §4.6). The server-side counterpart of the node-content shape is §3.5, and
+the term glossary is §2.6.
+
+#### Exported types & constants (`types.ts`)
+
+| Export | Kind | Meaning |
+| --- | --- | --- |
+| `GraphType` | type | Which graph a node belongs to: `'thesis'` or `'counterthesis'` (`:7`). |
+| `NODE_TYPES` | const | `['data','process','referencer'] as const` (`:9`); runtime source of `NodeType`. |
+| `NodeType` | type | `typeof NODE_TYPES[number]` (`:10`). |
+| `THESIS_TYPES` / `COUNTERTHESIS_TYPES` | const | both alias `NODE_TYPES` (`:12-13`); no per-graph subsets exist. |
+| `ThesisType` / `CounterthesisType` | type | both alias `NodeType` (`:14-15`). |
+| `STATE_OPTIONS` | const | `['W','B','A','S'] as const` (`:17`) — counterthesis execution states. |
+| `StateOption` | type | `typeof STATE_OPTIONS[number]` (`:18`). |
+| `EXECUTION_ORDER_OPTIONS` | const | `['unit','set'] as const` (`:20`). |
+| `ExecutionOrderOption` | type | `typeof EXECUTION_ORDER_OPTIONS[number]` (`:21`). |
+| `HtnNode` | type | union of `IThesis` and `ICounterthesis` — the canonical node (`:23`). |
+| `Graph` | interface | runtime graph: `edges`, `ady`/`inv` adjacency maps, optional `type`/`nodes`, and an `update$` subject (`:25-32`). |
+| `JSONValue` | type | recursive JSON union (`:34`). |
+| `JSONArray` | interface | `Array<JSONValue>` (`:36`). |
+| `JSONObject` | interface | string-indexed `JSONValue` map (`:38-40`). |
+| `NodeContentBase` | interface | alias base for any node-content object (`:42`). |
+| `NodeContentRoot` | interface | shared node-content root: `label`, `triggers`, `effects`, `refId`, `referencers` (`:44-50`). |
+| `FlowStateBase` | interface | per-flow-entry base: `condition`, numeric `priority` (`:52-55`). |
+| `AnalysisEntry` | interface | `timestamp` + `analysis` pair (`:57-60`). |
+| `FlowStateCounterthesis` | interface | `FlowStateBase` + `completed`, `completedCondition`, optional `cycles`/`analyzes` (`:62-67`). |
+| `NodeContentRootCounterthesis` | interface | counterthesis content: `flow` (of `FlowStateCounterthesis`), `theses`, `state`, `executionOrder`, `type` (`:69-76`). |
+| `FlowStateThesis` | interface | empty extension of `FlowStateBase` (`:78`). |
+| `NodeContentRootThesis` | interface | thesis content: `flow` (of `FlowStateThesis`), `countertheses`, `type`, `justification` (`:80-85`). |
+| `LayerMetrics` | interface | `longestPath`, `shortestPath`, `avg` (`:87-91`). |
+| `IThesis` | interface | thesis node: `id`, `graph:'thesis'`, `content`, `layer` (`:93-98`). |
+| `ICounterthesis` | interface | counterthesis node: `id`, `graph:'counterthesis'`, `layer`, `content` (`:100-105`). |
+| `CategoryList` | interface | explorer category: `id`, `name`, `nodeIds`, nested `children`, `expanded`, optional `isAddingNode`/`isRemoving`/`isRenaming` (`:107-116`). |
+| `ParsedCommand` | interface | console command: `command`, `positional`, `keyValues`, `flags` (`:118-123`). |
+| `DockRequest` | interface | `windowName` + target `zone` (`:125-128`). |
+| `ActiveExplorerTree` | interface | explorer's active node: `triggers`, `effects`, `mode` (`'triggers'`/`'effects'`/`null`), `instanceName` (`:130-135`). |
+| `EditorSearchRequest` | interface | editor open intents: `id`, `mode` (`'edit'`/`'create'`), optional `parentId`/`parentGraph`/`newNodeGraph`/`targetWindow`/`originWindow` (`:137-145`). |
+| `WindowHandle` | interface | duck-typed panel contract: `windowName()`, `setDocked()`, `docked()`, `initDefaultValues()`, `normalizeValues()` (`:147-153`). |
+
+`Edge`, `Adjacency` and `NodeId` (`:3-5`) are **module-local** — not `export`ed, absent from the
+barrel and from `Graph`'s public shape by name.
+
+#### `Thesis` / `Counterthesis` construction (`models.ts`)
+
+Two lightweight factory classes implementing `IThesis`/`ICounterthesis`; each pins `graph` and
+normalizes content and layer:
+
+| Behavior | `Thesis` | `Counterthesis` |
+| --- | --- | --- |
+| `graph` | fixed `'thesis'` (`:11`) | fixed `'counterthesis'` (`:33`) |
+| content fallback | `content ?? { label:'', flow:{} }` (`:12`) | same (`:34`) |
+| array fallback | `triggers`/`effects`/`countertheses` use the content value when non-empty, else the top-level arg, else `[]` (`:15-17`) | `triggers`/`effects`/`theses`, same rule (`:37-39`) |
+| counterthesis-only defaults | — | `state:'W'`, `executionOrder:'unit'`, `type:'process'` (`:40-42`) |
+| numeric `layer` | `{longestPath:l, shortestPath:l, avg:l}` for a number, else passed through (`:20`) | same (`:44`) |
+
+These classes are the constructor-level source of truth for normalization (restated from the
+`graph.utils.ts` angle in §4.6). The server does **not** mirror this logic — it stores whatever JSON
+it receives (§3.3/§3.5).
+
+#### Validation key-sets (`constants.ts`)
+
+| Export | Value (`:line`) |
+| --- | --- |
+| `NodeContentRootThesisTemplate` | a thesis content object with empty arrays/strings and `type:'process'` (`:3-13`) |
+| `NodeContentRootCounterthesisTemplate` | a counterthesis content object with `state:'W'`, `executionOrder:'unit'`, `type:'process'` (`:15-26`) |
+| `RuntimeRequiredKeys` | union of the two templates' keys (`:28-31`) |
+| `NODE_ROOT_STANDARD_KEYS` | the same union of template keys (`:33-35`) — currently identical to `RuntimeRequiredKeys` |
+| `FLOW_STATE_STANDARD_KEYS` | keys of the `FlowStateCounterthesis` shape: `condition`, `priority`, `completed`, `completedCondition`, `cycles`, `analyzes` (`:47`) |
+| `GLOBAL_STANDARD_KEYS` | `NODE_ROOT_STANDARD_KEYS` concatenated with `FLOW_STATE_STANDARD_KEYS` (`:49-52`) |
+| `REQUIRED_NON_FALSY_KEYS` | `['label','justification']` (`:54-57`) — the keys validation refuses to see empty |
+
+`RuntimeRequiredKeys` and `NODE_ROOT_STANDARD_KEYS` are two names for the same array (the
+distinction is historical). These key-sets feed `htn-validation.service.ts` (T11.3).
+
+#### Barrel (`htn.ts`)
+
+`core/domain/htn.ts` (`:1-5`) is a pure re-export module — the single import surface for the layer:
+
+| Line | Re-exports |
+| --- | --- |
+| `:1` | every type/interface from `types.ts` (the table above) |
+| `:2` | the option constants `THESIS_TYPES`, `COUNTERTHESIS_TYPES`, `NODE_TYPES`, `STATE_OPTIONS`, `EXECUTION_ORDER_OPTIONS` |
+| `:3` | the `Thesis` / `Counterthesis` classes |
+| `:4` | the seven `constants.ts` exports |
+| `:5` | `navigationRequest$`, `refreshGraph`, `populateCrossReferences`, `addEdge`, `removeEdge` from `graph.utils.ts` — documented in §4.6 |
 
 ## 5. Infrastructure, containers & deployment topology
 
