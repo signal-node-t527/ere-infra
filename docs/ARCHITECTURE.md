@@ -82,6 +82,196 @@ Load-bearing facts:
 - `exported-plan.json` at the root is a sample data export (a nested thesis/process plan), not
   source.
 
+### 2.1 SPA bootstrap & shell
+
+Startup order (all paths are relative to `shiny-computing-machine` unless noted):
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant I as index.html
+    participant M as main.ts
+    participant G as appConfig
+    participant A as AppComponent
+    participant S as root services
+    B->>I: GET /
+    I->>I: register /sw.js inline (index.html:24-30)
+    I->>M: run main bundle
+    M->>G: bootstrapApplication(AppComponent, appConfig) (main.ts:5)
+    G->>G: providers: zone CD, empty router, noop animations, HttpClient + connectionInterceptor (app.config.ts:11-16)
+    G->>A: create root component
+    A->>S: inject HtnService, WindowService, ConnectionService, WindowManagerService
+    S->>S: HtnService ctor calls refresh() (htn.service.ts:45) -- see 2.2
+    S->>S: WindowService ctor loads list + registers persist effect (window.service.ts:22-29)
+    S->>S: ConnectionService ctor loads saved connections (connection.service.ts:27-29)
+    S->>S: WindowManagerService reads/creates session id (window-manager.service.ts:11-20)
+    A->>A: isPopup detection + handleSpawnedWindow() (app.component.ts:35-61) -- see 2.5
+```
+
+- `provideRouter(routes)` is configured, but `app.routes.ts` is **empty** (`app.routes.ts:3`), so
+  `<router-outlet />` renders nothing; the app is one shell (D12).
+- The shell renders every open window from `WINDOW_REGISTRY` via `ngComponentOutlet`
+  (`core/config/window-registry.ts:10-18`), so a feature component is constructed only when a
+  window of its type is open.
+- `WindowService` auto-persists the window list on every change through an `effect`
+  (`window.service.ts:26-28`) via `StorageService` (localStorage, or sessionStorage in popups —
+  §2.5).
+
+### 2.2 Read path — the refresh pipeline
+
+`refresh()` is the single read entry point. It is triggered from the `HtnService` constructor
+(`htn.service.ts:45`), from explicit `refresh()` calls (`htn.service.ts:57`), and after every
+write via `refreshAndSettle()` (`htn.service.ts:279-289`).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant H as HtnService
+    participant St as HtnStateService
+    participant R as HttpHtnRepository
+    participant X as connectionInterceptor
+    participant API as HtnController
+    participant DB as SQL Server
+    H->>St: refresh() (htn.service.ts:57, ctor :45, refreshAndSettle :279)
+    St->>R: forkJoin of five reads (htn-state.service.ts:106-112)
+    R->>R: getThesisGraph + getCounterthesisGraph -- GET /htn/edges?graph= (http.repository.ts:77)
+    R->>R: getThesisNodes -- GET /htn/thesis-nodes (http.repository.ts:20)
+    R->>R: getCounterthesisNodes -- GET /htn/counterthesis-nodes (http.repository.ts:45)
+    R->>R: getCategoryTree -- GET /htn-categories (http.repository.ts:182)
+    R->>X: each HttpClient GET
+    X->>API: adds X-Connection-String (connection.interceptor.ts:5-25) -- see 2.4
+    API->>DB: EF Core query via per-scope DbContext
+    DB-->>API: rows
+    API-->>R: JSON
+    R-->>St: Thesis / Counterthesis maps + EdgeGraph
+    St->>St: attach nodes to graphs (htn-state.service.ts:114-115)
+    St->>St: normalizeType reference->referencer, drop dimension (:117-129)
+    St->>St: drop empty flow cycles (:131-140)
+    St->>St: populateCrossReferences (graph.utils.ts:94-140)
+    St->>St: refreshGraph (:143-144)
+    St-->>H: emit state, status online (:146-148)
+    St-->>H: on error status offline (:157-159)
+```
+
+- The five requests run in parallel (`forkJoin`); the state is only emitted once all succeed —
+  any failure moves the connection status to `offline` and leaves the previous state in place.
+- `getThesisNodes`/`getCounterthesisNodes` map raw JSON into `Thesis`/`Counterthesis`
+  (`http.repository.ts:25-32,50-57`); the graph reads build adjacency lists
+  (`http.repository.ts:88-93`).
+
+### 2.3 Write path — create and update
+
+**Create** (`createNode`):
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as caller (editor/console)
+    participant H as HtnService
+    participant G as HtnGraphService
+    participant R as HttpHtnRepository
+    participant St as HtnStateService
+    C->>H: createNode(parentId, graph, content) (htn.service.ts:141)
+    H->>H: getDefaultContent + merge (htn.service.ts:145-146)
+    H->>H: new Thesis / Counterthesis (htn.service.ts:148-153)
+    H->>R: POST /htn/nodes (http.repository.ts:117)
+    alt parent present, same graph
+        H->>R: addEdge(parent, new) -- POST /htn/edges (htn.service.ts:159)
+    else parent present, cross graph
+        H->>G: addCrossReference(parent, type, new) (htn-graph.service.ts:239)
+    end
+    H->>H: settled -> refreshAndSettle (htn.service.ts:155-180, :291, :279)
+    H->>St: emitNodeCreated (htn-state.service.ts:70)
+```
+
+**Update** (`updateNodeContent`):
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant C as caller (editor/console)
+    participant H as HtnService
+    participant G as HtnGraphService
+    participant R as HttpHtnRepository
+    C->>H: updateNodeContent(id, graph, content) (htn.service.ts:94)
+    H->>H: ensure a flow entry per parent; drop root when parents exist (:104-129)
+    H->>G: syncEdges(id, graph, old, new) (htn-graph.service.ts:15)
+    G->>R: addEdge / removeEdge from the diff (htn-graph.service.ts:30-124)
+    H->>R: POST /htn/nodes/{id}/content (http.repository.ts:130)
+    H->>H: settled -> refreshAndSettle (htn.service.ts:131-138)
+```
+
+- **Edge direction** depends on graph and field (`htn-graph.service.ts:30-50`): thesis
+  `triggers` → `addEdge(id, target)` and `effects` → `addEdge(effect, id)`; counterthesis
+  `triggers` → `addEdge(trigger, id)` and `effects` ->`addEdge(id, effect)`. Cross-list
+  membership (`countertheses`/`theses`) is mirrored through `addCrossReference`.
+- **Deletes** go through `performComplexRemoval` (mode `recursive`/`subtree`/`cascade`,
+  `htn-graph.service.ts:301-340`) and batch-delete (`http.repository.ts:149`); the backend
+  cascades the corresponding edges (§3.2).
+- `importNodes` (`htn.service.ts:310-345`) runs the same create/update primitives per node in a
+  single `forkJoin`.
+
+### 2.4 Connection resolution + ping / `EnsureCreated`
+
+The client half is the interceptor; the server half is `HttpConnectionProvider`. Ping is the
+bootstrap probe used to create/verify a database.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant CS as ConnectionService
+    participant X as connectionInterceptor
+    participant API as HtnController
+    participant P as HttpConnectionProvider
+    participant GM as Program (per-scope DbContext)
+    participant DB as SQL Server
+    CS->>X: getActiveConnectionString() builds from active config (connection.service.ts:85-109)
+    X->>API: request + X-Connection-String = base64 (connection.interceptor.ts:11-22)
+    API->>P: GetConnectionString() (HttpConnectionProvider.cs:18-42)
+    P->>P: base64 -> UTF-8, else raw, else DefaultConnection
+    API->>GM: AddDbContext resolves string per scope, else LocalDB (Program.cs:28-40)
+    GM->>DB: open connection
+    Note over API,DB: GET /htn/ping also calls EnsureCreated() then CanConnect() (HtnController.cs:55-87)
+    DB-->>API: result
+    API-->>X: JSON
+```
+
+- A header value that is not valid base64 is used verbatim as the raw connection string
+  (`HttpConnectionProvider.cs:33-37`).
+- `ping` is the only path that **creates** schema on a fresh database (`EnsureCreated()`,
+  `HtnController.cs:68`); `debug-connection` echoes the masked string and all headers
+  (`:89-98`) — see §6.
+
+### 2.5 Window spawn (popup) lifecycle
+
+`WindowManagerService.spawn` opens a real browser popup; the popup detects itself and re-adds
+the requested window.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as user
+    participant WM as WindowManagerService
+    participant B as new popup window
+    participant S as StorageService
+    participant A as AppComponent
+    participant W as WindowService
+    U->>WM: spawn(type, name) (window-manager.service.ts:23-33)
+    WM->>B: window.open('/?spawnType=...&spawnName=...')
+    B->>S: detect popup -> sessionStorage (storage.service.ts:16-21)
+    B->>A: constructor detects popup (app.component.ts:36-41)
+    A->>W: after 500 ms, addWindow(type, name) if absent (app.component.ts:46-61)
+    S-->>S: inherit from localStorage except internal keys (storage.service.ts:28-30)
+```
+
+- Popup detection is `window.opener` **or** the `/popup` path **or** a `spawnType` query param
+  (`storage.service.ts:16`); the same prefixes drive `AppComponent.isPopup`
+  (`app.component.ts:36-41`).
+- `EXCLUDED_FROM_INHERITANCE` (`shiny_session_id`, `shiny_window_registry`, `shiny_window_list`,
+  `shiny_dock_config`) is never inherited from localStorage into a popup
+  (`storage.service.ts:8-13`).
+
 ## 3. Backend — `resolution-engine`
 
 ### 3.1 Solution, entry point & configuration
@@ -201,7 +391,8 @@ Because `EnsureCreated()` never alters an existing schema, the repo carries
   (`:20-21`); otherwise it reads header `X-Connection-String`, tries base64-decode → UTF-8 and
   falls back to the raw header text on failure (`:23-39`); finally falls back to
   `DefaultConnection` (`:41`). The DbContext delegate substitutes LocalDB when this is empty
-  (`Program.cs:34-37`). This is what lets the SPA point the API at an arbitrary SQL Server.
+  (`Program.cs:34-37`). This is what lets the SPA point the API at an arbitrary SQL Server
+  (end-to-end exchange traced in §2.4).
 - **Serialization**: global `PropertyNameCaseInsensitive` (`Program.cs:21`); content
   round-trips as a JSON DOM (`JsonElement` on read, re-serialized on write); no discriminators.
 - **Diagnostics / security**: `debug-connection` masks `Password=…` but still returns the
@@ -313,7 +504,8 @@ not fixed (§6).
   `zone.js ~0.15.1`; dev tooling includes **both** Jasmine/Karma and Jest (`package.json:17-48`).
   The Angular project (and build output `dist/purgatory-ui`) is named **`purgatory-ui`**
   (`angular.json:6,20`); `npm start` serves on **`:4250`** (`package.json:8`, `angular.json:75`).
-- `main.ts` → `bootstrapApplication(AppComponent, appConfig)` (zone-based, **not** zoneless).
+- `main.ts` → `bootstrapApplication(AppComponent, appConfig)` (zone-based, **not** zoneless) —
+  the startup order is traced in §2.1.
   `app.config.ts` providers (`app.config.ts:10-16`): `provideZoneChangeDetection({ eventCoalescing: true })`,
   `provideRouter(routes)`, `provideNoopAnimations()`,
   `provideHttpClient(withInterceptors([connectionInterceptor]))`.
@@ -336,7 +528,7 @@ The window system (`features/window-system/**`) is the core UI abstraction:
 - `window.service.ts` — the open-window list (a `signal`, persisted under `shiny_window_list`),
   z-order/activation, `addWindow`/`activateWindow`/`bringToFront`.
 - `window-manager.service.ts` — **real browser popups** (`?spawnType=&spawnName=`), session id
-  `shiny_session_id`, and window inheritance.
+  `shiny_session_id`, and window inheritance (popup spawn lifecycle in §2.5).
 - `window.component.ts` — 8-handle resize + reposition drag + close.
 - `resize/resize.service.ts` — px/percent sizing; `reposition/reposition.component.ts` — a drag
   longer than ~1.2 s offers docking.
@@ -358,7 +550,7 @@ The window system (`features/window-system/**`) is the core UI abstraction:
   (F1).
 - **Connection interceptor**: `core/services/connection.interceptor.ts` injects a base64
   `X-Connection-String` header on every request unless one is already present
-  (`connection.interceptor.ts:5-25`) — the client half of §3.4.
+  (`connection.interceptor.ts:5-25`) — the client half of §3.4 (full exchange in §2.4).
 - **Connection management**: `core/services/connection.service.ts` holds connection configs in a
   signal, persisted under `shiny_connections` / `shiny_active_connection_id`
   (`connection.service.ts:21-22`), and builds the connection string
@@ -485,6 +677,16 @@ subset that contradicts the entry-point docs is corrected in T7.1.
    nothing; the whole app is one shell.
 8. **Two test frameworks coexist** (Jasmine/Karma and Jest) — see `package.json:36-46` and the
    Jest builder in `angular.json:82-89`.
+9. **Flow `condition` defaulting is inconsistent.** `HtnService.updateNodeContent` seeds a
+   missing parent flow entry with `condition: ''` for **both** graphs
+   (`htn.service.ts:109,122`), whereas `HtnGraphService.ensureFlowEntries` and
+   `HtnValidationService.getDefaultContent` default counterthesis entries to `'next'`
+   (`htn-graph.service.ts:275`; `htn-validation.service.ts:73`). A flow entry's initial
+   `condition` therefore depends on which code path created it.
+10. **`createNode` passes `parentGraph`, not the node's own graph, to the edge call.**
+    When `newNodeGraph` differs from `parentGraph`, the same-graph branch still compares against
+    `parentType` but forwards `parentGraph` to `addEdge` (`htn.service.ts:158-168`); the intent
+    is correct, but the argument is easy to misread.
 
 ## 7. Pointers
 

@@ -78,7 +78,7 @@ Remaining work is product, not docs — see `PRODUCTION_CHECKLIST.md`.
 | P6 | PRODUCTION_CHECKLIST — dev-seam registry | 1/1 | done |
 | P7 | Root docs reconciliation (`README.md`, then-`DOCUMENTATION.md`) | 1/1 | done |
 | P8 | Consistency audit + final state | 2/2 | done |
-| P9 | ARCHITECTURE (full) — foundations & schemas | 1/4 | in_progress |
+| P9 | ARCHITECTURE (full) — foundations & schemas | 2/4 | in_progress |
 | P10 | ARCHITECTURE (full) — backend reference | 0/4 | todo |
 | P11 | ARCHITECTURE (full) — frontend core reference | 0/4 | todo |
 | P12 | ARCHITECTURE (full) — frontend feature reference | 0/8 | todo |
@@ -394,7 +394,8 @@ works*, to the depth where a new engineer can navigate, extend, and operate any 
 documentation alone. The output is a single, much deeper `docs/ARCHITECTURE.md` (§1–§7 grown, plus
 new sections), keeping every load-bearing claim cited by `file:line` (decision 7).
 
-**Nothing here is started.** Every ticket below is `[ ] todo`; this is a plan only (decision 8).
+**Part II is in progress (P9).** Tickets are taken one at a time `[ ] todo → [x] done` (§ next
+ticket is T9.3); this section remains the plan of record (decision 8).
 When a ticket is taken, it follows the same one-at-a-time workflow as Part I.
 
 **Scope inventory (what "full coverage" must eventually touch).**
@@ -433,12 +434,18 @@ Notes: **Done 2026-10-10.** Added `ARCHITECTURE.md` §3.5: storage/transport, co
        `DOCUMENTATION.md` (D15) after capturing its content.
 
 ### T9.2  Request/response lifecycle & sequence diagrams
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [x] done
 Blocked by: T9.1
-Files: `docs/ARCHITECTURE.md` (new §2.x "Lifecycle & sequences")
+Files: `docs/ARCHITECTURE.md` (new §2.1–§2.5 "Lifecycle & sequences")
 Verify: each step maps to real call sites (`file:line`)
 Notes:
-- Sequence diagrams for: (a) SPA bootstrap (`main.ts` → `appConfig` → shell); (b) the refresh
+- **Done 2026-10-10.** Added `ARCHITECTURE.md` §2.1–§2.5, each with a Mermaid `sequenceDiagram`
+  plus `file:line` anchors: §2.1 SPA bootstrap & shell; §2.2 refresh pipeline; §2.3 write path
+  (`createNode`, `updateNodeContent`); §2.4 per-request `X-Connection-String` + `ping`/
+  `EnsureCreated`; §2.5 popup spawn lifecycle. Cross-links added from §3.4 and §4.1–§4.3.
+  Recorded two write-path observations as §6 items 9–10 (flow-`condition` default inconsistency;
+  `createNode` forwards `parentGraph` to `addEdge`).
+- Original scope: (a) SPA bootstrap (`main.ts` → `appConfig` → shell); (b) the refresh
   pipeline (`HtnService.refresh` → `HttpHtnRepository` `getThesisNodes`/`getCounterthesisNodes`/
   `get*Graph` → `HtnStateService` → `graph.utils` `computeTopology`/`populateCrossReferences`);
   (c) a write (`createNode`/`updateNodeContent` → `HtnGraphService.syncEdges` → `refreshAndSettle`);
