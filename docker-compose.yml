@@ -4,7 +4,7 @@ services:
     container_name: ere-db
     environment:
       - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=StrongPassword123!
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD:-Password123!}
     ports:
       - "1433:1433"
     networks:
@@ -21,7 +21,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=db;Database=ResolutionEngineDb;User Id=sa;Password=StrongPassword123!;TrustServerCertificate=True
+      - ConnectionStrings__DefaultConnection=Server=db;Database=ResolutionEngineDb;User Id=sa;Password=${MSSQL_SA_PASSWORD:-Password123!};TrustServerCertificate=True
     ports:
       - "5250:8080"
     depends_on:

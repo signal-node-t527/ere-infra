@@ -1,0 +1,679 @@
+# Roadmap — Documentation Buildout
+
+Master plan for producing the `ere-infra` documentation set to the **same depth and rigor
+as `LilithsTest/docs`**. Documentation *is* the product of this workstream: there is **no
+application code change** except correcting the two stale entry-point docs (`README.md`,
+`DOCUMENTATION.md`).
+
+The plan has two parts:
+
+- **Part I — Initial buildout (P0–P8): DONE.** Produced a verified **overview** of the system:
+  `ARCHITECTURE.md` (~400 lines) with `file:line` evidence, plus `PROJECT_STATE.md`,
+  `DECISIONS.md`, `PRODUCTION_CHECKLIST.md`, `CURRENT_TASK.md`, and corrected entry-point docs.
+- **Part II — Full ARCHITECTURE coverage (P9–P14): PLANNED.** Raises `ARCHITECTURE.md` from an
+  overview to an **exhaustive reference** — the node-content schema, sequence diagrams,
+  per-file/per-class, per-endpoint/per-schema, per-service, per-component, and a complete
+  console-command reference — targeting the depth of `LilithsTest/docs/ARCHITECTURE.md` (~830
+  lines). **No Part II ticket is started**; it is a plan only (every ticket is `[ ] todo`).
+
+This is a **forward-looking plan** — it defines what to document next and tracks progress.
+`ARCHITECTURE.md` is the record of reality and is written/updated only when a documentation
+phase closes, never before. `PROJECT_STATE.md` is the running snapshot; `DECISIONS.md` the
+decision log; `PRODUCTION_CHECKLIST.md` the dev-seam registry; `CURRENT_TASK.md` the single
+in-flight ticket.
+
+**Workflow (one ticket at a time):** take the single top `todo` ticket, copy it into
+`docs/CURRENT_TASK.md`, write the documentation, **verify every claim against the code**
+(`file:line` evidence where it matters), mark `done` (with date), and bump the progress
+table. The `Status:` line stays `[ ] todo [ ] in_progress [ ] done` until the ticket is
+actually finished — flipping `[x] done` *is* the mark of completion. Don't pre-check a
+ticket when scaffolding it.
+
+**Kickoff-session note (2026-10-10):** the first session wrote the P1–P4 and P6 deliverables in
+one pass; **T8.1 then audited every load-bearing claim against the code** and moved those tickets
+to `[x] done`. The audit found and fixed three drifts — two against the code (seed counts: 17
+thesis nodes and 17 thesis edges, not 16/18) and one against the file tree (the service worker is
+registered in `src/index.html`, not `pwa.service.ts`); also updated `ARCHITECTURE.md` §6 now that
+T7.1 has closed the entry-point-doc contradictions. Details in the T8.1 ticket. The same session
+also completed **T5.1** (backfilled D7–D14) and **T8.2** (final state), so **all of P0–P8 is done**.
+Remaining work is product, not docs — see `PRODUCTION_CHECKLIST.md`.
+
+## Locked decisions (recorded as D-series in DECISIONS.md)
+
+1. **Docs live in the root `ere-infra` repo** (`docs/`), not in either submodule: the two
+   halves (`resolution-engine`, `shiny-computing-machine`) are independent git submodules
+   (`.gitmodules`), and the root repo is the integration/infra layer.
+2. **`ARCHITECTURE.md` reflects reality, not intent**, backed by `file:line` evidence. Where
+   the shipped code contradicts the existing `README.md`/`DOCUMENTATION.md`, the code wins
+   and the contradiction is recorded (then fixed in P7).
+3. **Document code terms as they are** — do not rename anything as part of documentation.
+   Notably the graph value is `"counterthesis"` with `"antithesis"` kept as a compatibility
+   alias in the API layer.
+4. **No code changes.** The only non-`docs/` edits this workstream makes are the P7
+   corrections to `README.md` and `DOCUMENTATION.md`.
+5. **Quality bar = LilithsTest/docs**: per-endpoint tables, state machines where relevant,
+   "known limits / gaps" sections, and a production checklist whose rows each carry a
+   *production action* and a *verification*.
+6. **Statuses reflect reality.** Do not pre-check tickets; do not claim a section is
+   verified until it has been read against the code.
+7. **One `ARCHITECTURE.md`, deepened in place** (not split into `docs/architecture/*`). This
+   matches the single-file LilithsTest layout and keeps the `AGENTS.md`/`README.md` pointers
+   valid. Part II grows existing sections (`§3.x`, `§4.x`, …) and adds new top-level sections only
+   where §1–§7 cannot absorb the topic (node-content schema, console-command reference, sequence
+   diagrams, configuration/ports matrix).
+8. **Part II remains docs-only and additive.** It touches only `docs/` and preserves D2 (reality
+   over intent), D4 (verbatim terms), and D6 (frontend owns the graph algorithms); no source,
+   config, or image changes.
+
+## Progress
+
+| Phase | Scope | Done | Status |
+|---|---|---|---|
+| P0 | Documentation scaffolding (this doc, AGENTS pointer, DECISIONS seed, CURRENT_TASK) | 1/1 | done |
+| P1 | ARCHITECTURE — infrastructure & topology | 2/2 | done |
+| P2 | ARCHITECTURE — backend (`resolution-engine`, .NET 9) | 4/4 | done |
+| P3 | ARCHITECTURE — frontend (`shiny-computing-machine` / `purgatory-ui`, Angular 20) | 5/5 | done |
+| P4 | PROJECT_STATE — snapshot + session log | 1/1 | done |
+| P5 | DECISIONS — backfill the decision log | 1/1 | done |
+| P6 | PRODUCTION_CHECKLIST — dev-seam registry | 1/1 | done |
+| P7 | Root docs reconciliation (`README.md`, `DOCUMENTATION.md`) | 1/1 | done |
+| P8 | Consistency audit + final state | 2/2 | done |
+| P9 | ARCHITECTURE (full) — foundations & schemas | 0/4 | todo |
+| P10 | ARCHITECTURE (full) — backend reference | 0/4 | todo |
+| P11 | ARCHITECTURE (full) — frontend core reference | 0/4 | todo |
+| P12 | ARCHITECTURE (full) — frontend feature reference | 0/8 | todo |
+| P13 | ARCHITECTURE (full) — infra & operations reference | 0/3 | todo |
+| P14 | ARCHITECTURE (full) — assurance & consistency | 0/4 | todo |
+
+Last updated: 2026-10-10
+
+---
+
+## Phase 0 — Documentation scaffolding
+
+### T0.1  Docs system scaffolding
+Status: [x] done
+Blocked by: —
+Files: `docs/ROADMAP.md` (new, this doc), `docs/DECISIONS.md` (new, seed), `docs/CURRENT_TASK.md`
+       (new), `AGENTS.md` (root, already present — verify its pointers resolve under `docs/`)
+Verify: the five doc files exist; `AGENTS.md` "before starting work" list matches the real files;
+        no `docs/` path referenced anywhere is missing
+Notes: Done 2026-10-10. The AGENTS workflow references `docs/PROJECT_STATE.md`,
+       `docs/ARCHITECTURE.md`, `docs/ROADMAP.md`, `docs/CURRENT_TASK.md`; all now exist (the
+       last two plus `DECISIONS.md` from this ticket; `ARCHITECTURE.md`/`PROJECT_STATE.md`/
+       `PRODUCTION_CHECKLIST.md` as first drafts). The next logical action was T8.1 (audit).
+
+---
+
+## Phase 1 — ARCHITECTURE: infrastructure & topology
+
+### T1.1  §1 Repository layout & §2 System context
+Status: [x] done
+Blocked by: T0.1
+Files: `docs/ARCHITECTURE.md` (§1 Repository Layout, §2 System Context / Data Flow)
+Verify: layout matches `.gitmodules`, `.gitignore`, and the top-level tree; context diagram
+        names the real components and the real ports
+Notes:
+- Monorepo/infra root: `ere-infra/` holds `docker-compose.yml`, `.gitmodules`, `backups/`,
+  and the two submodules. Root is itself a git repo; each submodule has its own `.git/`.
+- Components: browser SPA (`shiny-computing-machine`) → `resolution-engine` REST API
+  (`:5250` dev, `:8080` in-container) → SQL Server 2022 (`:1433`).
+- The backend resolves its DB connection **per request** from the `X-Connection-String`
+  header (base64 or raw), falling back to config `DefaultConnection`, then LocalDB — a
+  distinctive seam (now in `ARCHITECTURE.md` §3.4).
+- `exported-plan.json` at the root is a sample data export (a nested thesis/process plan), not
+  source.
+- **Drafted 2026-10-10** in `docs/ARCHITECTURE.md` §1–§2; verified in T8.1 (2026-10-10).
+
+---
+
+### T1.2  Infrastructure, containers & deployment topology
+Status: [x] done
+Blocked by: T1.1
+Files: `docs/ARCHITECTURE.md` (§5 Infrastructure, containers & deployment topology)
+Verify: service/port/profile/volume facts match `docker-compose.yml`; Dockerfile/nginx claims
+        match the files
+Notes:
+- `ere-network` bridge; `mssql_data` named volume; `MSSQL_SA_PASSWORD` default `Password123!`
+  (a dev-only secret — PRODUCTION_CHECKLIST row B4/infra).
+- Backend Dockerfile: multi-stage `dotnet:9.0`, non-root, ports 8080/8081. Frontend prod:
+  Angular build + nginx (`nginx.conf` SPA fallback + `location = /scripts/index.json`
+  no-store). `Dockerfile.dev` runs node `:4250` with `--poll 2000`.
+- PWA: `public/manifest.json`, `public/sw.js` (cache `resolution-engine-v3`; cache-first
+  static, network-first navigations, network-only `/api/`).
+- **Drafted 2026-10-10** in `docs/ARCHITECTURE.md` §5; verified in T8.1 (2026-10-10).
+
+---
+
+## Phase 2 — ARCHITECTURE: backend (`resolution-engine`, .NET 9)
+
+### T2.1  Solution, entry point & configuration
+Status: [x] done
+Blocked by: T1.1
+Files: `docs/ARCHITECTURE.md` (§3.1 Solution, entry point & configuration)
+Verify: service registration and pipeline order match `Program.cs`; framework/package versions
+        match `ResolutionEngine.csproj`
+Notes:
+- Single project `ResolutionEngine` (`Microsoft.NET.Sdk.Web`), **`net9.0`**,
+  Nullable/ImplicitUsings enabled; packages `Microsoft.AspNetCore.OpenApi 9.0.9`,
+  `Microsoft.EntityFrameworkCore[.SqlServer/.Tools] 9.0.9`.
+- `Program.cs` DI: CORS policy `"AllowAngularDev"` (`SetIsOriginAllowed(_ => true)` +
+  any header/method), `AddControllers` with `PropertyNameCaseInsensitive`, `AddHttpContextAccessor`,
+  scoped `IConnectionProvider → HttpConnectionProvider`, `AddDbContext<ApplicationDbContext>`
+  resolving the connection **per scope** and falling back to LocalDB.
+- Pipeline: dev-only log → `UseCors("AllowAngularDev")` → HTTPS redirect only when **not**
+  Development → `MapControllers`. **No** auth, **no** OpenAPI mapping, **no** static files.
+- OpenAPI package is referenced but never wired — recorded as a gap.
+- **Drafted 2026-10-10** in `docs/ARCHITECTURE.md` §3.1; verified in T8.1 (2026-10-10).
+
+### T2.2  API surface
+Status: [x] done
+Blocked by: T2.1
+Files: `docs/ARCHITECTURE.md` (§3.2 API surface)
+Verify: endpoint table matches `Controllers/HtnController.cs` and
+        `Controllers/HtnCategoriesController.cs`; alias rules match the code
+Notes:
+- `HtnController` base `api/htn`: endpoints incl. `thesis-nodes`, `counterthesis-nodes`
+  (`graph == "counterthesis" || "antithesis"`), `edges?graph=`, `nodes/{id}?graph=`,
+  `nodes`, `nodes/{id}/content`, `DELETE nodes/{id}?graph=`, `nodes/batch-delete`, `edges`,
+  `DELETE edges?from=&to=&graph=`, `migrate-graph`, `ping`, `debug-connection`.
+- `HtnCategoriesController` base `api/htn-categories`: `GET /` and `POST /` (a single JSON
+  blob keyed `Id == "main"`).
+- No endpoint is authenticated; no plan/resource gates.
+- **Drafted 2026-10-10** in `docs/ARCHITECTURE.md` §3.2; verified in T8.1 (2026-10-10).
+
+### T2.3  Domain model & persistence
+Status: [x] done
+Blocked by: T2.1
+Files: `docs/ARCHITECTURE.md` (§3.3 Domain model & persistence)
+Verify: model fields match `Models/*.cs`; DbSets match `Services/ApplicationDbContext.cs`; seed
+        contents/counts match `Data/DbInitializer.cs`
+Notes:
+- `HtnNodeModel`: `Id` (string PK), `Graph`, persisted `ContentJson` exposed as
+  `[NotMapped] object? Content`, persisted `LayerJson` exposed as `[NotMapped] LayerMetrics?`,
+  `LayerMetrics { LongestPath, ShortestPath, Avg }`.
+- `HtnEdgeModel` (int PK, FromId/ToId/Graph); `HtnCategoryDoc` (`Id == "main"`, `JsonData`).
+- No `OnModelCreating`, no relationships/FKs/indexes; **no `Migrations/`** — `EnsureCreated()`
+  only, and `DbInitializer.Initialize` is **not** called from `Program.cs`.
+- **No custom polymorphic `JsonConverter`s exist** — content is untyped JSON (contradiction
+  with `DOCUMENTATION.md`, corrected in T7.1).
+- `Models/TestContext.cs` is an unused scaffold DbContext; `cleanup_weight_column.sql` drops a
+  legacy `Weight` column.
+- **Drafted 2026-10-10** in `docs/ARCHITECTURE.md` §3.3; verified in T8.1 (2026-10-10).
+
+### T2.4  Cross-cutting backend behavior
+Status: [x] done
+Blocked by: T2.1
+Files: `docs/ARCHITECTURE.md` (§3.4 Cross-cutting backend behavior)
+Verify: connection-header handling matches `Services/HttpConnectionProvider.cs`; JSON behavior
+        matches `HtnNode.cs` + `Program.cs`
+Notes:
+- `HttpConnectionProvider.GetConnectionString()`: `X-Connection-String` → base64-decode (raw
+  fallback) → `DefaultConnection` → empty (DbContext substitutes LocalDB).
+- `debug-connection` returns the masked connection string + all request headers (security note
+  → PRODUCTION_CHECKLIST B4).
+- No tests exist in this project — recorded as a gap.
+- **Drafted 2026-10-10** in `docs/ARCHITECTURE.md` §3.4; verified in T8.1 (2026-10-10).
+
+---
+
+## Phase 3 — ARCHITECTURE: frontend (`shiny-computing-machine` / `purgatory-ui`, Angular 20)
+
+### T3.1  Bootstrap, shell & window system
+Status: [x] done
+Blocked by: T1.1
+Files: `docs/ARCHITECTURE.md` (§4.1 Stack, bootstrap & shell; §4.2 Shell & window system)
+Verify: providers match `src/app/app.config.ts`; window behaviours match
+        `features/window-system/**`
+Notes:
+- Angular `^20.2.2`; `package.json` name **`purgatory-ui`**; `ng serve` on port **4250**;
+  `app.routes.ts` is **empty** and `<router-outlet>` is inert.
+- Providers: `provideZoneChangeDetection({ eventCoalescing: true })`,
+  `provideRouter(routes)`, `provideNoopAnimations()`,
+  `provideHttpClient(withInterceptors([connectionInterceptor]))`.
+- `AppComponent` maintains `WINDOW_REGISTRY`, renders windows via `ngComponentOutlet`; window
+  system = service/manager/window/resize/reposition/dockable-panels.
+- **Drafted 2026-10-10** in `docs/ARCHITECTURE.md` §4.1–§4.2; verified in T8.1 (2026-10-10).
+
+### T3.2  Repository & connection/state layer
+Status: [x] done
+Blocked by: T3.1
+Files: `docs/ARCHITECTURE.md` (§4.3 Repository, connection & state layer)
+Verify: endpoints match `core/repository/http.repository.ts`; base URL matches
+        `core/config/app-config.ts`
+Notes:
+- `HtnRepository` port + `HttpHtnRepository` over `${apiUrl}/htn/...` and
+  `${apiUrl}/htn-categories`; `APP_CONFIG.apiUrl` is hardcoded
+  (`http://localhost:5250/api`) — production seam F1.
+- `connectionInterceptor` injects base64 `X-Connection-String` unless already present.
+- `HtnService` facade over `HtnStateService` / `HtnGraphService` / `HtnValidationService`.
+- **Drafted 2026-10-10** in `docs/ARCHITECTURE.md` §4.3; verified in T8.1 (2026-10-10).
+
+### T3.3  Feature inventory
+Status: [x] done
+Blocked by: T3.1
+Files: `docs/ARCHITECTURE.md` (§4.4 Feature inventory)
+Verify: feature rows match the `src/app/features/**` tree; `WINDOW_REGISTRY` matches
+Notes:
+- Features: `graph-lib`, `htn-explorer`, `htn-editor`, `htn-plan`, `htn-categories`,
+  `connection-string-manager`, `window-system`, `console`.
+- `WINDOW_REGISTRY` maps `plan`/`explorer`/`categories`/`editor`/`console`/
+  `connection-manager`/`explorer-menu`.
+- **Drafted 2026-10-10** in `docs/ARCHITECTURE.md` §4.4; verified in T8.1 (2026-10-10).
+
+### T3.4  Console & scripting subsystem
+Status: [x] done
+Blocked by: T3.1
+Files: `docs/ARCHITECTURE.md` (§4.5 Console & scripting subsystem)
+Verify: command registry matches `console.handler.ts` + `handlers/*`; script schema matches
+        `handlers/script.handler.ts` + `docs/console_script_syntax.md`
+Notes:
+- Parser (`console.parser.ts`), handler registry/dispatch (`console.handler.ts`), logger
+  levels, `handler-context`.
+- Handlers: node-crud, graph, navigation, referencer, category, integrity, view,
+  config-utility, bulk-data, script.
+- Script engine (`script.handler.ts`): manifest `public/scripts/index.json` generated by
+  `tools/build-script-index.mjs`. Reference the shipped `docs/console_script_syntax.md`.
+- **Drafted 2026-10-10** in `docs/ARCHITECTURE.md` §4.5; verified in T8.1 (2026-10-10).
+
+### T3.5  Domain graph algorithms, PWA, styling & tests
+Status: [x] done
+Blocked by: T3.1
+Files: `docs/ARCHITECTURE.md` (§4.6 Domain graph algorithms, PWA, styling & tests)
+Verify: algorithm names match `core/domain/graph.utils.ts`; spec count matches the tree
+Notes:
+- Graph logic lives here: `computeTopology`/`rebuildAdjacency`/`populateCrossReferences`/
+  `refreshGraph` (`core/domain/graph.utils.ts`); `Thesis`/`Counterthesis` in
+  `core/domain/models.ts`.
+- PWA: `public/manifest.json`, `public/sw.js`; `core/services/pwa.service.ts`.
+- Tests: **21 Jest/Karma specs**; framework contradiction (docs say Angular 18; reality 20)
+  recorded for T7.1.
+- **Drafted 2026-10-10** in `docs/ARCHITECTURE.md` §4.6; verified in T8.1 (2026-10-10).
+
+---
+
+## Phase 4 — PROJECT_STATE
+
+### T4.1  Snapshot + first session entry
+Status: [x] done
+Blocked by: P1–P3
+Files: `docs/PROJECT_STATE.md`
+Verify: snapshot statements agree with ARCHITECTURE; dated entry matches this session
+Notes: **Drafted 2026-10-10.** Captures the "stable build vs. documented reality" status: the app
+       runs via compose; it has **no backend tests, no migrations, no auth**; the frontend has 21
+       specs; the entry-point docs were stale. Verified in T8.1 (2026-10-10).
+
+---
+
+## Phase 5 — DECISIONS
+
+### T5.1  Backfill the decision log
+Status: [x] done
+Blocked by: T1.1
+Files: `docs/DECISIONS.md` (seed grown into a real log)
+Verify: each decision cites its evidence (file/line or observed behavior)
+Notes: **Done 2026-10-10.** Beyond the D1–D6 seed, added D7–D14, each with `file:line` evidence
+       and cross-references to the relevant PRODUCTION_CHECKLIST rows: per-request
+       `X-Connection-String` resolution (D7/B1); untyped-JSON content with **no** polymorphic
+       converters (D8); `EnsureCreated()` + never-wired `DbInitializer` instead of migrations
+       (D9/B2); `LayerMetrics` persisted but computed client-side (D10, with D6); hardcoded
+       frontend API URL (D11/F1); empty router / dead outlet (D12); open CORS + no auth
+       (D13/B4); Jasmine **and** Jest coexistence (D14).
+
+---
+
+## Phase 6 — PRODUCTION_CHECKLIST
+
+### T6.1  Dev-seam registry
+Status: [x] done
+Blocked by: T2.4, T3.2
+Files: `docs/PRODUCTION_CHECKLIST.md`
+Verify: every known dev-only seam has a row with a production action + verification
+Notes: **Drafted 2026-10-10.** Backend B1–B6 (connection seam, `EnsureCreated`/unwired seeding,
+       LocalDB fallback, `debug-connection` + open CORS + no auth, unwired OpenAPI,
+       `ASPNETCORE_ENVIRONMENT=Development`); frontend F1–F3 (hardcoded API URL, SW cache
+       version, committed build logs); infra (default `MSSQL_SA_PASSWORD`, `backups/` bind,
+       frontend port mapping, unpinned `:latest`, `exported-plan.json`). Verified in T8.1 (2026-10-10).
+
+---
+
+## Phase 7 — Root docs reconciliation
+
+### T7.1  Correct `README.md` + `DOCUMENTATION.md`
+Status: [x] done
+Blocked by: P1–P6
+Files: `README.md`, `DOCUMENTATION.md` (root `ere-infra/`)
+Verify: frameworks, ports, endpoints, naming, and graph-logic location all match the code;
+        the "custom polymorphic converters" claim is gone; the endpoint lists match T2.2
+Notes: **Done 2026-10-10.** .NET 8 → **9**; Angular 18 → **20**; `purgatory-ui` package name
+       noted; "custom polymorphic converters" claim removed (content is untyped JSON);
+       `counterthesis` (with `antithesis` alias) documented; graph logic clarified as
+       frontend; frontend dev port corrected to **4250**; both docs now point at
+       `docs/ARCHITECTURE.md`.
+
+---
+
+## Phase 8 — Consistency audit
+
+### T8.1  Full documentation-vs-code audit
+Status: [x] done
+Blocked by: P1–P7
+Files: all `docs/*`
+Verify: every `file:line` citation resolves; every endpoint/model/port appears once and
+        matches code; no doc claims intent over reality
+Notes: **Done 2026-10-10.** Re-read `ARCHITECTURE.md`, `PROJECT_STATE.md`, and
+       `PRODUCTION_CHECKLIST.md` against the tree and fixed the drift found:
+       - `ARCHITECTURE.md` §3.3 seed counts were wrong → corrected to **17 thesis nodes** and
+         **17 thesis edges** (8 counterthesis nodes/edges were already right).
+       - `ARCHITECTURE.md` §4.6 said `pwa.service.ts` registers the service worker → the SW is
+         registered inline in `src/index.html:24-30`; `PwaService` only handles the install prompt.
+       - `ARCHITECTURE.md` §6 item 1 described the entry-point docs as still stale → reworded now
+         that T7.1 has corrected them.
+       All backend/frontend/infra `file:line` citations in `ARCHITECTURE.md` were spot-checked and
+       resolve; `PRODUCTION_CHECKLIST.md` rows (B1–B6, F1–F3, infra artifacts) all verified.
+       Flipped P1–P4 and P6 tickets to `done`. Outstanding: `PROJECT_STATE.md` still carries a
+       pre-T7.1 contradictions table and "unfinished" list → resolved in T8.2.
+
+### T8.2  Final state
+Status: [x] done
+Blocked by: T8.1
+Files: `docs/PROJECT_STATE.md`, `docs/CURRENT_TASK.md`, `docs/ROADMAP.md`
+Verify: `PROJECT_STATE.md` is the final snapshot; `CURRENT_TASK.md` names the next action;
+        the progress table matches the ticket statuses
+Notes: **Done 2026-10-10.** `PROJECT_STATE.md` rewritten to the final snapshot (with the P7
+       corrections table instead of the obsolete "contradictions to fix" one); `CURRENT_TASK.md`
+       reset to "no open ticket — buildout complete"; the progress table below matches the ticket
+       statuses. What remains is product work in `PRODUCTION_CHECKLIST.md`, not docs work.
+
+---
+
+# Part II — Full ARCHITECTURE coverage (P9–P14)
+
+**Purpose.** Part I documented *what the system is*; Part II documents *how every part of it
+works*, to the depth where a new engineer can navigate, extend, and operate any module from the
+documentation alone. The output is a single, much deeper `docs/ARCHITECTURE.md` (§1–§7 grown, plus
+new sections), keeping every load-bearing claim cited by `file:line` (decision 7).
+
+**Nothing here is started.** Every ticket below is `[ ] todo`; this is a plan only (decision 8).
+When a ticket is taken, it follows the same one-at-a-time workflow as Part I.
+
+**Scope inventory (what "full coverage" must eventually touch).**
+
+- **Backend — 11 C# files:** `Program.cs`; `Services/{IConnectionProvider, HttpConnectionProvider,
+  ApplicationDbContext}.cs`; `Controllers/{HtnController, HtnCategoriesController}.cs`;
+  `Models/{HtnNode, HtnEdge, HtnCategoryDoc, TestContext}.cs`; `Data/DbInitializer.cs`. Plus config
+  `appsettings*.json`, `Properties/launchSettings.json`, and artifacts `cleanup_weight_column.sql`,
+  `ResolutionEngine.http`, `build_log.txt`/`build_output.txt`.
+- **Frontend — 86 non-spec `.ts` files** across `core/{config,domain,repository,services}`;
+  `features/{window-system, htn-plan, htn-explorer, htn-editor, htn-categories, graph-lib, console,
+  connection-string-manager}`; `shared/{suggestion-input, utils}`. **11 console handlers** exposing
+  **~40 commands**. Plus PWA (`public/{manifest.json, sw.js}`), `nginx.conf`,
+  `tools/build-script-index.mjs`, Dockerfiles, tsconfigs, karma/jest.
+- **Infra:** `docker-compose.yml` (1 network `ere-network`, 4 services, 2 profiles, 1 volume).
+- **Depth bar:** `LilithsTest/docs/ARCHITECTURE.md` (~829 lines) vs the current ~400.
+
+**Out of scope for Part II:** application code, tests, and any behaviour change (D3, D8). Findings
+that look like bugs become `PRODUCTION_CHECKLIST.md` rows or §6 notes — never source edits (D2).
+
+## Phase 9 — Full ARCHITECTURE: foundations & schemas
+
+### T9.1  Node-content JSON schema (`content`) reference
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: —
+Files: `docs/ARCHITECTURE.md` (new §3.5 "Node content schema")
+Verify: every field verified against `Data/DbInitializer.cs` (seed content),
+        `src/app/core/domain/types.ts` (`NodeContentRoot*`), `core/domain/constants.ts`
+        (`REQUIRED_NON_FALSY_KEYS`, `GLOBAL_STANDARD_KEYS`), and
+        `features/htn-editor/htn-content.service.ts`
+Notes:
+- Document the exact JSON shape stored in `HtnNodeModel.ContentJson` for **thesis** and
+  **counterthesis**: `label`, `logicalConnector`, `description`, `flow` (map keyed by parent/root
+  holding `priority`/`condition`/`completed`/`completedCondition`/`cycles`/`analyzes`),
+  `flow`+`triggers`/`effects`, `countertheses`/`theses`, `refId`/`referencers`, `type`, `state`,
+  `executionOrder`, `informal`, `justification`.
+- Give each field: type, required/optional, default, and the condition that requires it
+  (from the validation service). Add one fully-worked example per graph.
+
+### T9.2  Request/response lifecycle & sequence diagrams
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T9.1
+Files: `docs/ARCHITECTURE.md` (new §2.x "Lifecycle & sequences")
+Verify: each step maps to real call sites (`file:line`)
+Notes:
+- Sequence diagrams for: (a) SPA bootstrap (`main.ts` → `appConfig` → shell); (b) the refresh
+  pipeline (`HtnService.refresh` → `HttpHtnRepository` `getThesisNodes`/`getCounterthesisNodes`/
+  `get*Graph` → `HtnStateService` → `graph.utils` `computeTopology`/`populateCrossReferences`);
+  (c) a write (`createNode`/`updateNodeContent` → `HtnGraphService.syncEdges` → `refreshAndSettle`);
+  (d) the per-request `X-Connection-String` flow (interceptor → `HttpConnectionProvider` →
+  `ApplicationDbContext`). Include the `ping`/`EnsureCreated` path and popup spawn.
+
+### T9.3  Configuration, environment & ports matrix
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: —
+Files: `docs/ARCHITECTURE.md` (new §5.2 "Configuration & ports")
+Verify: matches `appsettings*.json`, `Properties/launchSettings.json`, `docker-compose.yml`,
+        `angular.json`, `package.json`
+Notes: one table: setting → dev value → container value → prod value → source file. Cover
+       `DefaultConnection`, `ASPNETCORE_ENVIRONMENT`, `ASPNETCORE_URLS`, `MSSQL_SA_PASSWORD`, the
+       CORS policy, every port (5250/7150/8080/4200/4250/1433), profile names, and volumes.
+
+### T9.4  Glossary & domain vocabulary → code map
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: —
+Files: `docs/ARCHITECTURE.md` (new §2.x "Vocabulary")
+Verify: each term maps to a real type/value/route/file in code
+Notes: table of terms (ERE, HTN, thesis, counterthesis/antithesis, graph, node, edge, layer/
+       `LayerMetrics`, flow, trigger, effect, referencer, category, plan, window, dock) → where it
+       lives (type, DB column, route, file). Anchors the rest of the document.
+
+## Phase 10 — Full ARCHITECTURE: backend reference
+
+### T10.1  Per-file / per-class backend reference
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: —
+Files: `docs/ARCHITECTURE.md` (§3 grown)
+Verify: one subsection per file; every public member listed; citations resolve
+Notes: for each of the 11 `.cs` files — purpose, key members (with signatures), `file:line`. Give
+       `IConnectionProvider` and the unused `TestContext` their own entries; list the config and
+       artifact files (`appsettings*`, `launchSettings.json`, `ResolutionEngine.http`, SQL, logs).
+
+### T10.2  Endpoint reference — request/response schemas & status codes
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T10.1
+Files: `docs/ARCHITECTURE.md` (§3.2 grown)
+Verify: each body/response shape matches the controller code + model serialization
+Notes: turn the endpoint table into per-endpoint subsections: path/query params, request-body JSON
+       (referencing T9.1 for `content`), response JSON, and every status code
+       (200/204/400/404/409/500) with the exact message strings from the code.
+
+### T10.3  Persistence & schema reference (+ full seed dataset)
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T10.1
+Files: `docs/ARCHITECTURE.md` (§3.3 grown)
+Verify: EF column/table facts match the model annotations; seed listings match `DbInitializer.cs`
+Notes: document `HtnNodes`/`HtnEdges`/`HtnCategoryDoc` (columns/types per EF conventions +
+       annotations, PKs, no FKs/indexes, controller-side cascade). Enumerate the **complete seed
+       dataset** — 17 thesis + 8 counterthesis nodes and 17 + 8 edges — as id/label/edge tables.
+
+### T10.4  Cross-cutting backend behaviors
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T10.1
+Files: `docs/ARCHITECTURE.md` (§3.4 grown)
+Verify: matches `HttpConnectionProvider`, `Program.cs`, and the controller try/catch blocks
+Notes: the full per-request connection **algorithm** (pseudocode) and fallback matrix
+       (header/config/LocalDB); JSON round-trip rules for `ContentJson`/`LayerJson` and
+       case-insensitivity; per-endpoint exception→HTTP mapping; diagnostics (`debug-connection`,
+       `ping`) behavior.
+
+## Phase 11 — Full ARCHITECTURE: frontend core reference
+
+### T11.1  Domain layer reference
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: —
+Files: `docs/ARCHITECTURE.md` (new §4.x "Core domain")
+Verify: matches `core/domain/{types, models, constants, htn}.ts`
+Notes: every exported type/interface/constant with its meaning; the `Thesis`/`Counterthesis`
+       constructors + normalization/defaults; `NODE_TYPES`/`STATE_OPTIONS`/
+       `EXECUTION_ORDER_OPTIONS`; the `constants.ts` validation key sets; the `htn.ts` barrel.
+
+### T11.2  Graph algorithms deep-dive
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T11.1
+Files: `docs/ARCHITECTURE.md` (§4.6 grown)
+Verify: algorithm behavior matches `core/domain/graph.utils.ts`
+Notes: step-by-step for `rebuildAdjacency`; `computeTopology` (layering + trigger/effect synthesis
+       + the cycle guard); `populateCrossReferences` (both directions + referencer pass);
+       `addEdge`/`removeEdge`; `refreshGraph`; `navigationRequest$`. Include a worked example over
+       the seed graph.
+
+### T11.3  Services reference
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T11.1
+Files: `docs/ARCHITECTURE.md` (§4.3 grown)
+Verify: matches `core/services/*.ts`
+Notes: `HtnService` (facade surface); `HtnStateService` (state shape, BehaviorSubject + signals);
+       `HtnGraphService` (`syncEdges`, `addCrossReference`, `performComplexRemoval`,
+       `ensureFlowEntries`); `HtnValidationService` (rules + messages); `ConnectionService`;
+       `StorageService` (session-vs-local selection); `PwaService`; `connectionInterceptor`.
+
+### T11.4  Repository layer reference
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T11.1
+Files: `docs/ARCHITECTURE.md` (§4.3 grown)
+Verify: each method maps to a backend endpoint and a domain class
+Notes: the `HtnRepository` port and `HttpHtnRepository` — method → `${apiUrl}/…` route →
+       JSON→domain mapping, plus each method's error-swallowing/optimistic behavior.
+
+## Phase 12 — Full ARCHITECTURE: frontend feature reference
+
+### T12.1  Window system reference
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T11.1
+Files: `docs/ARCHITECTURE.md` (§4.2 grown)
+Verify: matches `features/window-system/**`
+Notes: `WindowService` (list/z-order, `shiny_window_list`), `WindowManagerService` (popups,
+       `shiny_session_id`, inheritance), `WindowComponent` (8-handle resize/drag/close),
+       `ResizeService`/`ResizeComponent`, `RepositionComponent` (dock offer), and dockable-panels
+       service/component + `dock-resize`. Document the persistence/inheritance rules.
+
+### T12.2  htn-plan reference
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T11.1
+Files: `docs/ARCHITECTURE.md` (§4.4 grown)
+Verify: matches `features/htn-plan/**`
+Notes: `plan-state.service.ts`, `plan.types.ts` (`PlanStep`/`PendingAnalysis`), `plan-utils.ts`,
+       `wire-utils.ts` (bezier), `plan.constants.ts`, `plan-node-card`.
+
+### T12.3  htn-explorer reference
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T11.1
+Files: `docs/ARCHITECTURE.md` (§4.4 grown)
+Verify: matches `features/htn-explorer/**`
+Notes: `tree-utils.ts` (`computeMinDepths`/`buildTree`), `io-utils.ts` (import/export format), and
+       `htn-metadata-menu`.
+
+### T12.4  htn-editor & htn-categories reference
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T11.1
+Files: `docs/ARCHITECTURE.md` (§4.4 grown)
+Verify: matches `features/htn-editor/**`, `features/htn-categories/**`
+Notes: `htn-content.service.ts` (sanitize + property CRUD) and the editor; categories CRUD and the
+       `CategoryList` tree model.
+
+### T12.5  graph-lib reference
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T11.1
+Files: `docs/ARCHITECTURE.md` (§4.4 grown)
+Verify: matches `features/graph-lib/**`
+Notes: the `@swimlane/ngx-graph` wrapper (`graph.ts`, `config.ts`) and the single-node prototype
+       patch.
+
+### T12.6  connection-string-manager reference
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T11.3
+Files: `docs/ARCHITECTURE.md` (§4.4 grown)
+Verify: matches `features/connection-string-manager/**` and `ConnectionService`
+Notes: the CRUD UI, the "test connection" call, and the exact connection-string builder output.
+
+### T12.7  Console command reference (per-command table)
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T11.3
+Files: `docs/ARCHITECTURE.md` (§4.5 grown)
+Verify: the command list matches the `Map` keys registered by all 11 handlers; grammar matches
+        `console.parser.ts`
+Notes: document the parser grammar, dispatch/fallback, logger levels, and the `handler-context`
+       contract; then a table of **every command** (~40) with usage string, args/flags, and effect —
+       sourced from `handlers/{node-crud, graph, navigation, referencer, category, integrity, view,
+       config-utility, bulk-data, script}.handler.ts`. Reference, don't duplicate,
+       `console_script_syntax.md`.
+
+### T12.8  Shared components & styling reference
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T11.1
+Files: `docs/ARCHITECTURE.md` (§4.6 grown)
+Verify: matches `shared/**` and `src/styles.scss`
+Notes: `shared/suggestion-input`, `shared/utils/units-conversion`, global styling/theming, and the
+       window-chrome conventions.
+
+## Phase 13 — Full ARCHITECTURE: infra & operations reference
+
+### T13.1  Container / image reference
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: —
+Files: `docs/ARCHITECTURE.md` (§5 grown)
+Verify: matches the Dockerfiles + `nginx.conf`
+Notes: each build stage of `resolution-engine/Dockerfile` and `shiny-computing-machine/Dockerfile`
+       (+ `Dockerfile.dev`), the nginx SPA/caching rules, `EXPOSE`/non-root/entrypoints, and the
+       `(localdb)`-in-container warning.
+
+### T13.2  Compose topology & container diagram
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T13.1
+Files: `docs/ARCHITECTURE.md` (§5 grown)
+Verify: matches `docker-compose.yml`
+Notes: services, profiles (`dev`/`prod`), the `ere-network` bridge, `mssql_data` + `./backups`, env
+       wiring, `depends_on` order, and a container-level diagram.
+
+### T13.3  Build tooling & PWA reference
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T12.7
+Files: `docs/ARCHITECTURE.md` (§4.6 grown)
+Verify: matches `tools/build-script-index.mjs`, `package.json` scripts, tsconfigs, karma/jest,
+        `public/{manifest.json, sw.js}`
+Notes: the script-index generation (`npm run scripts:index`); the test setup (Karma/Jasmine + Jest
+       coexistence, tsconfigs); `.eslintrc`; the PWA lifecycle (manifest + service-worker caching
+       strategies + inline registration). Reference `pwa_testing_guide.md`.
+
+## Phase 14 — Full ARCHITECTURE: assurance & consistency
+
+### T14.1  Gaps, assumptions & unknowns register
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: P9–P13
+Files: `docs/ARCHITECTURE.md` (§6 grown)
+Verify: each item is a real observation, not speculation
+Notes: fold the deep-dive findings into §6; mark anything not verifiable from code as an explicit
+       assumption/unknown; route production-relevant items to `PRODUCTION_CHECKLIST.md`.
+
+### T14.2  Full ARCHITECTURE-vs-code audit
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T14.1
+Files: all `docs/*`
+Verify: every `file:line` citation resolves; every inventory file appears; no intent-over-reality
+Notes: re-run the T8.1 method across the expanded document (per-file, per-endpoint, per-command);
+       fix drift and citations.
+
+### T14.3  Entry-point doc symmetry
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T14.2
+Files: `README.md`, `DOCUMENTATION.md`
+Verify: both agree with the expanded `ARCHITECTURE.md`; pointers correct
+Notes: refresh the entry-point docs' summaries/pointers to the deeper sections (docs-only edit,
+       consistent with D3/P7).
+
+### T14.4  Final state refresh
+Status: [ ] todo  [ ] in_progress  [ ] done
+Blocked by: T14.3
+Files: `docs/PROJECT_STATE.md`, `docs/CURRENT_TASK.md`, `docs/ROADMAP.md`
+Verify: `PROJECT_STATE.md` is the final snapshot; `CURRENT_TASK.md` names the next action; the
+        progress table matches statuses
+Notes: close out Part II the same way T8.2 closed Part I.

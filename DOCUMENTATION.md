@@ -23,47 +23,57 @@ The system follows a classic client-server architecture:
 ## Backend: Resolution Engine
 
 ### Technologies
--   **Framework**: .NET 8.0 / ASP.NET Core
--   **ORM**: Entity Framework Core
+-   **Framework**: .NET 9.0 / ASP.NET Core
+-   **ORM**: Entity Framework Core (SQL Server provider)
 -   **Database**: SQL Server
--   **Serialization**: System.Text.Json (with custom polymorphic converters)
+-   **Serialization**: System.Text.Json — node content is stored as **untyped JSON** (no custom
+    polymorphic converters). See [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) §3.3.
 
 ### Core Models
 
 #### HTN Nodes (`HtnNodeModel`)
-Nodes are the primary entities in the system. They belong to a specific graph (e.g., "thesis" or "antithesis") and contain polymorphic JSON content.
+Nodes are the primary entities in the system. They belong to a specific graph (`"thesis"` or
+`"counterthesis"`) and contain **untyped JSON content** (stored in a `ContentJson` string column;
+`"antithesis"` is kept as an API-level compatibility alias for `"counterthesis"`).
 -   **Thesis Nodes**: Represent structures, regularities, or static elements.
--   **Antithesis Nodes**: Represent processes, conditions, data flows, or dynamic elements.
+-   **Counterthesis Nodes**: Represent processes, conditions, data flows, or dynamic elements.
 
 #### Node Content
--   **Common Fields**: `Label`, `LogicalConnector` (AND/OR), `Triggers`, `Effects`, `RefId`, `Referencers`.
--   **Thesis-Specific**: `Flow` (priority-based), `Antitheses` (cross-references), `Type` (root, structure, regularity, etc.).
--   **Antithesis-Specific**: `Flow` (completed status, priority, cycles), `Theses` (cross-references), `State` (W/B/A/S), `ExecutionOrder`, `Type` (initial, final, condition, process, etc.).
+-   **Common Fields**: `label`, `logicalConnector` (AND/OR), `triggers`, `effects`, `refId`, `referencers`.
+-   **Thesis-Specific**: `flow` (priority-based), `countertheses` (cross-references), `type`.
+-   **Counterthesis-Specific**: `flow` (priority, completed status), `theses` (cross-references), `state` (W/B/A/S), `executionOrder` (unit/set), `type`.
 
 #### HTN Edges (`HtnEdgeModel`)
 Define the relationships between nodes within a specific graph.
 
 ### API Endpoints
 
--   `GET /api/Htn/thesis-nodes`: Retrieve all nodes in the "thesis" graph.
--   `GET /api/Htn/antithesis-nodes`: Retrieve all nodes in the "antithesis" graph.
--   `GET /api/Htn/edges?graph={name}`: Retrieve all edges for a specific graph.
--   `GET /api/Htn/nodes/{id}?graph={name}`: Retrieve a specific node.
--   `POST /api/Htn/nodes`: Create a new node.
--   `POST /api/Htn/nodes/{id}/content`: Update the JSON content of a node.
--   `DELETE /api/Htn/nodes/{id}`: Delete a node (cascades to edges).
--   `POST /api/Htn/edges`: Create a new edge.
--   `DELETE /api/Htn/edges`: Remove an edge.
+-   `GET /api/htn/thesis-nodes`: Retrieve all nodes in the "thesis" graph.
+-   `GET /api/htn/counterthesis-nodes`: Retrieve all nodes in the "counterthesis" graph (also matches legacy `"antithesis"` rows).
+-   `GET /api/htn/edges?graph={name}`: Retrieve all edges for a specific graph.
+-   `GET /api/htn/nodes/{id}?graph={name}`: Retrieve a specific node.
+-   `POST /api/htn/nodes`: Create a new node.
+-   `POST /api/htn/nodes/{id}/content`: Update the JSON content of a node.
+-   `DELETE /api/htn/nodes/{id}?graph={name}`: Delete a node (cascades to edges).
+-   `POST /api/htn/nodes/batch-delete?graph={name}`: Delete several nodes (cascades to edges).
+-   `POST /api/htn/edges`: Create a new edge.
+-   `DELETE /api/htn/edges?from={id}&to={id}&graph={name}`: Remove an edge.
+-   `GET /api/htn-categories`: Retrieve the single category document (`Id == "main"`).
+-   `POST /api/htn-categories`: Upsert the category document.
+
+The endpoints are unauthenticated. The full, authoritative surface (including `ping`,
+`debug-connection`, and `migrate-graph`) is tabulated in
+[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) §3.2.
 
 ---
 
 ## Frontend: Shiny Computing Machine (SCM)
 
 ### Technologies
--   **Framework**: Angular 18+
+-   **Framework**: Angular 20 (package name `purgatory-ui`)
 -   **Styling**: SCSS / Vanilla CSS
 -   **State Management**: RxJS / Angular Signals
--   **Visuals**: Custom graph rendering logic.
+-   **Visuals**: Custom graph rendering logic (`@swimlane/ngx-graph`).
 
 ### Key Features
 
@@ -80,8 +90,11 @@ A sophisticated form-based editor for modifying node properties, content, and di
 An integrated command-line interface for executing system commands, searching nodes, and performing batch operations.
 
 #### 5. Graph Logic
--   **Topological Analysis**: Automatically calculates layers (longest/shortest path) and detects cycles.
--   **Bidirectional Cross-References**: Automatically populates references between Thesis and Antithesis nodes based on their content.
+This logic is implemented **in the frontend** (`src/app/core/domain/graph.utils.ts`), not on the
+server — the backend only stores nodes/edges and a persisted `layer` value.
+-   **Topological Analysis**: Calculates layers (longest/shortest path) over the graph.
+-   **Bidirectional Cross-References**: Automatically populates references between Thesis and
+    Counterthesis nodes based on their content.
 
 ---
 
@@ -89,7 +102,7 @@ An integrated command-line interface for executing system commands, searching no
 
 ### Prerequisites
 -   Docker and Docker Compose
--   .NET 8.0 SDK (for local backend development)
+-   .NET 9.0 SDK (for local backend development)
 -   Node.js & Angular CLI (for local frontend development)
 
 ### Running with Docker
@@ -117,8 +130,16 @@ docker-compose --profile prod up frontend-prod
 2.  **Frontend**:
     -   Navigate to `shiny-computing-machine/`.
     -   Run `npm install`.
-    -   Run `ng serve`.
-    -   Access via `http://localhost:4200`.
+    -   Run `npm start` (or `ng serve`).
+    -   Access via `http://localhost:4250`.
+
+---
+
+## Further Documentation
+
+The authoritative, evidence-backed description of the system lives in
+[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md). Project state, roadmap, decisions, and the
+production checklist are under [docs/](./docs).
 
 ---
 

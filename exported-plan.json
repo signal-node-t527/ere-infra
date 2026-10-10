@@ -1,0 +1,847 @@
+[
+  {
+    "label": "Master",
+    "type": "process"
+  },
+  {
+    "label": "Find Condition && Execute Referencer",
+    "type": "referencer",
+    "condition": "Perding Task",
+    "children": [
+      {
+        "label": "Find Condition && Execute Referencer",
+        "type": "process",
+        "description": "I don't really know why I don't know what to do at this point. what should I do????\nI'll try.",
+        "children": [
+          {
+            "label": "Emergent P1",
+            "type": "process",
+            "condition": "emergencies",
+            "list": []
+          },
+          {
+            "label": "Short Term Infinite Loop",
+            "type": "referencer",
+            "condition": "short term loops",
+            "children": [
+              {
+                "label": "Short Term Infinite Loop",
+                "type": "process",
+                "children": [
+                  {
+                    "label": "Breakfast",
+                    "type": "process",
+                    "condition": "first half hour",
+                    "description": "avoid sugar and acid"
+                  },
+                  {
+                    "label": "Shower",
+                    "type": "process",
+                    "condition": "seconf half hour"
+                  },
+                  {
+                    "label": "Meditate Morning ",
+                    "type": "process",
+                    "condition": "second hour",
+                    "description": "verification systems && Drink",
+                    "children": [
+                      {
+                        "label": "Implicit Resolution",
+                        "type": "process",
+                        "condition": "meditate morning",
+                        "unclassified": [
+                          "T: tomar dos fotos que cumplan condiciones",
+                          "T: CLS environment",
+                          "T: ORG Clothes",
+                          "C: protocolo identificacion de problemas activa el protocolo identificacion de protocolos y el protocolo identificacion de protocolos activa el protocolo index y el protocolo index activa el protocolo que se va asociar a a la resolucion del problema identificado, que luego activa el ultimo protocolo que es el de recompensa, segun la cantidad complejidad resuelta."
+                        ],
+                        "children": [
+                          {
+                            "label": "Problem Visualization & Identification",
+                            "type": "process"
+                          },
+                          {
+                            "label": "High Frequency Problem Solving Visualization",
+                            "type": "process"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Check mind state",
+                        "type": "process",
+                        "children": [
+                          {
+                            "label": "Working Memory Mgmt.",
+                            "type": "process",
+                            "condition": "sanitizing the focus is needed",
+                            "description": "Mantente estoico, si no puedes cambiarlo no te lamentas, si puedes cambiarlo tampoco te lamentas e intentas dar lo mejor. Enfócate en tu parte, porque esto es lo que te tocó, no mires lo que hacen los demás porque perdés el enfoque, relaciona todo a tu parte y luego verás tu parte en todo. \"Todo lo que te viniere a la mano para hacer, hazlo según tus fuerzas; porque en el Seol, adonde vas, no hay obra, ni trabajo, ni ciencia, ni sabiduría.”"
+                          },
+                          {
+                            "label": "Impulses Rewiring",
+                            "type": "process",
+                            "condition": "needed to find emotions in meaning",
+                            "description": "Hacer el deber es incompatible con los sentimientos, puesto que el universo es tan frío, que hasta la materia esta esculpida en el vacío, este entorno es completamente incompatible con una conciencia sensible, aunque siempre hay que evaluar la posibilidad de la ingeniería de sentimientos, puesto que de las conexiones neuronales correctamente reforzadas viene la agudeza mental, pero por el contrario, darle mucha importancia a las conexiones incorrectamente reforzadas traerá consigo miseria y mas irracionalidad aun."
+                          },
+                          {
+                            "label": "Mind Flow Control",
+                            "type": "process",
+                            "condition": "working hours cognitive load control",
+                            "description": "erradicar el consumo de informacion no dirigida durante las horas operativas"
+                          },
+                          {
+                            "label": "Compounding Protection",
+                            "type": "process",
+                            "condition": "thoughts, distractions appearence",
+                            "description": "Cualquier cosa que distraiga se escribe para ser evaluada al final del día, mientras se sigue en la tarea pre-programada."
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Check hardware helpers",
+                        "type": "process",
+                        "children": [
+                          {
+                            "label": "Check Water",
+                            "type": "process",
+                            "condition": "!water",
+                            "completedCondition": "water",
+                            "description": "Mantener Hidratación a mano siempre"
+                          },
+                          {
+                            "label": "Check Suplementos",
+                            "type": "process",
+                            "condition": "lethargy",
+                            "completedCondition": "energy",
+                            "description": "mantener alimentos de suplemento cognitivo a mano, como café y frutos secos. l-teanina, l-tirosina, creatina"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Launch",
+                    "type": "process",
+                    "condition": "midday",
+                    "descripcion": "avoid sugar and acid"
+                  },
+                  {
+                    "label": "Physical",
+                    "type": "process",
+                    "condition": "hour 20",
+                    "Routine": "Push, Pull, Complements and rest (Walk). Keep track in analysis flow of execution order.",
+                    "Pull": "2 sets. 10 pronas 10 comando 10 arqueras 5 supinas. Descanso: 5 minutos.",
+                    "Push": "2 sets. 10 comunes, 10 espartanas 10 Diamante 10 Adelantadas."
+                  },
+                  {
+                    "label": "Write",
+                    "type": "process",
+                    "condition": "hour 23",
+                    "description": "DOCUMENTATION + FIX IMPLICIT PATTERNS + ENVISION + SCREENS WITH LOW BRIGHTNESS + MEDICI"
+                  },
+                  {
+                    "label": "Meditate Night",
+                    "type": "process",
+                    "condition": "hour 24",
+                    "description": "No Screens allowed",
+                    "children": [
+                      {
+                        "label": "Implicit Resolution",
+                        "type": "process",
+                        "condition": "meditate night",
+                        "unclassified": [
+                          "T: tomar dos fotos que cumplan condiciones",
+                          "T: CLS environment",
+                          "T: ORG Clothes",
+                          "C: protocolo identificacion de problemas activa el protocolo identificacion de protocolos y el protocolo identificacion de protocolos activa el protocolo index y el protocolo index activa el protocolo que se va asociar a a la resolucion del problema identificado, que luego activa el ultimo protocolo que es el de recompensa, segun la cantidad complejidad resuelta."
+                        ],
+                        "children": [
+                          {
+                            "label": "Problem Visualization & Identification",
+                            "type": "process"
+                          },
+                          {
+                            "label": "High Frequency Problem Solving Visualization",
+                            "type": "process"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Check mind state",
+                        "type": "process",
+                        "children": [
+                          {
+                            "label": "Working Memory Mgmt.",
+                            "type": "process",
+                            "condition": "sanitizing the focus is needed",
+                            "description": "Mantente estoico, si no puedes cambiarlo no te lamentas, si puedes cambiarlo tampoco te lamentas e intentas dar lo mejor. Enfócate en tu parte, porque esto es lo que te tocó, no mires lo que hacen los demás porque perdés el enfoque, relaciona todo a tu parte y luego verás tu parte en todo. \"Todo lo que te viniere a la mano para hacer, hazlo según tus fuerzas; porque en el Seol, adonde vas, no hay obra, ni trabajo, ni ciencia, ni sabiduría.”"
+                          },
+                          {
+                            "label": "Impulses Rewiring",
+                            "type": "process",
+                            "condition": "needed to find emotions in meaning",
+                            "description": "Hacer el deber es incompatible con los sentimientos, puesto que el universo es tan frío, que hasta la materia esta esculpida en el vacío, este entorno es completamente incompatible con una conciencia sensible, aunque siempre hay que evaluar la posibilidad de la ingeniería de sentimientos, puesto que de las conexiones neuronales correctamente reforzadas viene la agudeza mental, pero por el contrario, darle mucha importancia a las conexiones incorrectamente reforzadas traerá consigo miseria y mas irracionalidad aun."
+                          },
+                          {
+                            "label": "Mind Flow Control",
+                            "type": "process",
+                            "condition": "working hours cognitive load control",
+                            "description": "erradicar el consumo de informacion no dirigida durante las horas operativas"
+                          },
+                          {
+                            "label": "Compounding Protection",
+                            "type": "process",
+                            "condition": "thoughts, distractions appearence",
+                            "description": "Cualquier cosa que distraiga se escribe para ser evaluada al final del día, mientras se sigue en la tarea pre-programada."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Emergent P2",
+            "type": "process",
+            "condition": "implicit emergencies",
+            "list": [
+              "T: CLS ENV (Monday 21)",
+              "T: HC NPC (Thurdsday 22)",
+              "T: B: CLTH (awaiting)"
+            ]
+          },
+          {
+            "label": "Long Term Infinite Loop",
+            "type": "referencer",
+            "condition": "Long Term Loops",
+            "children": [
+              {
+                "label": "Long Term Infinite Loop",
+                "type": "data",
+                "children": [
+                  {
+                    "label": "Implicit Network Loop",
+                    "type": "process",
+                    "unclassified": [
+                      "R: IN could be called just social, and EN just network.",
+                      "R: put the focus on making this system to take less time as possible to implement.",
+                      "R: I thought this had a higher priority than problem solving, social life is a human need. some people say, it is not efficient to persue higher goals if social needs are not properly satisfied. but that is not the case. Maslow pyramid should be inverted or redefined, and Viktor Frankl envision should take place."
+                    ],
+                    "children": [
+                      {
+                        "label": "Implicit Network Nutrition: IG LEADS POOL",
+                        "type": "process",
+                        "condition": "1 HS each Friday",
+                        "notes": [
+                          "La atracción en la red implícita es la medida de cuánta energía psíquica están dispuestos los demás a invertir en un nodo.  La Raíz Biológica: Se basa en la promesa de valor. El individuo atractivo (prestigioso) es percibido como un atajo hacia recursos, conocimiento o estatus.  Mecanismo de Atracción: Funciona mediante la Validación. Si relacionarse contigo hace que el otro se sienta más inteligente, más seguro o más importante, tu valor de atracción (P) tiende al infinito.  En la Reprogramación: Un nodo con alta atracción tiene el \"permiso de escritura\" en la mente de los demás. Aceptamos la lógica de quien admiramos con mucha menos resistencia que la de quien nos obliga.",
+                          "- Empezar Casual  - Reir = baja defensa  - Quitar validacion de forma ambigua  - Conseguir lead  - Seguir casual  - Carnadas de bad boy para lavar cerebro  - Pasar shittests  - Historia de confort confianza, y conexion  - Plantear encuentro   - Aplicar juego en encuentro  - Escanear y clasificar en encuentro  - Romper barrera del toque, paulatinamente en lugar aceptables  - Sentar al lado, no al frente  - Dejar que ella invierta hablando mas de ella misma  - No hacer el encuentro acerca de ti (no revelar informacion para mantener la fantasia)  - El silencio es normal  - menos preguntas y mas afirmaciones emocionales  - coquetear todo el tiempo  - mirar a los ojos solo en alta carga emocional  - LLegar a lugar donde te den validacion  - Dar emociones fuertes  - Garchar.  **No-lineal process**",
+                          "E: Crear nueva cuenta de instagram"
+                        ],
+                        "children": [
+                          {
+                            "label": "Generate one picture",
+                            "type": "process",
+                            "condition": "each week",
+                            "completedCondition": "endless",
+                            "description": "generate one picture related to: competition activities, risk activities, network position or at least 'cool'."
+                          },
+                          {
+                            "label": "Upload One Story",
+                            "type": "process",
+                            "condition": "each week",
+                            "completedCondition": "endless"
+                          },
+                          {
+                            "label": "Check Hightlihts && Profile",
+                            "type": "process",
+                            "condition": "each week",
+                            "completedCondition": "endless",
+                            "description": "no muchas destacadas. re-seleccionar continuamente."
+                          },
+                          {
+                            "label": "Test Optimization",
+                            "type": "process",
+                            "condition": "each week",
+                            "completedCondition": "endless",
+                            "medicion": "por cada solicitud de seguimiento aceptadas. (ej: 10) porcentaje de 'follow back' determinan el nivel de optimizacion."
+                          },
+                          {
+                            "label": "Finish: Instagram Maintainance",
+                            "type": "process"
+                          }
+                        ]
+                      },
+                      {
+                        "label": "Implicit Network Convertion",
+                        "type": "process",
+                        "condition": "quality: 1:5, 2:3, 3:1 each week.",
+                        "register": {
+                          "danielle": "abuse-lvl: 3 | sx: 0 | rank: 3 | fullname: danielle | ovulation: undefined"
+                        },
+                        "children": [
+                          {
+                            "label": "Operational Mindset Required",
+                            "type": "process",
+                            "character": [
+                              "Narcissism && Strong Mental Frame (core)",
+                              "Charisma (to reduce defenses)",
+                              "Lateral Thinking (to enhance offense)",
+                              "Vanity"
+                            ]
+                          },
+                          {
+                            "label": "Offense",
+                            "type": "data",
+                            "condition": "it is not investing enough",
+                            "children": [
+                              {
+                                "label": "Observe and build model",
+                                "type": "process",
+                                "models": [
+                                  "for julisse.\n\nobserved: at the beggining was a general optimism and engagement. it began to decline once I sightly ignored her.\n\nthe following pattern was repeated with other prospects: they get off, inactive after night, they reach peak during nights.\n\ncurrently i slept last night so I didn't engage with her, so there is a double silent void, her feeling could be off, also I noticed a story of her, she's selling herself, however this can also be temporary.\n\nmy previous strategy was to stop ignoring her of course, however, the situation didn't improve, I just looked dumb, deseperate and the desire got more off.\nthen I corrected taking distance and the situation has gotten worse.\n\nthe things that worked until now despite all the errors are: Fluid conversation moments about interests, attractiveness/appearence and moments of joy.\n\n\nmy current approach could be the following:\n\ndo not talk just to talk. (it is not needed to respond when she says nothing relevant)\ndo not ignore her when she says something relevant related to her feelings since this can damage her ego directly.\ndo not be present when she is off, be present when she is peak.\n\nexploit lateral thinking to redirect the flow to something funny or to attractiveness.\nfind the moments where she is completely available.\n"
+                                ]
+                              },
+                              {
+                                "label": "Contrast with yours",
+                                "type": "process",
+                                "currentModel": "The current model of mine could be inesxistent, I don't desire something more than the desire itself. However, this cannot consume: neither my time, dignitiy, or, integrity and mindset towards logic.\n\nLogic could be boring, assertivy could be also, but, just if it is linear, logic could be placed in a metamodel where: lateral thinking could be exploited."
+                              },
+                              {
+                                "label": "make it invest || take validation being ambiguous",
+                                "type": "process",
+                                "strategy": "so the julisse thing is.\n\n- lowering her value: I don't have too many tools for achieving this. in fact, she is completly alone and, bored, controlled, not free. so it has been somehow easy.\n\n- making her reach peak, in this case, we could make her invest emotionally and her time. currently this matches with the two axis: attractiveness and enjoyment (expent time).\n\nfor finding free time spot: take track of what she's doing during the day, do not loose time making affirmations or dead answers during day. just keep track to find the night spot.\n\nfor enjoyment: laterl thinking talking in different places, apps, games, online activities, do not saturate this.\n\nfor attractiveness: just sx talking, validation taking, just overall game, not much more.\n\nprotocol when there is no answer: nothing, just find someone else. don't fight for a single option, if you already screw it up, you cannot fix it by pushing harder. so sad."
+                              }
+                            ]
+                          },
+                          {
+                            "label": "Defense",
+                            "type": "data",
+                            "condition": "shitest identified",
+                            "children": [
+                              {
+                                "label": "Analyze its thesis",
+                                "type": "process"
+                              },
+                              {
+                                "label": "Fallback: Use Logical Thinking to redirect pressure",
+                                "type": "process",
+                                "condition": "lateral thinking not available"
+                              },
+                              {
+                                "label": "Contrast with yours",
+                                "type": "process",
+                                "currentModel": "The current model of mine could be inesxistent, I don't desire something more than the desire itself. However, this cannot consume: neither my time, dignitiy, or, integrity and mindset towards logic.\n\nLogic could be boring, assertivy could be also, but, just if it is linear, logic could be placed in a metamodel where: lateral thinking could be exploited."
+                              },
+                              {
+                                "label": "Use Lateral Thinking to redirect pressure",
+                                "type": "process"
+                              }
+                            ]
+                          },
+                          {
+                            "label": "Fallback: Make her talk about herself",
+                            "type": "data",
+                            "condition": "defense nor offense are available"
+                          },
+                          {
+                            "label": "Make her invest",
+                            "type": "process"
+                          },
+                          {
+                            "label": "Test Scale",
+                            "type": "process"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "label": "Emergent P3",
+            "type": "process",
+            "condition": "Implicit Emergencies"
+          },
+          {
+            "label": "Main Loop",
+            "type": "referencer",
+            "condition": "main loop",
+            "children": [
+              {
+                "label": "Main Loop",
+                "type": "process",
+                "ct-active": [
+                  "this is deeply related to how the system works at the low-level, all contents inside explicit resolution have the capabilities of redefining the entire system, so I should take care of it, and probably redefine the whole concept"
+                ],
+                "children": [
+                  {
+                    "label": "Component Builder",
+                    "type": "referencer",
+                    "condition": "1/4 of the free time each day",
+                    "completedCondition": "endless",
+                    "children": [
+                      {
+                        "label": "Component Builder",
+                        "type": "process",
+                        "current-building": "Implicit Hardware MTN",
+                        "ct-active": [
+                          "this is deeply related to how the system works at the low-level, all contents inside explicit resolution have the capabilities of redefining the entire system, so I should take care of it",
+                          "counterthesis failure is missing as a pillar in the model \"Resolution Failure\", this is the reason of why the system feels so dumb when operating it",
+                          "model failure giant shoulders: justification: AI can produce specific information quickly but also allucinate very often, by the other hand, google can produce more precise information but time expent in searching can be much more. - htn-explorer failure in semantic decoding; justification: antithesis is for creating algorithms, the current problem might not be logical scope since each node can have any condition for its execution, but the current problem is visual, semantic conditions cannot be shown visually, this makes the system or model less governable."
+                        ],
+                        "children": [
+                          {
+                            "label": "Select Component && Read its root thesis node",
+                            "type": "data",
+                            "description": "Select Component && Read the system's domain state of the problem",
+                            "counterthesis": [
+                              "it is posible needed a system to filter, centralize and quickly find the all nodes of type initial and their current state, in this case, of state '\n'Building'"
+                            ]
+                          },
+                          {
+                            "label": "Thesis Builder",
+                            "type": "referencer",
+                            "children": [
+                              {
+                                "label": "Thesis Builder",
+                                "type": "process",
+                                "ct-active": [
+                                  "the subcauses of semantic analysis and logical analysis are not defined at Interpretation Failure (ijqNtjNi), neither the justification system or the hypothesis generation system",
+                                  "these kind of systems that are always repeated, couldn't be rigid forever and should be merged into the Lizard System (Implicit Resolution) in the long-term. ",
+                                  "R: una causa debe ser una variable mutable, delimitada por las fronteras de abstracción del modelo, cuya manipulación ejerce un efecto directo, determinista o probabilístico sobre la función de resolución del problema."
+                                ],
+                                "children": [
+                                  {
+                                    "label": "Read new main cause",
+                                    "type": "data"
+                                  },
+                                  {
+                                    "label": "Theoretical Knowledge",
+                                    "type": "referencer",
+                                    "children": [
+                                      {
+                                        "label": "Theoretical Knowledge",
+                                        "type": "process",
+                                        "ConceptSelected": "Dimension Property Failure",
+                                        "children": [
+                                          {
+                                            "label": "Select the concept",
+                                            "type": "data"
+                                          },
+                                          {
+                                            "label": "Use searching tools for finding context (at least 3 sources)",
+                                            "type": "process"
+                                          },
+                                          {
+                                            "label": "Verify author",
+                                            "type": "process"
+                                          },
+                                          {
+                                            "label": "Verify source",
+                                            "type": "process"
+                                          },
+                                          {
+                                            "label": "Is the source reliable?",
+                                            "type": "data",
+                                            "children": [
+                                              {
+                                                "label": "Use searching tools for finding context (at least 3 sources)",
+                                                "type": "referencer",
+                                                "condition": "NO"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "label": "Read about the matter and synthesize",
+                                            "type": "process"
+                                          },
+                                          {
+                                            "label": "Read reviews and contrast",
+                                            "type": "process"
+                                          },
+                                          {
+                                            "label": "Do you identified the causes?",
+                                            "type": "data",
+                                            "children": [
+                                              {
+                                                "label": "Finish: Theoretical Knowledge",
+                                                "type": "process",
+                                                "condition": "YES"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "label": "Is there studies about the matter?",
+                                            "type": "data",
+                                            "children": [
+                                              {
+                                                "label": "Use searching tools for finding context (at least 3 sources)",
+                                                "type": "referencer",
+                                                "condition": "YES"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "label": "Is it feasible to use the scientific method?",
+                                            "type": "data",
+                                            "children": [
+                                              {
+                                                "label": "Obtain data about the phenomenon through observation",
+                                                "type": "process",
+                                                "condition": "YES"
+                                              },
+                                              {
+                                                "label": "Read about the matter and synthesize",
+                                                "type": "referencer",
+                                                "condition": "YES"
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "label": "Finish: Theoretical Knowledge",
+                                            "type": "process"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  {
+                                    "label": "Set subcauses based on hypotheses",
+                                    "type": "process",
+                                    "description": "Observe and Make Hypotheses based on semantics and intuition"
+                                  },
+                                  {
+                                    "label": "Set their priority",
+                                    "type": "process"
+                                  },
+                                  {
+                                    "label": "Justify logically",
+                                    "type": "process"
+                                  },
+                                  {
+                                    "label": "Add the cause to unknown causes",
+                                    "type": "data",
+                                    "condition": "the cause is NOT correctly justified"
+                                  },
+                                  {
+                                    "label": "Set it as an assumption",
+                                    "type": "data",
+                                    "condition": "The cause is correctly justified"
+                                  },
+                                  {
+                                    "label": "Justify logically",
+                                    "type": "referencer",
+                                    "condition": "There are more unknown causes"
+                                  },
+                                  {
+                                    "label": "Theoretical Knowledge - RNMC",
+                                    "type": "referencer",
+                                    "condition": "not all the assumptions justify the main cause"
+                                  },
+                                  {
+                                    "label": "Order each cause by its priority",
+                                    "type": "data",
+                                    "condition": "all the assumptions justify the main cause"
+                                  },
+                                  {
+                                    "label": "Select the cause in the highest prioriy",
+                                    "type": "process",
+                                    "condition": "There are more not mapped causes"
+                                  },
+                                  {
+                                    "label": "Read new main cause",
+                                    "type": "referencer",
+                                    "condition": "There is another known cause && The cause can be divided into smaller causes"
+                                  },
+                                  {
+                                    "label": "Finish: Thesis Buiilder",
+                                    "type": "process",
+                                    "condition": "there is no more known causes that can be divided into smaller causes"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "label": "Counterthesis Builder",
+                            "type": "referencer",
+                            "children": [
+                              {
+                                "label": "Counterthesis Builder",
+                                "type": "process",
+                                "children": [
+                                  {
+                                    "label": "READ THE ROUTE TO THE SOLUTION OF THE SYSTEM'S DOMAIN BY THEIR PRIORITY",
+                                    "type": "process"
+                                  },
+                                  {
+                                    "label": "ESTABLISH THE EXECUTION OF AN ACTION BY ITS PRIORITY",
+                                    "type": "process"
+                                  },
+                                  {
+                                    "label": "ESTABLISH AN ITERATION METHOD",
+                                    "type": "process",
+                                    "condition": "the action need iteration to guarantee quality"
+                                  },
+                                  {
+                                    "label": "READ THE ROUTE TO THE SOLUTION OF THE SYSTEM'S DOMAIN BY THEIR PRIORITY",
+                                    "type": "referencer",
+                                    "condition": "there any other action to establish for completing the route"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "label": "Change State to \"W\"",
+                            "type": "data",
+                            "description": "Save it in the systems working category (State)"
+                          },
+                          {
+                            "label": "Establish Frequency Values",
+                            "type": "data",
+                            "description": "in frequency property of type object. keys 'required' and 'available'",
+                            "children": [
+                              {
+                                "label": "Determine time available to solve it",
+                                "type": "process"
+                              },
+                              {
+                                "label": "Determine Time Required to meet the objective",
+                                "type": "process"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Antithesis Update",
+                    "type": "referencer",
+                    "condition": "1/5 of the free time each day",
+                    "completedCondition": "endless",
+                    "children": [
+                      {
+                        "label": "Antithesis Update",
+                        "type": "process",
+                        "description": "This could be something like, the analyzes always contain the pending data to generate counterthesis. All that data is moved to the counterthesis list, each counterthesis item should have two possible states: pending and merged. If pending then state is \"[S]\"",
+                        "ct-active": [
+                          "technical debt of previous system, some operations are no longer needed, 'reestrucutre data to cause', associate the data with its acquisition time, and so on, that are not necessary",
+                          "counterthesis:{   active:{      interpretation:string,       contrast:string   },    record:{      interpretation:string,       contrast:string   } }[]"
+                        ],
+                        "children": [
+                          {
+                            "label": "Select Analyzes",
+                            "type": "data",
+                            "description": "Select the system to analyze according to its priority"
+                          },
+                          {
+                            "label": "Reestructure Data to Causes",
+                            "type": "data",
+                            "description": "Logically restructure the data to eliminate noise, the data should be shown as a serie of causes"
+                          },
+                          {
+                            "label": "Associate the data with its acquisition time",
+                            "type": "data"
+                          },
+                          {
+                            "label": "Associate the data with collection conditions",
+                            "type": "data"
+                          },
+                          {
+                            "label": "Informally infer the causes of each piece of data",
+                            "type": "process"
+                          },
+                          {
+                            "label": "Formally justify each of the inferences made by logically restructuring",
+                            "type": "process"
+                          },
+                          {
+                            "label": "Evaluate the validity of each of the inferences",
+                            "type": "process"
+                          },
+                          {
+                            "label": "Informally infer the causes of each piece of data",
+                            "type": "referencer",
+                            "condition": "not all inferences are valid"
+                          },
+                          {
+                            "label": "Comparison of the causes and conclusions with the previous assumptions",
+                            "type": "process"
+                          },
+                          {
+                            "label": "Detection of logical contrasts or inconsistencies",
+                            "type": "process"
+                          },
+                          {
+                            "label": "Change solution state to \"[S]\"",
+                            "type": "data",
+                            "condition": "logical discrepancies detected"
+                          },
+                          {
+                            "label": "Finish: Counterthesis Builder",
+                            "type": "process"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Component Update",
+                    "type": "referencer",
+                    "condition": "1/5 of the free time each day",
+                    "completedCondition": "endless",
+                    "children": [
+                      {
+                        "label": "Component Update",
+                        "type": "process",
+                        "informal": null,
+                        "description": "",
+                        "children": [
+                          {
+                            "label": "Select the highest priority solution",
+                            "type": "data"
+                          },
+                          {
+                            "label": "Read Antithesis",
+                            "type": "data"
+                          },
+                          {
+                            "label": "Component Builder",
+                            "type": "process",
+                            "current-building": "Implicit Hardware MTN",
+                            "ct-active": [
+                              "this is deeply related to how the system works at the low-level, all contents inside explicit resolution have the capabilities of redefining the entire system, so I should take care of it",
+                              "counterthesis failure is missing as a pillar in the model \"Resolution Failure\", this is the reason of why the system feels so dumb when operating it",
+                              "model failure giant shoulders: justification: AI can produce specific information quickly but also allucinate very often, by the other hand, google can produce more precise information but time expent in searching can be much more. - htn-explorer failure in semantic decoding; justification: antithesis is for creating algorithms, the current problem might not be logical scope since each node can have any condition for its execution, but the current problem is visual, semantic conditions cannot be shown visually, this makes the system or model less governable."
+                            ],
+                            "children": [
+                              {
+                                "label": "Select Component && Read its root thesis node",
+                                "type": "data",
+                                "description": "Select Component && Read the system's domain state of the problem",
+                                "counterthesis": [
+                                  "it is posible needed a system to filter, centralize and quickly find the all nodes of type initial and their current state, in this case, of state '\n'Building'"
+                                ]
+                              },
+                              {
+                                "label": "Thesis Builder - Component Builder",
+                                "type": "referencer"
+                              }
+                            ]
+                          },
+                          {
+                            "label": "Select the highest priority solution",
+                            "type": "referencer",
+                            "condition": "There is another solution synthetizing"
+                          },
+                          {
+                            "label": "Finish: Resolution Update",
+                            "type": "process"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "label": "Analysis Generation in Core",
+                    "type": "process",
+                    "condition": "1/5 of the free time each day",
+                    "completedCondition": "endless",
+                    "1-health": [
+                      "Alimentación",
+                      "Sueño",
+                      "Ejercicio",
+                      "Mente"
+                    ],
+                    "2-desire": [
+                      "Individual",
+                      "Familia",
+                      "Grupos",
+                      "Comunidades",
+                      "Organizaciones",
+                      "Civilización"
+                    ],
+                    "3-Epistemology": [
+                      "Empírica",
+                      "Racional",
+                      "Social",
+                      "Formal"
+                    ],
+                    "4-problem-solving": [
+                      "Logic",
+                      "Mathematics",
+                      "General System’s Theory",
+                      "Set Theory",
+                      "Complexity Theory",
+                      "Computing Theory"
+                    ],
+                    "5-solution-application": [
+                      "Inteligencia callejera",
+                      "Inteligencia emocional",
+                      "Inteligencia social",
+                      "Conocimiento tácito",
+                      "Conocimiento empírico",
+                      "Conocimiento contextual",
+                      "Sabiduría popular"
+                    ],
+                    "6-results-mgmt": [
+                      "Finanzas",
+                      "Data science",
+                      "Inversiones",
+                      "Seguimiento",
+                      "Visualización e interpretación"
+                    ]
+                  },
+                  {
+                    "label": "Low Level Update",
+                    "type": "process",
+                    "condition": "1/5 of the free time each day",
+                    "completedCondition": "endless",
+                    "list": [
+                      "E: reported bug at execution stage. two or more analysis of the same id cannot be registered at once. ",
+                      "E: design a system for seeing and centralizing all antithesis and analyzes generated in a map",
+                      "E: I need to design a system to centralize and filter the visibility of the nodes by their current state",
+                      "E.ERE Move all frontend type validation to backend network errors.",
+                      "E.ERE I NEED TO DESIGN THE LOW LEVEL SYSTEM for: direct feedback antithesis remodel to contrast thesis\n\nTo achieve this I need to take a different focus, maybe design new components to replace the htn-editor, or even split it into different SPECIALIZED COMPONENTS.\n\nFor the antithesis system I need a system to manage analyzes and to design the antithesis, to set its state and to where is linked to so it's easy to contrast later with the thesis.",
+                      "E.ERE i need to design the low level system for: simulation feedback, theoretical system perfectionism, thesis, knowledge, theoretical knowledge subsystem",
+                      "E.ERE migrate to server side type validation",
+                      "E.ERE desarrollar metodo para optimizar el flujo, reducir friccion operativa lo mas posible en tareas repetitiva"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Report Friction",
+    "type": "data",
+    "condition": "Referencer Block Executed && Found Friction",
+    "description": "After implementation, document the friction observations with critical thinking. (15-minute limit), ordering them by cycle number."
+  },
+  {
+    "label": "Update State",
+    "type": "data",
+    "condition": "Fibonacci Sequence Match",
+    "description": "Add the system to systems under analysis and clarify what is being analyzed to know when to analyze and when not to, so as not to be guided solely by the cycle number."
+  },
+  {
+    "label": "Find Condition && Execute Referencer",
+    "type": "referencer",
+    "condition": "Perding Task"
+  },
+  {
+    "label": "Finish: Resolution Engine",
+    "type": "process",
+    "condition": "!Pending Task",
+    "description": "Mark the completion of the explicit protocol."
+  }
+]

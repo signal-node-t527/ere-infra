@@ -6,8 +6,8 @@ Explicit Resolution Engine (ERE) is a comprehensive system designed to model and
 
 ## Project Structure
 
--   **[Resolution Engine](./resolution-engine)**: A .NET 8 based backend API for managing graph data and persistence.
--   **[Shiny Computing Machine (SCM)](./shiny-computing-machine)**: An Angular 18 based frontend GUI for visualizing, editing, and exploring the resolution graphs.
+-   **[Resolution Engine](./resolution-engine)**: A **.NET 9** based backend API for managing graph data and persistence.
+-   **[Shiny Computing Machine (SCM)](./shiny-computing-machine)**: An **Angular 20** based frontend GUI (package name `purgatory-ui`) for visualizing, editing, and exploring the resolution graphs.
 
 ## Core Concepts
 
@@ -29,7 +29,7 @@ ERE uses a Hierarchical Task Network (HTN) inspired model:
 ### Prerequisites
 
 -   [Docker](https://www.docker.com/products/docker-desktop/) and Docker Compose.
--   .NET 8.0 SDK (optional, for local backend development).
+-   .NET 9.0 SDK (optional, for local backend development).
 -   Node.js & Angular CLI (optional, for local frontend development).
 
 ### Quick Start with Docker
@@ -43,7 +43,7 @@ docker-compose up -d db backend
 # Start development frontend (with hot-reload)
 docker-compose --profile dev up frontend-dev
 
-# Access the application at http://localhost:4200
+# Access the application at http://localhost:4250
 ```
 
 For production-like frontend (served via Nginx):
@@ -61,9 +61,13 @@ docker-compose --profile prod up frontend-prod
 ### Frontend (Shiny Computing Machine)
 1. Navigate to `shiny-computing-machine/`.
 2. Run `npm install`.
-3. Run `ng serve` for a dev server.
-4. Access via `http://localhost:4200`.
+3. Run `npm start` (or `ng serve`) for a dev server. The dev server listens on `http://localhost:4250`.
+4. Access via `http://localhost:4250`.
 
 ## Documentation
 
-For more detailed information on models, API endpoints, and frontend features, see [DOCUMENTATION.md](./DOCUMENTATION.md).
+-   **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**: the authoritative description of the
+    system as it exists today (backend API, frontend architecture, containers, known limits).
+-   **[DOCUMENTATION.md](./DOCUMENTATION.md)**: a shorter narrative overview of the models and
+    features.
+-   **[docs/](./docs)**: project state, roadmap, decisions, and the production checklist.
