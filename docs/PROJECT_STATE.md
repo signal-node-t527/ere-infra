@@ -1,8 +1,14 @@
 # Project State
 
-> **Status: Part I final + Part II in progress (2026-10-10).** Part I (P0–P8) is complete and
-> audited: every load-bearing claim lives in `ARCHITECTURE.md` with `file:line` evidence. Part II
-> (P9–P14) deepens `ARCHITECTURE.md` in place; this file is the running snapshot and session log.
+> **Status: Part I final + Part II paused for the doc-structure split (2026-10-10).** Part I
+> (P0–P8) is complete and audited: every load-bearing claim lives in `docs/architecture/` with
+> `file:line` evidence. The former single `docs/ARCHITECTURE.md` has been **split into
+> `docs/architecture/`** (numbered parts, entered via `00_index.md`; D16), so Part II now deepens
+> those files in place. This file is the running snapshot and session log.
+
+> **Note (D16).** The architecture reference is a **folder** of ≤600-line files with a stable `§`
+> numbering; `docs/architecture/00_index.md` maps every `§` to its file. The active work item is
+> **T10.5** (this restructure); Phase 11 (`T11.3` onward) resumes afterwards.
 
 ## Snapshot — stable build vs. documented reality
 
@@ -43,33 +49,38 @@ of the corrections:
 ## Buildout status (P0–P8 done; P9–P14 in progress)
 
 - **P0** scaffolding — done.
-- **P1–P3** `ARCHITECTURE.md` (infra, backend, frontend) — done, audited in T8.1.
+- **P1–P3** `architecture/` (infra, backend, frontend) — done, audited in T8.1.
 - **P4** `PROJECT_STATE.md` — done (this file).
-- **P5** `DECISIONS.md` backfill — done (D1–D15).
+- **P5** `DECISIONS.md` backfill — done (D1–D16).
 - **P6** `PRODUCTION_CHECKLIST.md` — done (B1–B6, F1–F3, infra, smoke tests).
 - **P7** root-doc reconciliation — done.
 - **P8** consistency audit + final state — done (T8.1 audit; T8.2 this file).
 - **P9** ARCHITECTURE (full) — foundations & schemas — **done (4/4)**: T9.1 (node-content
-  schema → `ARCHITECTURE.md` §3.5), T9.2 (lifecycle & sequence diagrams → §2.1–§2.5), T9.3
+  schema → `architecture/` §3.5), T9.2 (lifecycle & sequence diagrams → §2.1–§2.5), T9.3
   (configuration & ports matrix → §5.2) and T9.4 (vocabulary & domain code map → §2.6).
 - **P10** ARCHITECTURE (full) — backend reference — **done (4/4)**: T10.1 (per-file / per-class
   reference → §3.6), T10.2 (endpoint reference → §3.2), T10.3 (persistence & seed dataset → §3.3)
   and T10.4 (cross-cutting behaviours → §3.4).
-- **P11** ARCHITECTURE (full) — frontend core reference — **in progress (2/4)**: T11.1 (domain-layer
-  reference → §4.7) and T11.2 (graph algorithms → §4.6) are done; T11.3 (services reference) is next.
+- **P10.5** documentation file convention & split — **in progress (0/1)**: **T10.5** (split
+  `ARCHITECTURE.md` → `docs/architecture/`; record D16) is the active ticket.
+- **P11** ARCHITECTURE (full) — frontend core reference — **paused (2/4)**: T11.1 (domain-layer
+  reference → §4.7) and T11.2 (graph algorithms → §4.6) are done; T11.3 (services reference)
+  resumes after T10.5.
 
 The T8.1 audit fixed three drifts: backend seed counts (17 thesis nodes / 17 thesis edges),
 the service-worker registration location (`src/index.html:24-30`, not `pwa.service.ts`), and the
-now-obsolete "entry-point docs are stale" note in `ARCHITECTURE.md` §6.
+now-obsolete "entry-point docs are stale" note in `architecture/` §6.
 
 ## What remains / next logical action
 
 Part I (P0–P8) is **complete**. **Part II (P9–P14, full ARCHITECTURE coverage) is in progress**:
 P9 is done, and **P10 (backend reference) is complete — T10.1 (per-file / per-class reference →
 §3.6), T10.2 (endpoint reference → §3.2), T10.3 (persistence & seed dataset → §3.3) and T10.4
-(cross-cutting behaviours → §3.4)**. **P11 is underway: T11.1 (domain-layer reference → §4.7) and
-T11.2 (graph algorithms deep-dive → §4.6) are done**, so the next documentation ticket is **T11.3
-(services reference → §4.3)**, the third of **P11**, in `ROADMAP.md`.
+(cross-cutting behaviours → §3.4)**. **Phase 11 is paused (2/4): T11.1 (domain-layer reference →
+§4.7) and T11.2 (graph algorithms deep-dive → §4.6) are done.** The **active documentation ticket
+is T10.5** — split `docs/ARCHITECTURE.md` into the numbered `docs/architecture/` folder and record
+the convention as D16 (ROADMAP **P10.5**). After T10.5, the next ticket is **T11.3 (services
+reference → §4.3)**, the third of **P11**.
 
 Separately, *product* work surfaced by the docs remains:
 

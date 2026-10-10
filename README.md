@@ -66,7 +66,8 @@ docker-compose --profile prod up frontend-prod
 
 ## Documentation
 
--   **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)**: the authoritative description of the
-    system as it exists today (repo layout, backend API + node-content schema, frontend
-    architecture, containers, known limits).
+-   **[docs/architecture/00_index.md](./docs/architecture/00_index.md)**: the authoritative
+    description of the system as it exists today (repo layout, backend API + node-content schema,
+    frontend architecture, containers, known limits) — a folder of numbered parts, entered via its
+    index (which maps every `§` section to its file).
 -   **[docs/](./docs)**: project state, roadmap, decisions, and the production checklist.

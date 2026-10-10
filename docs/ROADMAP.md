@@ -552,7 +552,7 @@ Notes: Done — §4.6 now documents `rebuildAdjacency`, `computeTopology` (two p
 ### T11.3  Services reference
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T11.1
-Files: `docs/ARCHITECTURE.md` (§4.3 grown)
+Files: `docs/architecture/04_frontend.md` (§4.3 grown)
 Verify: matches `core/services/*.ts`
 Notes: `HtnService` (facade surface); `HtnStateService` (state shape, BehaviorSubject + signals);
        `HtnGraphService` (`syncEdges`, `addCrossReference`, `performComplexRemoval`,
@@ -562,7 +562,7 @@ Notes: `HtnService` (facade surface); `HtnStateService` (state shape, BehaviorSu
 ### T11.4  Repository layer reference
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T11.1
-Files: `docs/ARCHITECTURE.md` (§4.3 grown)
+Files: `docs/architecture/04_frontend.md` (§4.3 grown)
 Verify: each method maps to a backend endpoint and a domain class
 Notes: the `HtnRepository` port and `HttpHtnRepository` — method → `${apiUrl}/…` route →
        JSON→domain mapping, plus each method's error-swallowing/optimistic behavior.
@@ -572,7 +572,7 @@ Notes: the `HtnRepository` port and `HttpHtnRepository` — method → `${apiUrl
 ### T12.1  Window system reference
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T11.1
-Files: `docs/ARCHITECTURE.md` (§4.2 grown)
+Files: `docs/architecture/04_frontend.md` (§4.2 grown)
 Verify: matches `features/window-system/**`
 Notes: `WindowService` (list/z-order, `shiny_window_list`), `WindowManagerService` (popups,
        `shiny_session_id`, inheritance), `WindowComponent` (8-handle resize/drag/close),
@@ -582,7 +582,7 @@ Notes: `WindowService` (list/z-order, `shiny_window_list`), `WindowManagerServic
 ### T12.2  htn-plan reference
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T11.1
-Files: `docs/ARCHITECTURE.md` (§4.4 grown)
+Files: `docs/architecture/04_frontend.md` (§4.4 grown)
 Verify: matches `features/htn-plan/**`
 Notes: `plan-state.service.ts`, `plan.types.ts` (`PlanStep`/`PendingAnalysis`), `plan-utils.ts`,
        `wire-utils.ts` (bezier), `plan.constants.ts`, `plan-node-card`.
@@ -590,7 +590,7 @@ Notes: `plan-state.service.ts`, `plan.types.ts` (`PlanStep`/`PendingAnalysis`), 
 ### T12.3  htn-explorer reference
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T11.1
-Files: `docs/ARCHITECTURE.md` (§4.4 grown)
+Files: `docs/architecture/04_frontend.md` (§4.4 grown)
 Verify: matches `features/htn-explorer/**`
 Notes: `tree-utils.ts` (`computeMinDepths`/`buildTree`), `io-utils.ts` (import/export format), and
        `htn-metadata-menu`.
@@ -598,7 +598,7 @@ Notes: `tree-utils.ts` (`computeMinDepths`/`buildTree`), `io-utils.ts` (import/e
 ### T12.4  htn-editor & htn-categories reference
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T11.1
-Files: `docs/ARCHITECTURE.md` (§4.4 grown)
+Files: `docs/architecture/04_frontend.md` (§4.4 grown)
 Verify: matches `features/htn-editor/**`, `features/htn-categories/**`
 Notes: `htn-content.service.ts` (sanitize + property CRUD) and the editor; categories CRUD and the
        `CategoryList` tree model.
@@ -606,7 +606,7 @@ Notes: `htn-content.service.ts` (sanitize + property CRUD) and the editor; categ
 ### T12.5  graph-lib reference
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T11.1
-Files: `docs/ARCHITECTURE.md` (§4.4 grown)
+Files: `docs/architecture/04_frontend.md` (§4.4 grown)
 Verify: matches `features/graph-lib/**`
 Notes: the `@swimlane/ngx-graph` wrapper (`graph.ts`, `config.ts`) and the single-node prototype
        patch.
@@ -614,14 +614,14 @@ Notes: the `@swimlane/ngx-graph` wrapper (`graph.ts`, `config.ts`) and the singl
 ### T12.6  connection-string-manager reference
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T11.3
-Files: `docs/ARCHITECTURE.md` (§4.4 grown)
+Files: `docs/architecture/04_frontend.md` (§4.4 grown)
 Verify: matches `features/connection-string-manager/**` and `ConnectionService`
 Notes: the CRUD UI, the "test connection" call, and the exact connection-string builder output.
 
 ### T12.7  Console command reference (per-command table)
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T11.3
-Files: `docs/ARCHITECTURE.md` (§4.5 grown)
+Files: `docs/architecture/04_frontend.md` (§4.5 grown)
 Verify: the command list matches the `Map` keys registered by all 11 handlers; grammar matches
         `console.parser.ts`
 Notes: document the parser grammar, dispatch/fallback, logger levels, and the `handler-context`
@@ -633,7 +633,7 @@ Notes: document the parser grammar, dispatch/fallback, logger levels, and the `h
 ### T12.8  Shared components & styling reference
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T11.1
-Files: `docs/ARCHITECTURE.md` (§4.6 grown)
+Files: `docs/architecture/05_frontend_core.md` (§4.6 grown)
 Verify: matches `shared/**` and `src/styles.scss`
 Notes: `shared/suggestion-input`, `shared/utils/units-conversion`, global styling/theming, and the
        window-chrome conventions.
@@ -643,7 +643,7 @@ Notes: `shared/suggestion-input`, `shared/utils/units-conversion`, global stylin
 ### T13.1  Container / image reference
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: —
-Files: `docs/ARCHITECTURE.md` (§5 grown)
+Files: `docs/architecture/06_infrastructure.md` (§5 grown)
 Verify: matches the Dockerfiles + `nginx.conf`
 Notes: each build stage of `resolution-engine/Dockerfile` and `shiny-computing-machine/Dockerfile`
        (+ `Dockerfile.dev`), the nginx SPA/caching rules, `EXPOSE`/non-root/entrypoints, and the
@@ -652,7 +652,7 @@ Notes: each build stage of `resolution-engine/Dockerfile` and `shiny-computing-m
 ### T13.2  Compose topology & container diagram
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T13.1
-Files: `docs/ARCHITECTURE.md` (§5 grown)
+Files: `docs/architecture/06_infrastructure.md` (§5 grown)
 Verify: matches `docker-compose.yml`
 Notes: services, profiles (`dev`/`prod`), the `ere-network` bridge, `mssql_data` + `./backups`, env
        wiring, `depends_on` order, and a container-level diagram.
@@ -660,7 +660,7 @@ Notes: services, profiles (`dev`/`prod`), the `ere-network` bridge, `mssql_data`
 ### T13.3  Build tooling & PWA reference
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T12.7
-Files: `docs/ARCHITECTURE.md` (§4.6 grown)
+Files: `docs/architecture/05_frontend_core.md` (§4.6 grown)
 Verify: matches `tools/build-script-index.mjs`, `package.json` scripts, tsconfigs, karma/jest,
         `public/{manifest.json, sw.js}`
 Notes: the script-index generation (`npm run scripts:index`); the test setup (Karma/Jasmine + Jest
@@ -672,7 +672,7 @@ Notes: the script-index generation (`npm run scripts:index`); the test setup (Ka
 ### T14.1  Gaps, assumptions & unknowns register
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: P9–P13
-Files: `docs/ARCHITECTURE.md` (§6 grown)
+Files: `docs/architecture/06_infrastructure.md` (§6 grown)
 Verify: each item is a real observation, not speculation
 Notes: fold the deep-dive findings into §6; mark anything not verifiable from code as an explicit
        assumption/unknown; route production-relevant items to `PRODUCTION_CHECKLIST.md`.

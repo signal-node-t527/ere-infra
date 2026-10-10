@@ -2,7 +2,7 @@
 
 Before starting work:
 1. Read docs/PROJECT_STATE.md
-2. Read relevant architecture documentation docs/ARCHITECTURE.md
+2. Read relevant architecture documentation docs/architecture/00_index.md
 3. Read the buildout plan docs/ROADMAP.md (progress + next ticket)
 4. Read current task if one exists docs/CURRENT_TASK.md
 

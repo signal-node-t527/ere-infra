@@ -108,3 +108,30 @@ production risk it is also a `PRODUCTION_CHECKLIST.md` row.
   `ROADMAP.md` / `PROJECT_STATE.md` / `CURRENT_TASK.md` references are reworded to past tense;
   T14.3 ("entry-point doc symmetry") now covers `README.md` only. This is the only non-`docs/`
   edit in Part II and extends D3.
+
+### D16 — The architecture reference is a numbered folder with stable `§` IDs
+- A single `docs/ARCHITECTURE.md` had reached **1477 lines** (over 2× the quality-bar doc), making
+  it slow to navigate and edit. It is **split into `docs/architecture/`** — a folder of parts entered
+  via **`00_index.md`** — and the convention below is now the rule for all `docs/` files:
+  - **File naming:** `NN_<descriptive_snake_case>.md`, `NN` zero-padded, ordered by reading sequence.
+  - **Size budget:** 150–500 lines typical, **hard cap 600** per file (150 is a soft floor;
+    `00_index.md` may be shorter). A part that would exceed the cap gains a **new numbered sibling**
+    rather than growing.
+  - **Index:** a folder's `00_index.md` states its purpose and holds the **§→file map**, reading
+    order, and navigation rules.
+  - **Stable IDs:** **`§x.y` is the canonical, append-only citation** used by every doc; section
+    numbers never change when files are added/split. One chapter may span more than one file, so a
+    `§` is resolved through the index, not the file name.
+  - **Per-file header:** each part starts with `# … — <title>` + `> Part N of M · owns §a–§b ·
+    index: 00_index.md`.
+  - **Scope & exemptions:** applies to documentation (`docs/*.md` + root entry `.md`) **only** —
+    application source is exempt from the naming rule. Plan/state docs (`ROADMAP.md`,
+    `PROJECT_STATE.md`, `CURRENT_TASK.md`, `DECISIONS.md`, `PRODUCTION_CHECKLIST.md`) are **exempt
+    from the 600-line cap** (they are append-only logs, not reference parts).
+- **Consequences:** `docs/ARCHITECTURE.md` is deleted; the folder holds `00_index.md` (map) plus
+  `01_overview` (§1–§2), `02_backend` (§3.1–§3.4), `03_backend_reference` (§3.5–§3.6),
+  `04_frontend` (§4.1–§4.5), `05_frontend_core` (§4.6–§4.7), `06_infrastructure` (§5–§7). Existing
+  `§` citations throughout `docs/` remain valid unchanged. `README.md`, `AGENTS.md`,
+  `PROJECT_STATE.md` and `PRODUCTION_CHECKLIST.md` entry points now point at `00_index.md`. This
+  **supersedes ROADMAP locked decision #7** ("one `ARCHITECTURE.md` deepened in place"); heavy
+  tickets (T11.3 onward) re-point their `Files:` at the owning part. It extends D3/D15 (docs only).
