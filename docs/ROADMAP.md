@@ -78,8 +78,8 @@ Remaining work is product, not docs — see `PRODUCTION_CHECKLIST.md`.
 | P6 | PRODUCTION_CHECKLIST — dev-seam registry | 1/1 | done |
 | P7 | Root docs reconciliation (`README.md`, then-`DOCUMENTATION.md`) | 1/1 | done |
 | P8 | Consistency audit + final state | 2/2 | done |
-| P9 | ARCHITECTURE (full) — foundations & schemas | 2/4 | in_progress |
-| P10 | ARCHITECTURE (full) — backend reference | 0/4 | todo |
+| P9 | ARCHITECTURE (full) — foundations & schemas | 4/4 | done |
+| P10 | ARCHITECTURE (full) — backend reference | 1/4 | in_progress |
 | P11 | ARCHITECTURE (full) — frontend core reference | 0/4 | todo |
 | P12 | ARCHITECTURE (full) — frontend feature reference | 0/8 | todo |
 | P13 | ARCHITECTURE (full) — infra & operations reference | 0/3 | todo |
@@ -394,8 +394,8 @@ works*, to the depth where a new engineer can navigate, extend, and operate any 
 documentation alone. The output is a single, much deeper `docs/ARCHITECTURE.md` (§1–§7 grown, plus
 new sections), keeping every load-bearing claim cited by `file:line` (decision 7).
 
-**Part II is in progress (P9).** Tickets are taken one at a time `[ ] todo → [x] done` (§ next
-ticket is T9.3); this section remains the plan of record (decision 8).
+**Part II is in progress (P10).** Tickets are taken one at a time `[ ] todo → [x] done` (§ next
+ticket is T10.1); this section remains the plan of record (decision 8).
 When a ticket is taken, it follows the same one-at-a-time workflow as Part I.
 
 **Scope inventory (what "full coverage" must eventually touch).**
@@ -453,34 +453,42 @@ Notes:
   `ApplicationDbContext`). Include the `ping`/`EnsureCreated` path and popup spawn.
 
 ### T9.3  Configuration, environment & ports matrix
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [x] done
 Blocked by: —
-Files: `docs/ARCHITECTURE.md` (new §5.2 "Configuration & ports")
+Files: `docs/ARCHITECTURE.md` (new §5.2 "Configuration & ports matrix"; §5 split into §5.1/§5.2)
 Verify: matches `appsettings*.json`, `Properties/launchSettings.json`, `docker-compose.yml`,
         `angular.json`, `package.json`
+Notes: **Done 2026-10-10.** Added §5.2 with a settings matrix and a ports matrix, every cell
+       citing its source line; split §5 into §5.1 (containers/images/topology) and §5.2. Corrected
+       a §3.1 drift: `appsettings.json` holds a **placeholder** `DefaultConnection`,
+       `appsettings.Development.json` has none, and LocalDB is only the in-code empty-string
+       fallback (`Program.cs:34-37`).
 Notes: one table: setting → dev value → container value → prod value → source file. Cover
        `DefaultConnection`, `ASPNETCORE_ENVIRONMENT`, `ASPNETCORE_URLS`, `MSSQL_SA_PASSWORD`, the
        CORS policy, every port (5250/7150/8080/4200/4250/1433), profile names, and volumes.
 
 ### T9.4  Glossary & domain vocabulary → code map
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [x] done
 Blocked by: —
-Files: `docs/ARCHITECTURE.md` (new §2.x "Vocabulary")
+Files: `docs/ARCHITECTURE.md` (new §2.6 "Vocabulary & domain code map")
 Verify: each term maps to a real type/value/route/file in code
-Notes: table of terms (ERE, HTN, thesis, counterthesis/antithesis, graph, node, edge, layer/
-       `LayerMetrics`, flow, trigger, effect, referencer, category, plan, window, dock) → where it
-       lives (type, DB column, route, file). Anchors the rest of the document.
+Notes: Done — §2.6 table maps ERE, HTN, GraphType, thesis, counterthesis/antithesis (alias, D4),
+       graph, adjacency, node, edge, layer/`LayerMetrics`, flow, trigger, effect, referencer,
+       category, node content, plan/`PlanStep`, window, dock, and the `X-Connection-String`
+       seam to their defining type/column/route/file. Cross-links added at §3.3, §4.4, §4.6.
 
 ## Phase 10 — Full ARCHITECTURE: backend reference
 
 ### T10.1  Per-file / per-class backend reference
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [x] done
 Blocked by: —
-Files: `docs/ARCHITECTURE.md` (§3 grown)
+Files: `docs/ARCHITECTURE.md` (new §3.6 "Source file & class reference")
 Verify: one subsection per file; every public member listed; citations resolve
-Notes: for each of the 11 `.cs` files — purpose, key members (with signatures), `file:line`. Give
-       `IConnectionProvider` and the unused `TestContext` their own entries; list the config and
-       artifact files (`appsettings*`, `launchSettings.json`, `ResolutionEngine.http`, SQL, logs).
+Notes: Done — §3.6 gives each of the 11 `.cs` files its own subsection (purpose + public members
+       with signatures and `file:line`); `IConnectionProvider` and the unused `TestContext` have
+       their own entries; a closing "Non-source files" table lists the csproj/sln, launchSettings,
+       appsettings×2, Dockerfile/ignore files, `cleanup_weight_column.sql`, `ResolutionEngine.http`
+       and the historical build logs. Values are cross-linked to §3.1–§3.5 and §5, not duplicated.
 
 ### T10.2  Endpoint reference — request/response schemas & status codes
 Status: [ ] todo  [ ] in_progress  [ ] done

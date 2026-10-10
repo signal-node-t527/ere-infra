@@ -272,6 +272,35 @@ sequenceDiagram
   `shiny_dock_config`) is never inherited from localStorage into a popup
   (`storage.service.ts:8-13`).
 
+### 2.6 Vocabulary & domain code map
+
+Quick map from the project's domain vocabulary to the code that defines each term. Every row
+cites the type, DB column, route, or file where the term lives; expand there. Terms are recorded
+verbatim as they appear in code (D4).
+
+| Term | Meaning | Where it lives (type / column / route / file) |
+| --- | --- | --- |
+| **ERE** — Explicit Resolution Engine | The whole system. | `README.md:1`; apps `resolution-engine` (backend) and `purgatory-ui` (Angular frontend) (`README.md:9-10`). |
+| **HTN** — Hierarchical Task Network | The planning model the domain is inspired by. | `README.md:14`; `NODE_TYPES` (`types.ts:9`). |
+| **GraphType** | The two graph kinds: `'thesis' \| 'counterthesis'`. | `types.ts:7`. |
+| **Thesis** | A structure / regularity / static element. | `IThesis` `types.ts:93-98`; class `Thesis` `models.ts:3-22`; DB `HtnNodes.Graph == "thesis"`; route `GET /api/htn/thesis-nodes` (`HtnController.cs:18`). |
+| **Counterthesis** / **Antithesis** (alias) | A process / condition / data-flow element. Canonical value is `"counterthesis"`; `"antithesis"` is kept as a compatibility alias on read (D4). | `ICounterthesis` `types.ts:100-105`; class `Counterthesis` `models.ts:24-45`; alias matched in `HtnController.cs:25-30`. |
+| **Node** | One vertex, either a thesis or a counterthesis. | `HtnNode = IThesis \| ICounterthesis` `types.ts:23`; backend `HtnNodeModel` table `HtnNodes` (`Models/HtnNode.cs`); route `nodes/{id}`. |
+| **Edge** | A directed `[from, to]` pair. | `Edge = [string, string]` `types.ts:3`; backend `HtnEdgeModel` (`FromId`/`ToId`/`Graph`) `Models/HtnEdge.cs`; route `edges`. |
+| **Graph** | A set of nodes + edges with forward/reverse adjacency. | `Graph` `types.ts:25-32` (`edges`, `ady`, `inv`, `nodes`); rebuilt by `rebuildAdjacency` `graph.utils.ts:6-17`. |
+| **Adjacency** (`ady` / `inv`) | Forward / reverse `Map<nodeId, nodeId[]>` on a `Graph`. | `types.ts:27-28`; `graph.utils.ts:6-17`. |
+| **Layer** / **`LayerMetrics`** | Topological depth of a node: `{longestPath, shortestPath, avg}`. Persisted, but computed client-side (D6/D10). | `LayerMetrics` `types.ts:87-91`; `LayerJson` → `Layer` `Models/HtnNode.cs:30-50`; `computeTopology` `graph.utils.ts:19-85`. |
+| **Flow** / **`FlowState`** | Per-parent execution state map `flow: Record<parentId, FlowState>`. | `FlowStateBase` `types.ts:52-55`; `FlowStateThesis` `types.ts:78`; `FlowStateCounterthesis` (adds `completed`, `completedCondition`, `cycles?`, `analyzes?`) `types.ts:62-67`. |
+| **Trigger** | Inbound reference (the node is activated by it). | `triggers: string[]` `types.ts:46`; synthesized in `computeTopology` `graph.utils.ts:36-42`. |
+| **Effect** | Outbound reference (the node activates it). | `effects: string[]` `types.ts:47`; synthesized in `computeTopology` `graph.utils.ts:37-42`. |
+| **Referencer** | A node (`type: 'referencer'`) that points at another via `refId`; the target accumulates `referencers`. | `graph.utils.ts:132-139`; `populateCrossReferences` `graph.utils.ts:94-140`. |
+| **Category** / **`CategoryList`** | The user's category tree over nodes. | `CategoryList` `types.ts:107-116`; backend singleton `HtnCategoryDoc` (id `"main"`, `JsonData`) `Models/HtnCategoryDoc.cs:6-12`; route `htn-categories`. |
+| **Node content** | The untyped JSON payload of a node. | `NodeContentBase` / `NodeContentRoot` `types.ts:42-50`; full field schema in §3.5. |
+| **Plan** / **`PlanStep`** / **`PendingAnalysis`** | The plan view's step tree (`type: 'step' \| 'loop'`). | `features/htn-plan/plan.types.ts:3-28`; view in §4.4. |
+| **Window** | A floating/closable UI panel. | `WindowService` (list, z-index), `WindowManagerService` (popups); `WINDOW_REGISTRY` types `window-registry.ts:10-18`; §4.2. |
+| **Dock** | Pinning a window to a region: `left` / `right` / `top` / `bottom` / `center`. | `DockablePanelsService` `dockable-panels.service.ts:11-15`; persisted under `shiny_dock_config` (`:207`). |
+| **Connection string** / **`X-Connection-String`** | Per-request target DB; the SPA attaches the header, the backend resolves it (D7). | `connection.interceptor.ts`; `Services/HttpConnectionProvider.cs:18-42`; `ConnectionService`; §2.4. |
+
 ## 3. Backend — `resolution-engine`
 
 ### 3.1 Solution, entry point & configuration
@@ -298,9 +327,12 @@ Pipeline (`Program.cs:42-58`): dev-only `Console.WriteLine` → **`UseCors("Allo
 **no** authentication, **no** OpenAPI mapping (`AddOpenApi`/`MapOpenApi` are never called even
 though the package is referenced), and **no** static-file serving.
 
-`launchSettings.json` exposes http `:5250` and https `:7150`. `appsettings*.json` hold the
-`DefaultConnection`; the dev value points at LocalDB, the container overrides it via the
-`ConnectionStrings__DefaultConnection` env var (see §5).
+`launchSettings.json` exposes http `:5250` and https `:7150`. `appsettings.json:10` holds a
+**placeholder** `DefaultConnection` (`Server=YOUR_SERVER;Database=YOUR_DATABASE;…`), and
+`appsettings.Development.json` holds **no** connection string (logging only). **LocalDB is only an
+in-code fallback** used when the resolved string is empty (`Program.cs:34-37`) — never triggered
+by the committed placeholder. The container overrides the value via
+`ConnectionStrings__DefaultConnection` (`docker-compose.yml:24`); the full matrix is §5.2.
 
 ### 3.2 API surface
 
@@ -342,6 +374,9 @@ Cross-cutting endpoint behaviour:
 - **No plan/role gates, no pagination, no filtering** beyond the `graph` query parameter.
 
 ### 3.3 Domain model & persistence
+
+Domain vocabulary (thesis, counterthesis, graph, node, edge, layer, flow) is mapped to code in
+§2.6.
 
 `Models/HtnNode.cs`:
 
@@ -493,8 +528,168 @@ not fixed (§6).
   {"label":"Functional Iteration HTN/Chain Triggered Loops (CTL)","logicalConnector":"AND",
    "description":"Migrated from connection\n\n T_MIGRATED",
    "flow":{"7ef4e6da":{"priority":5,"condition":"","completed":false}},
-   "theses":["if1s1g4","asd9aj294"]}
+    "theses":["if1s1g4","asd9aj294"]}
   ```
+
+### 3.6 Source file & class reference
+
+A file-by-file map of `resolution-engine`. Each entry lists the file's purpose and its public
+members with signatures and `file:line`; behaviour is documented in the cross-linked subsections
+(endpoints §3.2, models & persistence §3.3, cross-cutting §3.4, content schema §3.5, config &
+deployment §5.1/§5.2, vocabulary §2.6) rather than duplicated here.
+
+#### `Program.cs` — application entry point
+
+Top-level statements (no class): builds and runs the host (`Program.cs:1-67`).
+
+| Member / step | Signature | Where |
+| --- | --- | --- |
+| Host builder | `var builder = WebApplication.CreateBuilder(args)` | `Program.cs:5` |
+| CORS policy `"AllowAngularDev"` | `AddCors(o => o.AddPolicy(…, SetIsOriginAllowed(_ => true) + AllowAnyHeader/AllowAnyMethod))` | `Program.cs:7-16` |
+| Controllers + JSON | `AddControllers().AddJsonOptions(o => o.JsonSerializerOptions.PropertyNameCaseInsensitive = true)` | `Program.cs:18-22` |
+| HTTP context + provider | `AddHttpContextAccessor()`, `AddScoped<IConnectionProvider, HttpConnectionProvider>()` | `Program.cs:24-25` |
+| DbContext (per scope) | `AddDbContext<ApplicationDbContext>(…)` reading `IConnectionProvider`, LocalDB when empty | `Program.cs:28-40` |
+| Pipeline | dev `Console.WriteLine` → `UseCors` → `UseHttpsRedirection` (non-Development only) → `MapControllers()` → `Run()` | `Program.cs:42-68` |
+
+No endpoints are mapped here (a `MapGet("/test")` block is commented out, `Program.cs:60-66`).
+
+#### `Controllers/HtnController.cs`
+
+`public class HtnController : ControllerBase` — `[ApiController]` + `[Route("api/[controller]")]`
+(`HtnController.cs:7-9`); the main graph API. Bodies and status codes are in §3.2.
+
+| Member | Signature | Where |
+| --- | --- | --- |
+| Constructor | `HtnController(ApplicationDbContext context)` | `:13-16` |
+| `GetThesisNodes` | `ActionResult<IEnumerable<HtnNodeModel>> GetThesisNodes()` | `:18-23` |
+| `GetCounterthesisNodes` | `ActionResult<IEnumerable<HtnNodeModel>> GetCounterthesisNodes()` | `:25-30` |
+| `GetEdges` | `ActionResult<IEnumerable<HtnEdgeModel>> GetEdges([FromQuery] string graph)` | `:32-37` |
+| `UpdateNodeContent` | `IActionResult UpdateNodeContent(string id, [FromBody] object content)` | `:39-53` |
+| `Ping` | `ActionResult Ping()` | `:55-87` |
+| `DebugConnection` | `ActionResult<object> DebugConnection()` | `:89-98` |
+| `GetNode` | `ActionResult<HtnNodeModel> GetNode(string id, [FromQuery] string graph)` | `:100-109` |
+| `CreateNode` | `IActionResult CreateNode([FromBody] HtnNodeModel node)` | `:111-134` |
+| `DeleteNode` | `IActionResult DeleteNode(string id, [FromQuery] string graph)` | `:136-159` |
+| `BatchDeleteNodes` | `IActionResult BatchDeleteNodes([FromBody] List<string> ids, [FromQuery] string graph)` | `:161-192` |
+| `AddEdge` | `IActionResult AddEdge([FromBody] HtnEdgeModel edge)` | `:194-220` |
+| `RemoveEdge` | `IActionResult RemoveEdge([FromQuery] string from, string to, string graph)` | `:222-241` |
+| `MigrateGraph` | `IActionResult MigrateGraph()` | `:243-273` |
+
+#### `Controllers/HtnCategoriesController.cs`
+
+`public class HtnCategoriesController : ControllerBase` — `[ApiController]` +
+`[Route("api/[controller]")]` (`HtnCategoriesController.cs:7-9`); the single category document.
+
+| Member | Signature | Where |
+| --- | --- | --- |
+| Constructor | `HtnCategoriesController(ApplicationDbContext context)` | `:13-16` |
+| `GetMain` | `ActionResult GetMain()` | `:18-27` |
+| `SaveMain` | `IActionResult SaveMain([FromBody] object jsonContent)` | `:29-59` |
+
+#### `Data/DbInitializer.cs`
+
+`public static class DbInitializer` (`DbInitializer.cs:6`); schema creation + optional seeding
+(never invoked from `Program.cs`, §3.3). The seed dataset itself is enumerated in T10.3.
+
+| Member | Signature | Where |
+| --- | --- | --- |
+| `Initialize` | `static void Initialize(ApplicationDbContext context)` — `EnsureCreated()`, orphan-edge cleanup, thesis/counterthesis/edge seeding | `:8-148` |
+| `CreateEdge` | `static HtnEdgeModel CreateEdge(string from, string to, string graph)` (private) | `:150-153` |
+| `CreateThesis` | `static HtnNodeModel CreateThesis(string id, string label, string description, int layer, string[]? countertheses = null, Dictionary<string, object>? flow = null)` (private) | `:155-173` |
+| `CreateCounterthesis` | `static HtnNodeModel CreateCounterthesis(string id, string label, string description, int layer, string[]? theses = null, Dictionary<string, object>? flow = null, string? informal = null)` (private) | `:175-195` |
+
+#### `Models/HtnNode.cs`
+
+Node entity + its layer metrics (persistence details in §3.3).
+
+| Member | Signature / shape | Where |
+| --- | --- | --- |
+| `HtnNodeModel` | `public class` | `:5-43` |
+| `Id` | `string` (`[Key]`, JSON `"id"`) | `:9-11` |
+| `Graph` | `string` (JSON `"graph"`) | `:13-14` |
+| `ContentJson` | `string` = `"{}"` (`[JsonIgnore]`) | `:17-18` |
+| `Content` | `object?` (`[NotMapped]`, JSON `"content"`; setter serializes) | `:20-28` |
+| `LayerJson` | `string` = `"{}"` (`[JsonIgnore]`) | `:31-32` |
+| `Layer` | `LayerMetrics?` (`[NotMapped]`, JSON `"layer"`) | `:34-40` |
+| `LayerMetrics` | `public class { int LongestPath; int ShortestPath; double Avg }` | `:45-50` |
+
+#### `Models/HtnEdge.cs`
+
+`public class HtnEdgeModel` (graph edge; no FK to nodes, §3.3).
+
+| Member | Signature / shape | Where |
+| --- | --- | --- |
+| `Id` | `int` (`[Key]`, JSON `"id"`) | `:7-9` |
+| `FromId` | `string` (JSON `"fromId"`) | `:11-12` |
+| `ToId` | `string` (JSON `"toId"`) | `:14-15` |
+| `Graph` | `string` — `'thesis'` or `'counterthesis'` (JSON `"graph"`) | `:17-18` |
+
+#### `Models/HtnCategoryDoc.cs`
+
+`public class HtnCategoryDoc` — `[Table("HtnCategoryDoc")]` singleton category document.
+
+| Member | Signature / shape | Where |
+| --- | --- | --- |
+| `Id` | `string` = `"main"` (`[Key]`) | `:9-10` |
+| `JsonData` | `string` = `"[]"` | `:11` |
+
+#### `Models/TestContext.cs` — unused scaffold
+
+`public partial class TestContext : DbContext` (`Models/TestContext.cs:7`). Not registered or
+referenced anywhere in the runtime (no `Program.cs`/controller/config use).
+
+| Member | Signature | Where |
+| --- | --- | --- |
+| Constructor | `TestContext()` | `:9-11` |
+| Constructor | `TestContext(DbContextOptions<TestContext> options)` | `:13-16` |
+| `OnConfiguring` | `protected override void OnConfiguring(DbContextOptionsBuilder)` → `UseSqlServer("Name=DefaultConnection")` | `:18-19` |
+| `OnModelCreating` | `protected override void OnModelCreating(ModelBuilder)` → `OnModelCreatingPartial` | `:21-24` |
+| `OnModelCreatingPartial` | `partial void OnModelCreatingPartial(ModelBuilder)` | `:26` |
+
+#### `Services/ApplicationDbContext.cs`
+
+`public class ApplicationDbContext : DbContext` (`ApplicationDbContext.cs:7`); no
+`OnModelCreating`, so there are no relationships/indexes (§3.3).
+
+| Member | Signature | Where |
+| --- | --- | --- |
+| Constructor | `ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)` | `:8-10` |
+| `HtnNodes` | `DbSet<HtnNodeModel>` | `:12` |
+| `HtnEdges` | `DbSet<HtnEdgeModel>` | `:13` |
+| `HtnCategories` | `DbSet<HtnCategoryDoc>` | `:14` |
+
+#### `Services/HttpConnectionProvider.cs`
+
+`public class HttpConnectionProvider : IConnectionProvider` (`HttpConnectionProvider.cs:7`); the
+per-request connection seam (algorithm in §3.4, full matrix §5.2).
+
+| Member | Signature | Where |
+| --- | --- | --- |
+| Constructor | `HttpConnectionProvider(IHttpContextAccessor httpContextAccessor, IConfiguration configuration)` — caches config `"DefaultConnection"` | `:12-16` |
+| `GetConnectionString` | `string GetConnectionString()` — header `X-Connection-String` (base64 → UTF-8, raw fallback) → config `DefaultConnection` | `:18-42` |
+
+#### `Services/IConnectionProvider.cs`
+
+`public interface IConnectionProvider` (`IConnectionProvider.cs:3`); the seam implemented by
+`HttpConnectionProvider` and consumed by the per-scope `DbContext` delegate (`Program.cs:34-37`).
+
+| Member | Signature | Where |
+| --- | --- | --- |
+| `GetConnectionString` | `string GetConnectionString()` | `:5` |
+
+#### Non-source files
+
+| File | Role |
+| --- | --- |
+| `ResolutionEngine.csproj` | Project file: `Microsoft.NET.Sdk.Web`, `net9.0`, Nullable/ImplicitUsings; 4 packages (`:9-16`). |
+| `ResolutionEngine.sln` | Solution wrapper (single project). |
+| `Properties/launchSettings.json` | Dev profiles; http `:5250` / https `:7150` (§5.2). |
+| `appsettings.json` | Logging, `AllowedHosts`, **placeholder** `DefaultConnection` (§3.1, §5.2). |
+| `appsettings.Development.json` | Logging only — no connection string (§3.1). |
+| `Dockerfile` / `.dockerignore` / `.gitignore` | Container build + ignore rules (§5.1). |
+| `cleanup_weight_column.sql` | Legacy manual `ALTER` evidence — a dropped `Weight` column (§3.3). |
+| `ResolutionEngine.http` | HTTP scratch file with a stale `weatherforecast` sample — not runtime (§3.4). |
+| `build_log.txt` / `build_output.txt` | Historical `MSB3026` file-lock build failures — not runtime (§3.4). |
 
 ## 4. Frontend — `shiny-computing-machine` (`purgatory-ui`)
 
@@ -566,6 +761,8 @@ The window system (`features/window-system/**`) is the core UI abstraction:
 
 ### 4.4 Feature inventory
 
+The window, dock, and plan terms used below are mapped to code in §2.6.
+
 | Feature (`src/app/features/…`) | Role |
 |---|---|
 | `graph-lib` | `@swimlane/ngx-graph` wrapper + a single-node prototype patch (`graph.ts`, `config.ts`). |
@@ -604,6 +801,9 @@ Domain types live in `core/domain/types.ts` — `GraphType`, `NODE_TYPES` (`data
 
 ### 4.6 Domain graph algorithms, PWA, styling & tests
 
+Vocabulary for the terms used here (graph, adjacency, layer, trigger, effect, referencer) is
+mapped to code in §2.6.
+
 **Graph algorithms live here** (D6): `core/domain/graph.utils.ts` implements `rebuildAdjacency`
 (`:6-17`), `computeTopology` — longest/shortest-path layering + trigger/effect synthesis
 (`:19-85`), `refreshGraph` (`:87-92`), `populateCrossReferences` — bidirectional
@@ -629,6 +829,8 @@ thesis↔counterthesis linking (`:94-140`), `addEdge`/`removeEdge` (`:142-153`),
 
 ## 5. Infrastructure, containers & deployment topology
 
+### 5.1 Containers, images & topology
+
 `docker-compose.yml` (root) defines one network `ere-network` (bridge) and four services:
 
 | Service | Image / build | Ports | Profile | Notes |
@@ -648,6 +850,57 @@ header comment warns that `(localdb)` strings do not work in-container.
 `try_files … /index.html`, 6-month caching for static assets, and an exact-match
 `location = /scripts/index.json` with `no-store` so the regenerated script manifest is never
 cached (`nginx.conf:7-23`).
+
+### 5.2 Configuration & ports matrix
+
+Every runtime setting and port, with where each value comes from. Unless noted, values are read
+from the backend's `appsettings*.json` / `launchSettings.json` / `docker-compose.yml` or the
+frontend's `angular.json` / `package.json` / `core/config/app-config.ts`.
+
+**Settings**
+
+| Setting | Dev (local) | Container / prod | Source |
+|---|---|---|---|
+| `ASPNETCORE_ENVIRONMENT` | `Development` (both launch profiles) | `Development` | `launchSettings.json:10,19`; `docker-compose.yml:22` |
+| `applicationUrl` (launch profile) | http `http://0.0.0.0:5250`; https `https://0.0.0.0:7150;http://0.0.0.0:5250` | — (uses `ASPNETCORE_URLS`) | `launchSettings.json:8,17` |
+| `ASPNETCORE_URLS` | — | `http://+:8080` | `docker-compose.yml:23` |
+| `ConnectionStrings:DefaultConnection` | placeholder `Server=YOUR_SERVER;Database=YOUR_DATABASE;Trusted_Connection=True;TrustServerCertificate=True` | `Server=db;Database=ResolutionEngineDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True` | `appsettings.json:10`; `docker-compose.yml:24` |
+| LocalDB fallback | in-code, only when the resolved string is **empty**: `Server=(localdb)\mssqllocaldb;Database=ResolutionEngineDb;Trusted_Connection=True;MultipleActiveResultSets=true` | same | `Program.cs:36` |
+| `MSSQL_SA_PASSWORD` | — (consumed by `db` + the compose override) | `${MSSQL_SA_PASSWORD:-Password123!}` | `docker-compose.yml:7,24` |
+| `AllowedHosts` | `*` | `*` | `appsettings.json:8` |
+| `Logging:LogLevel` | `Default=Information`, `Microsoft.AspNetCore=Warning` | same | `appsettings.json:2-7`; `appsettings.Development.json:2-7` |
+| CORS policy `AllowAngularDev` | any origin, any header, any method | same | `Program.cs:7-16` |
+| `APP_CONFIG.apiUrl` | `http://localhost:5250/api` | same — **hardcoded, no env replacement** | `app-config.ts:2` |
+| Angular build/serve config | serve default `development`; build default `production` (`outputHashing: all`, budgets) | same | `angular.json:53,61,73` |
+| npm script hooks | `prestart`/`prebuild`/`prewatch` run `scripts:index` first | same | `package.json:6-13` |
+
+**Ports**
+
+| Port | Process / service | Dev (host) | Container | Source |
+|---|---|---|---|---|
+| `5250` | backend HTTP | API on `0.0.0.0:5250` | host `5250` → container `8080` | `launchSettings.json:8`; `docker-compose.yml:26` |
+| `7150` | backend HTTPS | https launch profile only (unused by the SPA) | — | `launchSettings.json:17` |
+| `8080` | backend in-container | — | `ASPNETCORE_URLS=http://+:8080` | `docker-compose.yml:23`; `Dockerfile:17` |
+| `8081` | backend (declared only) | — | `EXPOSE`d with no bound URL | `Dockerfile:18` |
+| `1433` | SQL Server 2022 | `1433:1433` | `1433:1433` | `docker-compose.yml:9` |
+| `4250` | Angular dev server | `ng serve` (`npm start`) | `frontend-dev` `4250:4250` | `package.json:8`; `angular.json:75`; `docker-compose.yml:54` |
+| `4200` | frontend prod (host) | — | `4200` → nginx `80` | `docker-compose.yml:40` |
+| `80` | nginx (`frontend-prod`) | — | in-container web root | `Dockerfile:28`; `nginx.conf:2` |
+
+- **Profiles & volumes** (defined in §5.1): `db`/`backend` are always on; `frontend-prod` is the
+  `prod` profile, `frontend-dev` the `dev` profile; data persists in the `mssql_data` volume with
+  `./backups` bind-mounted.
+- **No committed `.env`.** `MSSQL_SA_PASSWORD` is supplied by the environment and falls back to
+  `Password123!`; the root `.gitignore` ignores only `backups/`.
+- **Host vs container ports.** The API is `:5250` on the host in both modes (dev binds it
+  directly; compose maps host `5250 → 8080`). The SPA's hardcoded `http://localhost:5250/api`
+  therefore resolves from a host browser even against the prod frontend container (§6 item 6).
+- **HTTPS is dev-host only.** The `:7150` https profile is unused by the SPA, and the container
+  sets `ASPNETCORE_ENVIRONMENT=Development`, so `UseHttpsRedirection()` stays off
+  (`Program.cs:53-56`); `EXPOSE 8081` in the image has no matching URL.
+- **`ConnectionStrings__DefaultConnection` is the container seam**; on the host the committed
+  placeholder is what the API would use absent an `X-Connection-String` header, so LocalDB is
+  reached only when the resolved string is empty (§5.2 settings table, `Program.cs:34-37`).
 
 ## 6. Known limits / gaps (current behaviour, not intent)
 

@@ -49,9 +49,12 @@ of the corrections:
 - **P6** `PRODUCTION_CHECKLIST.md` — done (B1–B6, F1–F3, infra, smoke tests).
 - **P7** root-doc reconciliation — done.
 - **P8** consistency audit + final state — done (T8.1 audit; T8.2 this file).
-- **P9** ARCHITECTURE (full) — foundations & schemas — **in progress (2/4)**: T9.1 (node-content
-  schema → `ARCHITECTURE.md` §3.5) and T9.2 (lifecycle & sequence diagrams → §2.1–§2.5) done;
-  T9.3–T9.4 todo.
+- **P9** ARCHITECTURE (full) — foundations & schemas — **done (4/4)**: T9.1 (node-content
+  schema → `ARCHITECTURE.md` §3.5), T9.2 (lifecycle & sequence diagrams → §2.1–§2.5), T9.3
+  (configuration & ports matrix → §5.2) and T9.4 (vocabulary & domain code map → §2.6).
+- **P10** ARCHITECTURE (full) — backend reference — **in progress (1/4)**: T10.1 (per-file /
+  per-class reference → §3.6); T10.2 (endpoint reference), T10.3 (persistence + seed) and T10.4
+  (cross-cutting behaviours) remain.
 
 The T8.1 audit fixed three drifts: backend seed counts (17 thesis nodes / 17 thesis edges),
 the service-worker registration location (`src/index.html:24-30`, not `pwa.service.ts`), and the
@@ -60,8 +63,9 @@ now-obsolete "entry-point docs are stale" note in `ARCHITECTURE.md` §6.
 ## What remains / next logical action
 
 Part I (P0–P8) is **complete**. **Part II (P9–P14, full ARCHITECTURE coverage) is in progress**:
-T9.1 (node-content schema) and T9.2 (lifecycle & sequence diagrams) are done, so the next
-documentation ticket is **T9.3 (configuration, environment & ports matrix)** in `ROADMAP.md`.
+P9 is done, and **P10 (backend reference) has started — T10.1 (per-file / per-class reference →
+§3.6) is done**, so the next documentation ticket is **T10.2 (endpoint reference — request/response
+schemas & status codes)** in `ROADMAP.md`.
 
 Separately, *product* work surfaced by the docs remains:
 
