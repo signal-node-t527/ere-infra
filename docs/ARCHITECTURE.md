@@ -195,7 +195,7 @@ sequenceDiagram
     participant G as HtnGraphService
     participant R as HttpHtnRepository
     C->>H: updateNodeContent(id, graph, content) (htn.service.ts:94)
-    H->>H: ensure a flow entry per parent; drop root when parents exist (:104-129)
+    H->>H: ensure a flow entry per parent, drop root when parents exist (:104-129)
     H->>G: syncEdges(id, graph, old, new) (htn-graph.service.ts:15)
     G->>R: addEdge / removeEdge from the diff (htn-graph.service.ts:30-124)
     H->>R: POST /htn/nodes/{id}/content (http.repository.ts:130)
