@@ -27,7 +27,9 @@ frontend profile) run through the root `docker-compose.yml`. Reality, honestly s
 
 ### Entry-point doc corrections (made in P7 / T7.1)
 
-Both `README.md` and `DOCUMENTATION.md` were stale on arrival. They now state the reality:
+Both `README.md` and `DOCUMENTATION.md` were stale on arrival and were corrected in T7.1.
+`DOCUMENTATION.md` was later **removed** (D15) as redundant; the table below is kept as history
+of the corrections:
 
 | Was claimed before T7.1 | Reality (now documented) |
 |---|---|
@@ -38,15 +40,17 @@ Both `README.md` and `DOCUMENTATION.md` were stale on arrival. They now state th
 | Topological analysis in the backend (`DOCUMENTATION.md:83-84`) | In the frontend (`core/domain/graph.utils.ts`) (D6) |
 | Frontend dev on `:4200` (`README.md:46,65`) | Dev server `:4250`; `:4200` is the prod nginx port |
 
-## Buildout status (P0–P8)
+## Buildout status (P0–P8 done; P9–P14 planned)
 
 - **P0** scaffolding — done.
 - **P1–P3** `ARCHITECTURE.md` (infra, backend, frontend) — done, audited in T8.1.
 - **P4** `PROJECT_STATE.md` — done (this file).
-- **P5** `DECISIONS.md` backfill — done (D1–D14).
+- **P5** `DECISIONS.md` backfill — done (D1–D15).
 - **P6** `PRODUCTION_CHECKLIST.md` — done (B1–B6, F1–F3, infra, smoke tests).
 - **P7** root-doc reconciliation — done.
 - **P8** consistency audit + final state — done (T8.1 audit; T8.2 this file).
+- **P9** ARCHITECTURE (full) — foundations & schemas — **in progress (1/4)**: T9.1 (node-content
+  schema → `ARCHITECTURE.md` §3.5) done; T9.2–T9.4 todo.
 
 The T8.1 audit fixed three drifts: backend seed counts (17 thesis nodes / 17 thesis edges),
 the service-worker registration location (`src/index.html:24-30`, not `pwa.service.ts`), and the
@@ -54,12 +58,14 @@ now-obsolete "entry-point docs are stale" note in `ARCHITECTURE.md` §6.
 
 ## What remains / next logical action
 
-The documentation buildout itself is **complete**. There is no open documentation ticket. The
-remaining work is *product* work surfaced by the docs, not docs work:
+Part I (P0–P8) is **complete**. **Part II (P9–P14, full ARCHITECTURE coverage) is in progress**:
+T9.1 (node-content schema) is done, so the next documentation ticket is **T9.2 (request/response
+lifecycle & sequence diagrams)** in `ROADMAP.md`.
+
+Separately, *product* work surfaced by the docs remains:
 
 - Close the production seams in `PRODUCTION_CHECKLIST.md` (connection-string seam B1, migrations
   B2, auth/CORS B4, hardcoded frontend API URL F1, …).
 - Optionally add a backend test project (currently none).
 
-If more documentation is needed later, open a new ticket in `ROADMAP.md` following the existing
-one-ticket-at-a-time workflow.
+Resume documentation via the one-ticket-at-a-time workflow in `ROADMAP.md`.

@@ -2,8 +2,8 @@
 
 Master plan for producing the `ere-infra` documentation set to the **same depth and rigor
 as `LilithsTest/docs`**. Documentation *is* the product of this workstream: there is **no
-application code change** except correcting the two stale entry-point docs (`README.md`,
-`DOCUMENTATION.md`).
+application code change** except correcting the entry-point docs and removing the redundant
+`DOCUMENTATION.md` (D15).
 
 The plan has two parts:
 
@@ -14,7 +14,7 @@ The plan has two parts:
   overview to an **exhaustive reference** — the node-content schema, sequence diagrams,
   per-file/per-class, per-endpoint/per-schema, per-service, per-component, and a complete
   console-command reference — targeting the depth of `LilithsTest/docs/ARCHITECTURE.md` (~830
-  lines). **No Part II ticket is started**; it is a plan only (every ticket is `[ ] todo`).
+  lines). Part II has begun: **T9.1 is `done`**; the remaining tickets are `[ ] todo`.
 
 This is a **forward-looking plan** — it defines what to document next and tracks progress.
 `ARCHITECTURE.md` is the record of reality and is written/updated only when a documentation
@@ -44,13 +44,13 @@ Remaining work is product, not docs — see `PRODUCTION_CHECKLIST.md`.
    halves (`resolution-engine`, `shiny-computing-machine`) are independent git submodules
    (`.gitmodules`), and the root repo is the integration/infra layer.
 2. **`ARCHITECTURE.md` reflects reality, not intent**, backed by `file:line` evidence. Where
-   the shipped code contradicts the existing `README.md`/`DOCUMENTATION.md`, the code wins
-   and the contradiction is recorded (then fixed in P7).
+   the shipped code contradicts the entry-point docs, the code wins and the contradiction is
+   recorded (then fixed in P7; the redundant `DOCUMENTATION.md` was later removed — D15).
 3. **Document code terms as they are** — do not rename anything as part of documentation.
    Notably the graph value is `"counterthesis"` with `"antithesis"` kept as a compatibility
    alias in the API layer.
 4. **No code changes.** The only non-`docs/` edits this workstream makes are the P7
-   corrections to `README.md` and `DOCUMENTATION.md`.
+   corrections to `README.md` and the D15 removal of `DOCUMENTATION.md`.
 5. **Quality bar = LilithsTest/docs**: per-endpoint tables, state machines where relevant,
    "known limits / gaps" sections, and a production checklist whose rows each carry a
    *production action* and a *verification*.
@@ -76,9 +76,9 @@ Remaining work is product, not docs — see `PRODUCTION_CHECKLIST.md`.
 | P4 | PROJECT_STATE — snapshot + session log | 1/1 | done |
 | P5 | DECISIONS — backfill the decision log | 1/1 | done |
 | P6 | PRODUCTION_CHECKLIST — dev-seam registry | 1/1 | done |
-| P7 | Root docs reconciliation (`README.md`, `DOCUMENTATION.md`) | 1/1 | done |
+| P7 | Root docs reconciliation (`README.md`, then-`DOCUMENTATION.md`) | 1/1 | done |
 | P8 | Consistency audit + final state | 2/2 | done |
-| P9 | ARCHITECTURE (full) — foundations & schemas | 0/4 | todo |
+| P9 | ARCHITECTURE (full) — foundations & schemas | 1/4 | in_progress |
 | P10 | ARCHITECTURE (full) — backend reference | 0/4 | todo |
 | P11 | ARCHITECTURE (full) — frontend core reference | 0/4 | todo |
 | P12 | ARCHITECTURE (full) — frontend feature reference | 0/8 | todo |
@@ -196,7 +196,7 @@ Notes:
 - No `OnModelCreating`, no relationships/FKs/indexes; **no `Migrations/`** — `EnsureCreated()`
   only, and `DbInitializer.Initialize` is **not** called from `Program.cs`.
 - **No custom polymorphic `JsonConverter`s exist** — content is untyped JSON (contradiction
-  with `DOCUMENTATION.md`, corrected in T7.1).
+  with the former `DOCUMENTATION.md`, corrected in T7.1).
 - `Models/TestContext.cs` is an unused scaffold DbContext; `cleanup_weight_column.sql` drops a
   legacy `Weight` column.
 - **Drafted 2026-10-10** in `docs/ARCHITECTURE.md` §3.3; verified in T8.1 (2026-10-10).
@@ -342,7 +342,7 @@ Notes: **Drafted 2026-10-10.** Backend B1–B6 (connection seam, `EnsureCreated`
 ### T7.1  Correct `README.md` + `DOCUMENTATION.md`
 Status: [x] done
 Blocked by: P1–P6
-Files: `README.md`, `DOCUMENTATION.md` (root `ere-infra/`)
+Files: `README.md`, `DOCUMENTATION.md` (root `ere-infra/`; file removed later in D15)
 Verify: frameworks, ports, endpoints, naming, and graph-logic location all match the code;
         the "custom polymorphic converters" claim is gone; the endpoint lists match T2.2
 Notes: **Done 2026-10-10.** .NET 8 → **9**; Angular 18 → **20**; `purgatory-ui` package name
@@ -418,21 +418,19 @@ that look like bugs become `PRODUCTION_CHECKLIST.md` rows or §6 notes — never
 ## Phase 9 — Full ARCHITECTURE: foundations & schemas
 
 ### T9.1  Node-content JSON schema (`content`) reference
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [x] done
 Blocked by: —
 Files: `docs/ARCHITECTURE.md` (new §3.5 "Node content schema")
 Verify: every field verified against `Data/DbInitializer.cs` (seed content),
         `src/app/core/domain/types.ts` (`NodeContentRoot*`), `core/domain/constants.ts`
         (`REQUIRED_NON_FALSY_KEYS`, `GLOBAL_STANDARD_KEYS`), and
         `features/htn-editor/htn-content.service.ts`
-Notes:
-- Document the exact JSON shape stored in `HtnNodeModel.ContentJson` for **thesis** and
-  **counterthesis**: `label`, `logicalConnector`, `description`, `flow` (map keyed by parent/root
-  holding `priority`/`condition`/`completed`/`completedCondition`/`cycles`/`analyzes`),
-  `flow`+`triggers`/`effects`, `countertheses`/`theses`, `refId`/`referencers`, `type`, `state`,
-  `executionOrder`, `informal`, `justification`.
-- Give each field: type, required/optional, default, and the condition that requires it
-  (from the validation service). Add one fully-worked example per graph.
+Notes: **Done 2026-10-10.** Added `ARCHITECTURE.md` §3.5: storage/transport, common +
+       thesis-only + counterthesis-only field tables (with required/default), defaults &
+       normalization, validation rules, `LayerMetrics`, seed-reality mismatches, and two
+       worked examples (`2bb33b4d`, `l0asd142`). Recorded that `logicalConnector`/`description`/
+       `informal` are seed-only (not in `types.ts`). Also removed the redundant
+       `DOCUMENTATION.md` (D15) after capturing its content.
 
 ### T9.2  Request/response lifecycle & sequence diagrams
 Status: [ ] todo  [ ] in_progress  [ ] done
@@ -662,12 +660,10 @@ Verify: every `file:line` citation resolves; every inventory file appears; no in
 Notes: re-run the T8.1 method across the expanded document (per-file, per-endpoint, per-command);
        fix drift and citations.
 
-### T14.3  Entry-point doc symmetry
-Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T14.2
-Files: `README.md`, `DOCUMENTATION.md`
-Verify: both agree with the expanded `ARCHITECTURE.md`; pointers correct
-Notes: refresh the entry-point docs' summaries/pointers to the deeper sections (docs-only edit,
+Files: `README.md`
+Verify: it agrees with the expanded `ARCHITECTURE.md`; pointers correct
+Notes: refresh the entry-point doc's summaries/pointers to the deeper sections (docs-only edit,
        consistent with D3/P7).
 
 ### T14.4  Final state refresh

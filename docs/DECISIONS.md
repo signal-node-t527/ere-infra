@@ -17,15 +17,16 @@ that are only implicit in the code today.
 
 ### D2 — `ARCHITECTURE.md` reflects reality, not intent
 - Every load-bearing claim is verified against the code and, where it matters, cited by
-  `file:line`. Where the current `README.md`/`DOCUMENTATION.md` contradict the code, the code
-  is authoritative; the contradiction is recorded and then corrected in P7.
+  `file:line`. Where the entry-point docs (`README.md`, and `DOCUMENTATION.md` until D15)
+  contradicted the code, the code is authoritative; the contradiction is recorded and then
+  corrected in P7.
 - This is the same rule as `LilithsTest/docs`: "The documentation must reflect reality, not
   the intended state."
 
 ### D3 — No application code changes (docs only)
-- This workstream changes only files under `docs/`, plus the P7 corrections to the two
-  entry-point documents (`README.md`, `DOCUMENTATION.md`). No source, config, or Docker file
-  is touched.
+- This workstream changes only files under `docs/`, plus the P7 corrections to the entry-point
+  documents and the D15 removal of `DOCUMENTATION.md`. No source, config, or Docker file is
+  touched.
 
 ### D4 — Document code terms verbatim; do not rename
 - The canonical graph value in the backend is `"counterthesis"`, with `"antithesis"` retained
@@ -93,3 +94,17 @@ production risk it is also a `PRODUCTION_CHECKLIST.md` row.
 - `package.json:17-48` lists both toolchains; `angular.json:82-89` selects the
   `@angular-devkit/build-angular:jest` builder for `ng test`, while Karma/Jasmine specs remain.
   Documented as reality; no consolidation is proposed in this workstream.
+
+## 2026-10-10 — Part II (full ARCHITECTURE coverage)
+
+### D15 — `DOCUMENTATION.md` is removed; `README.md` + `docs/` are the entry points
+- The former root `DOCUMENTATION.md` duplicated `README.md` + `docs/ARCHITECTURE.md` while
+  carrying stale detail (see `PROJECT_STATE.md`'s corrections table) and a third copy of the
+  node-content / endpoint / feature lists to keep in sync. It is **deleted outright** (no
+  redirect stub), superseded as follows:
+  - models / node content → `ARCHITECTURE.md` §3.3 + §3.5 (T9.1);
+  - API endpoints → §3.2; features → §4; deployment → §5; overview/quick-start → `README.md`.
+- Consequences: `README.md` drops its `DOCUMENTATION.md` bullet; `ARCHITECTURE.md` §1/§6 and the
+  `ROADMAP.md` / `PROJECT_STATE.md` / `CURRENT_TASK.md` references are reworded to past tense;
+  T14.3 ("entry-point doc symmetry") now covers `README.md` only. This is the only non-`docs/`
+  edit in Part II and extends D3.

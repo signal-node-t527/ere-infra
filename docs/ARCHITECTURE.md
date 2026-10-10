@@ -2,8 +2,9 @@
 
 > **Status: audited (2026-10-10, ROADMAP T8.1).** Written against the code as it exists today;
 > every load-bearing claim cites `file:line`, and the T8.1 audit re-read each claim against the
-> tree. This document is the record of **reality**, not intent; where `README.md`/`DOCUMENTATION.md`
-> disagreed with the code, the code won (the contradictions were recorded in §6 and fixed in T7.1).
+> tree. This document is the record of **reality**, not intent; where the entry-point docs
+> disagreed with the code, the code won (recorded in §6 and fixed in T7.1; the redundant
+> `DOCUMENTATION.md` was then removed — D15).
 
 > ERE (Explicit Resolution Engine) models and resolves complex problems as a **dialectic
 > graph**: **Thesis** nodes (structures/regularities) and **Counterthesis** nodes
@@ -17,8 +18,7 @@
 ```
 ere-infra/                         # integration/infra root — itself a git repo
 ├── AGENTS.md                      # workflow / context-management rules
-├── README.md                      # entry-point doc (stale — corrected in T7.1)
-├── DOCUMENTATION.md               # entry-point doc (stale — corrected in T7.1)
+├── README.md                      # entry-point doc (corrected in T7.1)
 ├── docker-compose.yml             # the whole stack (db / backend / frontend-prod|dev)
 ├── .gitmodules                    # declares the two submodules
 ├── backups/                       # bind-mounted into the db container
@@ -160,7 +160,7 @@ Cross-cutting endpoint behaviour:
 - **`ContentJson`** — persisted `string` (default `"{}"`), `[JsonIgnore]` (`HtnNode.cs:17-18`),
   exposed as a `[NotMapped] object? Content` that (de)serializes with `System.Text.Json`
   (`HtnNode.cs:20-28`). Content is **untyped JSON** — there are **no custom polymorphic
-  converters** (contradicts `DOCUMENTATION.md:29`; see §6).
+  converters** (the former `DOCUMENTATION.md` claimed these; see §6).
 - **`LayerJson`** — persisted `string`, exposed as `[NotMapped] LayerMetrics? Layer`
   (`HtnNode.cs:30-40`). `LayerMetrics { LongestPath:int, ShortestPath:int, Avg:double }`
   (`HtnNode.cs:45-50`). Layers are **persisted**, but computed by the **frontend** (D6).
@@ -186,7 +186,7 @@ is created empty by `ping`, and **no demo data appears unless `Initialize` is ru
 **8 counterthesis nodes**, and **17 thesis edges + 8 counterthesis edges**
 (`DbInitializer.cs:26-147`); thesis content carries `label`/`logicalConnector`/`description`/
 `flow`/`countertheses`, counterthesis content adds `theses` and optional `informal`
-(`DbInitializer.cs:155-195`).
+(`DbInitializer.cs:155-195`). The full field-by-field schema is §3.5.
 
 `Models/TestContext.cs` is an **unused** scaffold `DbContext` bound to
 `Name=DefaultConnection` (`TestContext.cs:18-19`).
@@ -210,7 +210,100 @@ Because `EnsureCreated()` never alters an existing schema, the repo carries
 - **No tests** exist in this project (contrast the frontend's 21 specs) — a gap (§6).
 - Non-runtime artifacts at the backend root: `build_log.txt` / `build_output.txt` (historical
   `MSB3026` file-lock build failures from a running `ResolutionEngine.exe`), and
-  `ResolutionEngine.http` (a template with a stale `weatherforecast` sample). None are runtime.
+   `ResolutionEngine.http` (a template with a stale `weatherforecast` sample). None are runtime.
+
+### 3.5 Node content schema (`content`)
+
+(ROADMAP T9.1.) Node payloads are **untyped JSON** (D8). The persisted `HtnNodeModel.ContentJson`
+string (`Models/HtnNode.cs:17-18`) is exposed as `[NotMapped] object? Content`
+(`HtnNode.cs:20-28`): reads yield a `JsonElement` DOM, writes re-serialize with
+`System.Text.Json`, and property names deserialize case-insensitively (`Program.cs:21`). There is
+**no** discriminator, type registry, or `JsonConverter`. The schema below is the de-facto contract
+shared by the seed (`Data/DbInitializer.cs:155-195`), the SPA types
+(`core/domain/types.ts:42-105`), its templates/defaults
+(`core/domain/constants.ts:3-57`, `core/domain/models.ts:9-46`), the editor cleanup
+(`features/htn-editor/htn-content.service.ts:117-165`), and the validator
+(`core/services/htn-validation.service.ts:8-82`).
+
+Conventions: keys are camelCase; `flow` is an object **keyed by the parent node id**; list fields
+hold **node ids** (same graph unless noted).
+
+**Common fields** (`NodeContentRoot`, `types.ts:44-50`)
+
+| Key | Type | Required | Default | Notes |
+|---|---|---|---|---|
+| `label` | string | yes | `''` | must be non-empty (`htn-validation.service.ts:28`); in `REQUIRED_NON_FALSY_KEYS` (`constants.ts:54-57`) |
+| `triggers` | string[] | no | `[]` | node refs; integrity-checked (`integrity.handler.ts:74-83`) |
+| `effects` | string[] | no | `[]` | node refs; integrity-checked (`integrity.handler.ts:76-86`) |
+| `refId` | string | no | `''` | meaningful only when `type == "referencer"`; cleared otherwise (`htn-content.service.ts:66-72,157-162`) |
+| `referencers` | string[] | no | `[]` | **computed** by `populateCrossReferences` (`graph.utils.ts:94-140`); not authored |
+
+**Thesis-only** (`NodeContentRootThesis`, `types.ts:80-85`; template `constants.ts:3-13`)
+
+| Key | Type | Required | Default | Notes |
+|---|---|---|---|---|
+| `flow` | `Record<parentId, FlowStateThesis>` | yes | `{}` | one entry per parent edge (`htn-validation.service.ts:14-23`) |
+| `countertheses` | string[] | no | `[]` | cross-graph refs to counterthesis ids |
+| `type` | `"data"/"process"/"referencer"` | no | `"process"` | `NODE_TYPES` (`types.ts:9`) |
+| `justification` | string | yes | `''` | non-falsy (`REQUIRED_NON_FALSY_KEYS`) |
+
+`FlowStateThesis` (`types.ts:78`) = `{ condition: string, priority: number }`; `priority` must be
+a non-negative integer (`htn-validation.service.ts:44-48`).
+
+**Counterthesis-only** (`NodeContentRootCounterthesis`, `types.ts:69-76`; template `constants.ts:15-26`)
+
+| Key | Type | Required | Default | Notes |
+|---|---|---|---|---|
+| `flow` | `Record<parentId, FlowStateCounterthesis>` | yes | `{}` | as above |
+| `theses` | string[] | no | `[]` | cross-graph refs to thesis ids |
+| `state` | `"W"/"B"/"A"/"S"` | no | `"W"` | `STATE_OPTIONS` (`types.ts:17`) |
+| `executionOrder` | `"unit"/"set"` | no | `"unit"` | `EXECUTION_ORDER_OPTIONS` (`types.ts:20`) |
+| `type` | `"data"/"process"/"referencer"` | no | `"process"` | as thesis |
+
+`FlowStateCounterthesis` (`types.ts:61-67`) adds to `FlowStateThesis`: `completed: boolean` and
+`completedCondition: string` (both required — `htn-validation.service.ts:50-57`), plus optional
+`cycles?: string[]` and `analyzes?: { timestamp, analysis }[]`.
+
+**Defaults & normalization**
+
+- `Thesis`/`Counterthesis` constructors (`models.ts:9-46`) fill `triggers`/`effects` and the
+  cross-ref list from constructor args when content is empty, normalize `layer` (number →
+  `{longestPath,shortestPath,avg}`), and default `state`/`executionOrder`/`type`.
+- `HtnContentService.cleanupContent` (`htn-content.service.ts:117-165`): coerces a blank
+  `priority` to `0`, defaults `condition` to `"next"` for counterthesis (else `""`), fills
+  `completed`/`completedCondition` for counterthesis, strips counterthesis-exclusive keys from a
+  thesis node, and clears `refId` when `type != "referencer"`.
+- `getDefaultContent` (`htn-validation.service.ts:64-82`) seeds a new child's `flow[parentId]`
+  with `{ priority: 1, condition }` (+ `completed`/`completedCondition` for counterthesis).
+
+**`LayerMetrics`** are stored separately, not inside `content`: `LayerJson` → `[NotMapped]
+LayerMetrics { LongestPath, ShortestPath, Avg }` (`HtnNode.cs:30-50`); the SPA type uses
+camelCase `longestPath`/`shortestPath`/`avg` (`types.ts:87-91`). Computed client-side (D6/D10).
+
+**Seed reality.** Thesis content (`DbInitializer.cs:155-173`) writes `label`, `logicalConnector`
+(`"AND"`), `description`, `flow`, `countertheses`. Counterthesis content (`:175-195`) writes
+`label`, `logicalConnector`, `description`, `flow`, `theses`, and optional `informal`. The seed
+therefore **omits** `triggers`, `effects`, `refId`, `referencers`, `type`, `justification`
+(thesis) and `type`, `refId` (counterthesis); the SPA tolerates the gaps by normalizing on read.
+Conversely `logicalConnector`, `description`, and `informal` appear in the seed (and in entries
+the SPA round-trips) but are **not** modelled in `types.ts` — `logicalConnector` survives only in
+the console `purge-prop` example (`config-utility.handler.ts:38`). These mismatches are recorded,
+not fixed (§6).
+
+**Worked examples** (verbatim seed, compacted):
+
+- Thesis `2bb33b4d` (`DbInitializer.cs:31`):
+  ```json
+  {"label":"Agent Resolution","logicalConnector":"AND","description":"The root state...",
+   "flow":{},"countertheses":["7ef4e6da"]}
+  ```
+- Counterthesis `l0asd142` (`DbInitializer.cs:78-79`):
+  ```json
+  {"label":"Functional Iteration HTN/Chain Triggered Loops (CTL)","logicalConnector":"AND",
+   "description":"Migrated from connection\n\n T_MIGRATED",
+   "flow":{"7ef4e6da":{"priority":5,"condition":"","completed":false}},
+   "theses":["if1s1g4","asd9aj294"]}
+  ```
 
 ## 4. Frontend — `shiny-computing-machine` (`purgatory-ui`)
 
@@ -370,12 +463,12 @@ These are documented as reality; most become PRODUCTION_CHECKLIST rows or future
 subset that contradicts the entry-point docs is corrected in T7.1.
 
 1. **The entry-point docs *were* stale (fixed in T7.1, 2026-10-10).** Before that, `README.md`
-   and `DOCUMENTATION.md` claimed .NET **8** and Angular **18**; the code is .NET **9**
-   (`ResolutionEngine.csproj:4`) and Angular **20** (`package.json:18`). `DOCUMENTATION.md` also
-   claimed "custom polymorphic converters" (**none exist** — content is untyped JSON, §3.3),
-   named the endpoint `antithesis-nodes` (it is `counterthesis-nodes`, with `antithesis` as an
-   alias, §3.2), and placed topological analysis in the backend (it is in the frontend, §4.6).
-   All of these are now corrected in the entry-point docs.
+   and the now-removed `DOCUMENTATION.md` (D15) claimed .NET **8** and Angular **18**; the code
+   is .NET **9** (`ResolutionEngine.csproj:4`) and Angular **20** (`package.json:18`). The former
+   file also claimed "custom polymorphic converters" (**none exist** — content is untyped JSON,
+   §3.3/§3.5), named the endpoint `antithesis-nodes` (it is `counterthesis-nodes`, with
+   `antithesis` as an alias, §3.2), and placed topological analysis in the backend (it is in the
+   frontend, §4.6). All of these are corrected, and the redundant file is gone.
 2. **No authentication / authorization** on any backend endpoint, and CORS is fully open
    (`Program.cs:12`). Combine with `debug-connection` exposing masked connection strings and all
    request headers (`HtnController.cs:89-98`).
@@ -395,7 +488,7 @@ subset that contradicts the entry-point docs is corrected in T7.1.
 
 ## 7. Pointers
 
-- Decisions behind these facts: `docs/DECISIONS.md` (D1–D6).
+- Decisions behind these facts: `docs/DECISIONS.md` (D1–D15).
 - Dev-only seams that must be swapped/verified before production: `docs/PRODUCTION_CHECKLIST.md`.
 - Current snapshot + next action: `docs/PROJECT_STATE.md`, `docs/CURRENT_TASK.md`.
 - Build-out plan for this documentation: `docs/ROADMAP.md`.
