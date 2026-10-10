@@ -1,13 +1,13 @@
 # Current Task
 
-## T10.5 in progress — next ticket T11.3 (2026-10-10)
+## T11.3 done — next ticket T11.4 (2026-10-10)
 
 Part I (P0–P8) is complete and audited. **Part II (P9–P14, full architecture coverage)**: P9 and
-**P10 (backend reference) are complete** (T10.1–T10.4), and **P11 (frontend core reference) is
-paused (2/4)** — T11.1 (domain-layer reference → §4.7) and T11.2 (graph algorithms → §4.6) are done.
-The **active ticket is T10.5** (ROADMAP **P10.5**): split the former single `docs/ARCHITECTURE.md`
-into the numbered `docs/architecture/` folder and record the file convention as **D16**. After
-T10.5, the next ticket is **T11.3** (services reference → §4.3), in `ROADMAP.md`.
+**P10 (backend reference) are complete** (T10.1–T10.4); **the T10.5 split is done** (the reference
+now lives in the numbered `docs/architecture/` folder; **D16**); and **P11 (frontend core
+reference) is in progress (3/4)** — T11.1 (domain-layer reference → §4.7), T11.2 (graph algorithms
+→ §4.6) and **T11.3 (services reference → §4.3)** are done. The next ticket is **T11.4**
+(repository layer reference → §4.3), in `ROADMAP.md`.
 
 ### What this workstream produced
 
@@ -21,15 +21,18 @@ T10.5, the next ticket is **T11.3** (services reference → §4.3), in `ROADMAP.
   dataset in **§3.3** (T10.3), the cross-cutting behaviours (connection resolution, JSON
   round-trip, exception→HTTP mapping, diagnostics) in **§3.4** (T10.4), the frontend domain
   layer reference (types/constants, `Thesis`/`Counterthesis` normalization, validation key-sets,
-  barrel) in **§4.7** (T11.1), and the graph-algorithm deep-dive (`rebuildAdjacency`,
+  barrel) in **§4.7** (T11.1), the graph-algorithm deep-dive (`rebuildAdjacency`,
   `computeTopology`, `refreshGraph`, `populateCrossReferences`, `addEdge`/`removeEdge`,
-  `navigationRequest$`, plus a seed-graph worked example) in **§4.6** (T11.2); a §3.1 drift about
-  `DefaultConnection`/LocalDB was corrected. T9.4 also adds cross-links at §3.3, §4.4 and §4.6.
+  `navigationRequest$`, plus a seed-graph worked example) in **§4.6** (T11.2), and the **services
+  reference** (per-service surface tables + `:line` for all eight `core/services/*.ts` entries) in
+  **§4.3** (T11.3); a §3.1 drift about `DefaultConnection`/LocalDB was corrected. T9.4 also adds
+  cross-links at §3.3, §4.4 and §4.6.
 - **`docs/PROJECT_STATE.md`** — final snapshot + the P7 corrections to the entry-point docs.
-- **`docs/DECISIONS.md`** — D1–D15 (decisions and documented realities, each with evidence).
+- **`docs/DECISIONS.md`** — D1–D16 (decisions and documented realities, each with evidence; D16
+  records the doc folder/§ convention and supersedes locked decision #7).
 - **`docs/PRODUCTION_CHECKLIST.md`** — dev-seam registry (backend B1–B6, frontend F1–F3, infra,
   keys/secrets, smoke tests).
-- **`docs/ROADMAP.md`** — the plan; P0–P10 `done`, **P10.5 in progress (T10.5)**, P11 **paused (2/4)**.
+- **`docs/ROADMAP.md`** — the plan; P0–P10 `done`, **P10.5 done (T10.5)**, P11 **3/4 (T11.1–T11.3)**.
 - **`README.md`** — corrected in T7.1; the redundant `DOCUMENTATION.md` was **removed** (D15).
 
 No application source, config, or Docker file was changed (D3); the only non-`docs/` edits were
@@ -73,15 +76,23 @@ the T7.1 corrections to the entry-point docs and the D15 removal of `DOCUMENTATI
   the worked example's layers reproduce the seed thesis edges (`634e76d4` = longest 3 / shortest 1);
   the two realities (`avg` always 0; out-of-graph triggers dropped on the 2nd refresh) are recorded
   inline (no §6 item, per scope).
-- Two reality notes recorded, not fixed, in `ARCHITECTURE.md` §6 (items 9–10).
+- T11.3 §4.3: every service's table row and `:line` resolves against `core/services/*.ts`
+  (`HtnService`, `HtnStateService`, `HtnGraphService`, `HtnValidationService`, `ConnectionService`,
+  `connection.interceptor.ts`, `StorageService`, `PwaService`); the `HtnState` shape matches
+  `htn-state.service.ts:10-17`, the connection string matches `buildConnectionString` (`:95-109`),
+  and the validation error strings match `htn-validation.service.ts`. Four realities recorded inline:
+  `detachNode` bypasses `settled`, `performComplexRemoval('cascade')` ≡ `'recursive'`,
+  `PwaService` is injected nowhere (**added as §6 item 11**), and the two `condition` defaults
+  (§6 item 9).
+- Reality notes recorded, not fixed, in `architecture/` §6 (items 9–11).
 
 ### Next action
 
-**P11 (frontend core reference) is underway — T11.1 and T11.2 done.** The next documentation ticket is
-**T11.3** (services reference → `ARCHITECTURE.md` §4.3), in `ROADMAP.md`. After the Part II
-documentation work, the remaining **product** follow-up is in `PRODUCTION_CHECKLIST.md`
-(connection-string seam, migrations, auth/CORS, hardcoded API URL) and, optionally, a backend test
-project.
+**P11 (frontend core reference) is underway — T11.1, T11.2 and T11.3 done.** The next documentation
+ticket is **T11.4** (repository layer reference → `docs/architecture/04_frontend.md` §4.3), in
+`ROADMAP.md`. After the Part II documentation work, the remaining **product** follow-up is in
+`PRODUCTION_CHECKLIST.md` (connection-string seam, migrations, auth/CORS, hardcoded API URL) and,
+optionally, a backend test project.
 
 ## One-ticket-at-a-time loop (the rule)
 

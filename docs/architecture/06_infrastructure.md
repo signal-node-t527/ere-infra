@@ -115,10 +115,15 @@ subset that contradicts the entry-point docs is corrected in T7.1.
     When `newNodeGraph` differs from `parentGraph`, the same-graph branch still compares against
     `parentType` but forwards `parentGraph` to `addEdge` (`htn.service.ts:158-168`); the intent
     is correct, but the argument is easy to misread.
+11. **`PwaService` is dead code.** `core/services/pwa.service.ts` implements the install-prompt
+    lifecycle (`beforeinstallprompt`/`promptInstall`, `pwa.service.ts:11-46`) but is injected
+    nowhere — no component or service references it (only its own file does), so the PWA install
+    UI it backs is unreachable. The service worker itself is registered separately in
+    `src/index.html:24-30` (§4.6), so the app is still a PWA; only the in-app prompt is dead.
 
 ## 7. Pointers
 
-- Decisions behind these facts: `docs/DECISIONS.md` (D1–D15).
+- Decisions behind these facts: `docs/DECISIONS.md` (D1–D16).
 - Dev-only seams that must be swapped/verified before production: `docs/PRODUCTION_CHECKLIST.md`.
 - Current snapshot + next action: `docs/PROJECT_STATE.md`, `docs/CURRENT_TASK.md`.
 - Build-out plan for this documentation: `docs/ROADMAP.md`.

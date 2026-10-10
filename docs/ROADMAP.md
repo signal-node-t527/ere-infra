@@ -56,11 +56,12 @@ Remaining work is product, not docs — see `PRODUCTION_CHECKLIST.md`.
    *production action* and a *verification*.
 6. **Statuses reflect reality.** Do not pre-check tickets; do not claim a section is
    verified until it has been read against the code.
-7. **One `ARCHITECTURE.md`, deepened in place** (not split into `docs/architecture/*`). This
-   matches the single-file LilithsTest layout and keeps the `AGENTS.md`/`README.md` pointers
-   valid. Part II grows existing sections (`§3.x`, `§4.x`, …) and adds new top-level sections only
-   where §1–§7 cannot absorb the topic (node-content schema, console-command reference, sequence
-   diagrams, configuration/ports matrix).
+7. ~~**One `ARCHITECTURE.md`, deepened in place** (not split into `docs/architecture/*`).~~
+   **SUPERSEDED by D16 (T10.5, 2026-10-10).** The reference is now the numbered folder
+   `docs/architecture/` (`00_index.md` + parts), with stable `§` IDs — a single file had reached
+   1477 lines (over 2× the quality bar). Part II still grows existing sections (`§3.x`, `§4.x`, …)
+   and adds new top-level sections only where §1–§7 cannot absorb the topic (node-content schema,
+   console-command reference, sequence diagrams, configuration/ports matrix).
 8. **Part II remains docs-only and additive.** It touches only `docs/` and preserves D2 (reality
    over intent), D4 (verbatim terms), and D6 (frontend owns the graph algorithms); no source,
    config, or image changes.
@@ -80,7 +81,8 @@ Remaining work is product, not docs — see `PRODUCTION_CHECKLIST.md`.
 | P8 | Consistency audit + final state | 2/2 | done |
 | P9 | ARCHITECTURE (full) — foundations & schemas | 4/4 | done |
 | P10 | ARCHITECTURE (full) — backend reference | 4/4 | done |
-| P11 | ARCHITECTURE (full) — frontend core reference | 2/4 | in_progress |
+| P10.5 | Documentation file convention & ARCHITECTURE split | 1/1 | done |
+| P11 | ARCHITECTURE (full) — frontend core reference | 3/4 | in_progress |
 | P12 | ARCHITECTURE (full) — frontend feature reference | 0/8 | todo |
 | P13 | ARCHITECTURE (full) — infra & operations reference | 0/3 | todo |
 | P14 | ARCHITECTURE (full) — assurance & consistency | 0/4 | todo |
@@ -391,11 +393,13 @@ Notes: **Done 2026-10-10.** `PROJECT_STATE.md` rewritten to the final snapshot (
 
 **Purpose.** Part I documented *what the system is*; Part II documents *how every part of it
 works*, to the depth where a new engineer can navigate, extend, and operate any module from the
-documentation alone. The output is a single, much deeper `docs/ARCHITECTURE.md` (§1–§7 grown, plus
-new sections), keeping every load-bearing claim cited by `file:line` (decision 7).
+documentation alone. The output is the numbered folder `docs/architecture/` (§1–§7 grown, plus new
+sections), keeping every load-bearing claim cited by `file:line` — see **D16** (which superseded
+decision 7's "one file, deepened in place").
 
 **Part II is in progress (P11).** Tickets are taken one at a time `[ ] todo → [x] done` (§ next
-ticket is T11.3); this section remains the plan of record (decision 8).
+ticket is T11.4); this section remains the plan of record (decision 8). (Phase **P10.5/T10.5** —
+the T10.5 split — sits between P10 and P11 and is done.)
 When a ticket is taken, it follows the same one-at-a-time workflow as Part I.
 
 **Scope inventory (what "full coverage" must eventually touch).**
@@ -524,6 +528,25 @@ Notes: Done — §3.4 now has four subsections: the connection `resolve()` pseud
        handler, `ping` always-200); and diagnostics (`ping` schema-creation side effect,
        `debug-connection` masking).
 
+## Phase 10.5 — Documentation file convention & ARCHITECTURE split
+
+### T10.5  Split `ARCHITECTURE.md` into `docs/architecture/` (record D16)
+Status: [x] done
+Blocked by: —
+Files: `docs/architecture/*` (new), `docs/ARCHITECTURE.md` (deleted), `docs/DECISIONS.md` (D16),
+       `docs/ROADMAP.md`, `docs/PROJECT_STATE.md`, `docs/CURRENT_TASK.md`,
+       `docs/PRODUCTION_CHECKLIST.md`, `AGENTS.md`, `README.md`
+Verify: concatenating the parts (minus their headers) reproduces the old body exactly; every part
+        ≤600 lines; `00_index.md` maps every `§`; all pointers resolve
+Notes: Done — a single 1477-line file was split into `docs/architecture/`: `00_index.md` (the §→file
+       map) plus `01_overview` (§1–§2), `02_backend` (§3.1–§3.4), `03_backend_reference` (§3.5–§3.6),
+       `04_frontend` (§4.1–§4.5), `05_frontend_core` (§4.6–§4.7) and `06_infrastructure` (§5–§7),
+       each byte-faithful with a `Part N of M · owns §a–§b` header. **D16** records the convention
+       (naming, the 150–500 / 600 budget, stable append-only `§` IDs, `00_index.md`, plan/state-doc
+       exemptions) and **supersedes locked decision #7**. Entry points repointed (`AGENTS.md`,
+       `README.md`, `PROJECT_STATE.md`, `CURRENT_TASK.md`, `PRODUCTION_CHECKLIST.md` F3); all
+       existing `§` citations stay valid.
+
 ## Phase 11 — Full ARCHITECTURE: frontend core reference
 
 ### T11.1  Domain layer reference
@@ -550,14 +573,20 @@ Notes: Done — §4.6 now documents `rebuildAdjacency`, `computeTopology` (two p
        and a minimal diamond.
 
 ### T11.3  Services reference
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [x] done
 Blocked by: T11.1
 Files: `docs/architecture/04_frontend.md` (§4.3 grown)
 Verify: matches `core/services/*.ts`
-Notes: `HtnService` (facade surface); `HtnStateService` (state shape, BehaviorSubject + signals);
-       `HtnGraphService` (`syncEdges`, `addCrossReference`, `performComplexRemoval`,
-       `ensureFlowEntries`); `HtnValidationService` (rules + messages); `ConnectionService`;
-       `StorageService` (session-vs-local selection); `PwaService`; `connectionInterceptor`.
+Notes: Done — §4.3 gained a `Services reference` covering all eight `core/services/*.ts` entries
+       with a public-surface table + `:line` per service: `HtnService` (façade, `settled`/
+       `refreshAndSettle` contract, `createNode`/`updateNodeContent`/`importNodes`), `HtnStateService`
+       (`HtnState` shape, BehaviorSubject + `shareReplay` streams, the `refresh()` normalization
+       pipeline), `HtnGraphService` (`syncEdges`/`connectNodes`/`disconnectNodes`/`addCrossReference`/
+       `ensureFlowEntries`/`performComplexRemoval`), `HtnValidationService` (rules + fixed messages),
+       `ConnectionService` (`buildConnectionString` exact output), `connection.interceptor`,
+       `StorageService` (session-vs-local + inheritance keys) and `PwaService`. Four inline realities
+       recorded: `detachNode` bypasses `settled`; `performComplexRemoval`'s `'cascade'` ≡ `'recursive'`;
+       `PwaService` is unwired (**new §6 item 11**); the two `condition` defaults (§6 item 9).
 
 ### T11.4  Repository layer reference
 Status: [ ] todo  [ ] in_progress  [ ] done
@@ -683,11 +712,13 @@ Blocked by: T14.1
 Files: all `docs/*`
 Verify: every `file:line` citation resolves; every inventory file appears; no intent-over-reality
 Notes: re-run the T8.1 method across the expanded document (per-file, per-endpoint, per-command);
-       fix drift and citations.
+        fix drift and citations.
 
+### T14.3  Entry-point doc symmetry
+Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T14.2
 Files: `README.md`
-Verify: it agrees with the expanded `ARCHITECTURE.md`; pointers correct
+Verify: it agrees with the expanded `docs/architecture/`; pointers correct
 Notes: refresh the entry-point doc's summaries/pointers to the deeper sections (docs-only edit,
        consistent with D3/P7).
 
