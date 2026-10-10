@@ -1,13 +1,14 @@
 # Current Task
 
-## T11.3 done — next ticket T11.4 (2026-10-10)
+## T12.3 done — next ticket T12.4 (2026-10-10)
 
 Part I (P0–P8) is complete and audited. **Part II (P9–P14, full architecture coverage)**: P9 and
 **P10 (backend reference) are complete** (T10.1–T10.4); **the T10.5 split is done** (the reference
-now lives in the numbered `docs/architecture/` folder; **D16**); and **P11 (frontend core
-reference) is in progress (3/4)** — T11.1 (domain-layer reference → §4.7), T11.2 (graph algorithms
-→ §4.6) and **T11.3 (services reference → §4.3)** are done. The next ticket is **T11.4**
-(repository layer reference → §4.3), in `ROADMAP.md`.
+now lives in the numbered `docs/architecture/` folder; **D16**); **P11 (frontend core
+reference) is complete (4/4)**; and **P12 (frontend feature reference) is in progress (3/8)** —
+T12.1 (window system reference → §4.2), T12.2 (htn-plan reference → §4.4) and T12.3 (htn-explorer
+reference → §4.4, in the new owning part `07_frontend_features.md`) are done, T12.4
+(htn-editor & htn-categories reference → §4.4) is next.
 
 ### What this workstream produced
 
@@ -25,14 +26,42 @@ reference) is in progress (3/4)** — T11.1 (domain-layer reference → §4.7), 
   `computeTopology`, `refreshGraph`, `populateCrossReferences`, `addEdge`/`removeEdge`,
   `navigationRequest$`, plus a seed-graph worked example) in **§4.6** (T11.2), and the **services
   reference** (per-service surface tables + `:line` for all eight `core/services/*.ts` entries) in
-  **§4.3** (T11.3); a §3.1 drift about `DefaultConnection`/LocalDB was corrected. T9.4 also adds
-  cross-links at §3.3, §4.4 and §4.6.
+  **§4.3** (T11.3), and the **repository layer reference** (the port→impl→route→JSON→domain table
+  for all 13 `HtnRepository`/`HttpHtnRepository` methods, the `getGraph`/domain-class mapping, and
+  the error-behaviour/connection-status rules) in **§4.3** (T11.4); a §3.1 drift about
+  `DefaultConnection`/LocalDB was corrected. T9.4 also adds cross-links at §3.3, §4.4 and §4.6;
+  T11.4 adds §6 item 12. Part II's P12 opened with the **window system reference** in **§4.2**
+  (T12.1): `WindowService` (list/z-order, `shiny_window_list` auto-persist, 600 z floor),
+  `WindowManagerService` (`shiny_session_id`, `spawn`), `WindowComponent` (`Ctx` geometry,
+  close≠remove, 8 resize handles, dock registry lifecycle), `Resize`/`Reposition` components
+  (1200 ms dock offer), and the dockable-panels service/component (`dockRequests` queues, DOM
+  reparenting, mobile rules) + the persistence/inheritance table — with **§6 item 13**. P12
+  continued with the **htn-plan reference** in **§4.4** (T12.2): the `'plan'` window shell,
+  the `PlanStateService` table (signals, per-window `htn_plan_*` keys, bootstrap + the only
+  inbound `planSearchRequest$`), the `PlanStep` model, `buildTree`'s three loop cuts
+  (recursion / priority-inversion / reference-loop), the component behaviours (≤450 px
+  compact breakpoint, ctrl-click nav, editor delegation, `exportQueue`), the bezier wire
+  overlay, and the presentational `PlanNodeCardComponent` — with two inline realities
+  (root-singleton plan windows share one signal set; `"Cycle N"` cycle strings + `[LoopDetect]`
+  console.log). P12 continued with the **htn-explorer reference** in **§4.4** (T12.3):
+  `§4.4` was **split into a new owning part `07_frontend_features.md`** (04 now owns §4.1–§4.3,
+  §4.5; `00_index.md` re-mapped with bold chapter bands + one row per §; **D16 amended** into a
+  scalability protocol — owner/ref files, split-at-subsection rules). 07 carries the moved feature
+  inventory + `htn-plan reference` verbatim plus the explorer reference: the `'explorer'` window
+  shell + `'explorer-menu'` companion (`window-registry.ts:12,17`), per-window `PaneState` +
+  name-prefixed `htn_explorer_*` keys, `tree-utils.ts` (`computeMinDepths`/`buildTree` +
+  `+N more` truncation), ctrl-inverted click actions + referencer choice overlay, the three
+  exclusive modes (add-child/rewire/prune), the operations panel, `activeExplorerTrees` →
+  metadata menu → `navigationRequest$`, the `<app-graph>` embed, and `io-utils.ts` import/export —
+  with three inline realities (per-window state vs the plan singleton; legacy-key deletion not
+  migration; fire-and-forget import).
 - **`docs/PROJECT_STATE.md`** — final snapshot + the P7 corrections to the entry-point docs.
 - **`docs/DECISIONS.md`** — D1–D16 (decisions and documented realities, each with evidence; D16
-  records the doc folder/§ convention and supersedes locked decision #7).
+  records the doc folder/§ convention — **amended in T12.3 into a scalability protocol** —
+  and supersedes locked decision #7).
 - **`docs/PRODUCTION_CHECKLIST.md`** — dev-seam registry (backend B1–B6, frontend F1–F3, infra,
   keys/secrets, smoke tests).
-- **`docs/ROADMAP.md`** — the plan; P0–P10 `done`, **P10.5 done (T10.5)**, P11 **3/4 (T11.1–T11.3)**.
+- **`docs/ROADMAP.md`** — the plan; P0–P10 `done`, **P10.5 done (T10.5)**, P11 **4/4 (T11.1–T11.4)**, P12 **3/8 (T12.1–T12.3)**.
 - **`README.md`** — corrected in T7.1; the redundant `DOCUMENTATION.md` was **removed** (D15).
 
 No application source, config, or Docker file was changed (D3); the only non-`docs/` edits were
@@ -84,15 +113,64 @@ the T7.1 corrections to the entry-point docs and the D15 removal of `DOCUMENTATI
   `detachNode` bypasses `settled`, `performComplexRemoval('cascade')` ≡ `'recursive'`,
   `PwaService` is injected nowhere (**added as §6 item 11**), and the two `condition` defaults
   (§6 item 9).
-- Reality notes recorded, not fixed, in `architecture/` §6 (items 9–11).
+- T11.4 §4.3: every repository table row and `:line` resolves against
+  `core/repository/{htn,http}.repository.ts` — all 11 port methods plus the two class-only category
+  methods; each route matches the §3.2 endpoint reference; the `Thesis`/`Counterthesis` constructor
+  mapping matches `models.ts:9-45`; the rethrow/swallow split matches the `catchError` operators
+  and the only `connectionStatus$ → offline` drivers are the four reads (`htn-state.service.ts:106-112,157-159`).
+  Two realities recorded: `HtnRepository` never injected + omits category methods (**§6 item 12**);
+  `updateNodeContent` ignores `graphType`.
+- T12.1 §4.2: every window-system table row and `:line` resolves against
+  `features/window-system/**` — the `WindowService` method table matches `window.service.ts:52-112`
+  and the `shiny_window_list` persistence (`:20-47`); the z-index floor (600) and
+  `bringToFront`/`ZIndexflag` mechanics match `:63,85-101`; the spawn facts match
+  `window-manager.service.ts:11-33`; `WindowComponent` inputs/geometry/handles match
+  `window.component.ts:16-30,81-96,184-191` and `window.component.html:1-66`; the 1200 ms dock offer
+  (+500 ms stop detection) matches `reposition.component.ts:76-110,129-147`; the dock zones, request
+  queues, mobile rules, and `enforceMobileLayout` match `dockable-panels.service.ts:11-180,197-226`;
+  the reparenting + `setDocked` backdoor match `dockable-panels.component.ts:78-150`. The persistence
+  & inheritance table matches the `StorageService` exclusion list (§4.3). One inline reality
+  (DOM reparenting) and **§6 item 13** (partial mobile reflow + mobile-check console logs).
+- T12.2 §4.4: every table row and `:line` resolves against `features/htn-plan/**` — the
+  `PlanStateService` table matches `plan-state.service.ts:27-38,65-71,40-63,73-125,127-282` (incl.
+  the `NAV_HISTORY_LIMIT = 5` slice/`realIndex` remap at `:35,299-308` and the `console.warn` on a
+  parse failure at `:278-280`); `PlanStep`/`PendingAnalysis` match `plan.types.ts:3-27`; the three
+  `buildTree` loop cuts match `plan-utils.ts:115-145` with the `type:'loop'` stub at `:188-221`,
+  priority sort at `:250-259`, referencer `targetStep` at `:146-182`, and the
+  `executionOrder==='set'` → `childrenCollapsed` default at `:276`; the component behaviours match
+  `htn-plan.component.ts:54-63,96-118,169-181,197-274,276-342,373-413`; wire geometry matches
+  `wire-utils.ts:26-37,74-137` and `plan.constants.ts:1-7`; the card matches
+  `plan-node-card.component.ts:13-32` and `plan-node-card.component.html:24-132`. The only inbound
+  plan channel cited (`planSearchRequest$`, a `Subject` on `htn-state.service.ts:54-55,73-75`
+  re-exposed at `htn.service.ts:37,48`) is emitted only by the explorer's/categories' `openInPlan`
+  (`htn-explorer.component.ts:697-698`, label `htn-explorer.html:229`;
+  `htn-categories.component.ts:271-273`) and consumed only by `plan-state.service.ts:58-62`. Two
+  realities recorded inline: the root-singleton `PlanStateService` (all plan windows share one
+  signal set), and `"Cycle N"` cycle strings + the `[LoopDetect]` console.log.
+- T12.3 §4.4: every row and `:line` resolves against `features/htn-explorer/**` — the window
+  shell (`window-registry.ts:12,17`; `htn-explorer.html:1-2`); `PaneState`
+  (`htn-explorer.component.ts:19-25`); the four name-prefixed keys (`:46-53`,
+  `htn-explorer.constants.ts:2-5`); `restoreState` + its three legacy-key deletions
+  (`:334-336`); the bootstrap + `htn-config-changed` listener (`:263-298`);
+  `tree-utils.ts:10-33,35-77`; click routing + `effectiveClickAction` + the reference overlay
+  (`:366-441`); the modes (`:501-662`); the operations panel (`:467-732`); `activeExplorerTrees`
+  → metadata menu → `navigationRequest$` (`:235-245`, `htn-metadata-menu.component.ts:24-30`);
+  the `<app-graph>` embed (`htn-explorer.html:210-217`); `io-utils.ts:5-177`. The §4.4 split is
+  faithful: the feature-inventory table + `htn-plan reference` in `07_frontend_features.md` are
+  byte-identical to their former `04_frontend.md` text; `04_frontend.md` owns §4.1–§4.3, §4.5;
+  `00_index.md` maps every `§` to exactly one row (owner-first), with 07 as the §4.4 owner; every
+  part header reads `Part N of 7`; all files ≤600 lines. Three realities recorded inline
+  (per-window explorer state vs the plan singleton; legacy-key deletion not migration;
+  fire-and-forget import).
+- Reality notes recorded, not fixed, in `architecture/` §6 (items 9–13).
 
 ### Next action
 
-**P11 (frontend core reference) is underway — T11.1, T11.2 and T11.3 done.** The next documentation
-ticket is **T11.4** (repository layer reference → `docs/architecture/04_frontend.md` §4.3), in
-`ROADMAP.md`. After the Part II documentation work, the remaining **product** follow-up is in
-`PRODUCTION_CHECKLIST.md` (connection-string seam, migrations, auth/CORS, hardcoded API URL) and,
-optionally, a backend test project.
+**P12 (frontend feature reference) is underway — T12.3 done.** The next documentation ticket is
+**T12.4** (htn-editor & htn-categories reference → `docs/architecture/07_frontend_features.md`
+§4.4), in `ROADMAP.md`. After the Part II documentation work, the remaining **product** follow-up
+is in `PRODUCTION_CHECKLIST.md` (connection-string seam, migrations, auth/CORS, hardcoded API URL)
+and, optionally, a backend test project.
 
 ## One-ticket-at-a-time loop (the rule)
 

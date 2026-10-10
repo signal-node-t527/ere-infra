@@ -1,6 +1,6 @@
 # ERE Architecture — 03 Backend Reference
 
-> Part 3 of 6 · owns §3.5–§3.6 · index: `00_index.md`
+> Part 3 of 7 · owns §3.5–§3.6 · index: `00_index.md`
 
 ### 3.5 Node content schema (`content`)
 

@@ -1,6 +1,6 @@
 # ERE Architecture — 01 Overview
 
-> Part 1 of 6 · owns §1–§2 · index: `00_index.md`
+> Part 1 of 7 · owns §1–§2 · index: `00_index.md`
 
 ## 1. Repository Layout
 
@@ -20,9 +20,10 @@ ere-infra/                         # integration/infra root — itself a git rep
     │   ├── 01_overview.md         # §1–§2 (this file)
     │   ├── 02_backend.md          # §3.1–§3.4
     │   ├── 03_backend_reference.md# §3.5–§3.6
-    │   ├── 04_frontend.md         # §4.1–§4.5
+    │   ├── 04_frontend.md         # §4.1–§4.3, §4.5
     │   ├── 05_frontend_core.md    # §4.6–§4.7
-    │   └── 06_infrastructure.md   # §5–§7
+    │   ├── 06_infrastructure.md   # §5–§7
+    │   └── 07_frontend_features.md# §4.4 (feature references)
     ├── PROJECT_STATE.md
     ├── ROADMAP.md
     ├── DECISIONS.md

@@ -112,7 +112,9 @@ production risk it is also a `PRODUCTION_CHECKLIST.md` row.
 ### D16 — The architecture reference is a numbered folder with stable `§` IDs
 - A single `docs/ARCHITECTURE.md` had reached **1477 lines** (over 2× the quality-bar doc), making
   it slow to navigate and edit. It is **split into `docs/architecture/`** — a folder of parts entered
-  via **`00_index.md`** — and the convention below is now the rule for all `docs/` files:
+  via **`00_index.md`**. **Amended (T12.3)** into a *scalability protocol*: the §→file map must
+  never degrade into a flat, duplicated pile of rows as content grows, so the rules below define an
+  explicit hierarchy and a growth path. The convention now applies to all `docs/` files:
   - **File naming:** `NN_<descriptive_snake_case>.md`, `NN` zero-padded, ordered by reading sequence.
   - **Size budget:** 150–500 lines typical, **hard cap 600** per file (150 is a soft floor;
     `00_index.md` may be shorter). A part that would exceed the cap gains a **new numbered sibling**
@@ -123,15 +125,36 @@ production risk it is also a `PRODUCTION_CHECKLIST.md` row.
     numbers never change when files are added/split. One chapter may span more than one file, so a
     `§` is resolved through the index, not the file name.
   - **Per-file header:** each part starts with `# … — <title>` + `> Part N of M · owns §a–§b ·
-    index: 00_index.md`.
+    index: 00_index.md`. A part that only hosts delegated subsections of another part's `§` states
+    `owns §c (ref: <owner part>)` instead, so owner and ref files are distinguishable at a glance.
   - **Scope & exemptions:** applies to documentation (`docs/*.md` + root entry `.md`) **only** —
     application source is exempt from the naming rule. Plan/state docs (`ROADMAP.md`,
     `PROJECT_STATE.md`, `CURRENT_TASK.md`, `DECISIONS.md`, `PRODUCTION_CHECKLIST.md`) are **exempt
     from the 600-line cap** (they are append-only logs, not reference parts).
+
+**Scalability protocol (added T12.3):**
+
+- **Ownership.** Each `§x.y` has exactly **one owner file** — the part that holds the §'s
+  canonical intro (the overview table / opening paragraph). The owner is listed first in the map.
+- **Spanning.** A § may **delegate subsections** to a *ref file* only when the owner would exceed
+  the 600-line cap. A ref file must **not** restate the § header or intro; it holds only the moved
+  `####` subsections picked up from the owner (or added new), and its header records the owner part.
+- **Split procedure.** When a file nears the cap: (1) compress in place (prose→tables, reality
+  notes→§6/§7); (2) if still over, move a **contiguous block of subsections of one §** to a new
+  `NN` part (never split a `####` in half); (3) the owner keeps the § header, the canonical intro,
+  and a short subsection index (`#### … → 07_frontend_features.md`); (4) update the map row and
+  increment `M` in every `Part N of M` header.
+- **Index discipline.** The §→file map holds **one row per §**; a § that spans files keeps a single
+  row whose file cell lists the **owner first**, then ref files (e.g. `04 (owner), 08 (ref: §4.4
+  htn-editor)`). Rows are grouped under **bold chapter-band headers** (e.g. `## Frontend — §4`) so
+  the map stays scannable as parts multiply.
+- **Enforcement.** Part headers must state owner-vs-ref; the map row must match; each ticket's
+  done-step re-checks line counts (< 600) and that every `§` still resolves through exactly one row.
 - **Consequences:** `docs/ARCHITECTURE.md` is deleted; the folder holds `00_index.md` (map) plus
   `01_overview` (§1–§2), `02_backend` (§3.1–§3.4), `03_backend_reference` (§3.5–§3.6),
-  `04_frontend` (§4.1–§4.5), `05_frontend_core` (§4.6–§4.7), `06_infrastructure` (§5–§7). Existing
-  `§` citations throughout `docs/` remain valid unchanged. `README.md`, `AGENTS.md`,
+  `04_frontend` (§4.1–§4.3, §4.5), `05_frontend_core` (§4.6–§4.7), `06_infrastructure` (§5–§7),
+  `07_frontend_features` (§4.4 — owner of the feature references; added T12.3). Existing `§`
+  citations throughout `docs/` remain valid unchanged. `README.md`, `AGENTS.md`,
   `PROJECT_STATE.md` and `PRODUCTION_CHECKLIST.md` entry points now point at `00_index.md`. This
   **supersedes ROADMAP locked decision #7** ("one `ARCHITECTURE.md` deepened in place"); heavy
   tickets (T11.3 onward) re-point their `Files:` at the owning part. It extends D3/D15 (docs only).

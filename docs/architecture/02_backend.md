@@ -1,6 +1,6 @@
 # ERE Architecture — 02 Backend
 
-> Part 2 of 6 · owns §3.1–§3.4 · index: `00_index.md`
+> Part 2 of 7 · owns §3.1–§3.4 · index: `00_index.md`
 
 ## 3. Backend — `resolution-engine`
 

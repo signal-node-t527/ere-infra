@@ -1,6 +1,6 @@
 # ERE Architecture — 06 Infrastructure & Gaps
 
-> Part 6 of 6 · owns §5–§7 · index: `00_index.md`
+> Part 6 of 7 · owns §5–§7 · index: `00_index.md`
 
 ## 5. Infrastructure, containers & deployment topology
 
@@ -120,6 +120,17 @@ subset that contradicts the entry-point docs is corrected in T7.1.
     nowhere — no component or service references it (only its own file does), so the PWA install
     UI it backs is unreachable. The service worker itself is registered separately in
     `src/index.html:24-30` (§4.6), so the app is still a PWA; only the in-app prompt is dead.
+12. **The `HtnRepository` port is decorative.** No consumer injects the `HtnRepository` interface;
+    the three services inject the concrete `HttpHtnRepository` (`htn.service.ts:20`,
+    `htn-graph.service.ts:12`, `htn-state.service.ts:23`). The interface also **omits**
+    `getCategoryTree`/`saveCategoryTree`, which exist only on the class. It documents the HTTP
+    contract but is not a swappable seam (§4.3).
+13. **Mobile dock enforcement is partial.** `DockablePanelsService.enforceMobileLayout` only raises
+    `bottomHeight` and docks `console`; its own comments state that other windows are **not**
+    systematically reflowed or re-docked on the mode switch (`dockable-panels.service.ts:99-122`).
+    `checkMobileMode` also ships verbose `console.log` diagnostics (UA/pointer/portrait/screen
+    details) on **every** evaluation — including window resize and orientation changes (`:76-82`).
+    Dock/undock tightens this per-window, but the initial reflow is incomplete (§4.2).
 
 ## 7. Pointers
 

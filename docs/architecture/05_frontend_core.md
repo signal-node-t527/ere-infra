@@ -1,6 +1,6 @@
 # ERE Architecture — 05 Frontend Core
 
-> Part 5 of 6 · owns §4.6–§4.7 · index: `00_index.md`
+> Part 5 of 7 · owns §4.6–§4.7 · index: `00_index.md`
 
 ### 4.6 Domain graph algorithms, PWA, styling & tests
 

@@ -1,6 +1,6 @@
 # ERE Architecture — 04 Frontend
 
-> Part 4 of 6 · owns §4.1–§4.5 · index: `00_index.md`
+> Part 4 of 7 · owns §4.1–§4.3, §4.5 · index: `00_index.md`
 
 ## 4. Frontend — `shiny-computing-machine` (`purgatory-ui`)
 
@@ -29,20 +29,130 @@
 
 ### 4.2 Window system
 
-The window system (`features/window-system/**`) is the core UI abstraction:
+The window system (`features/window-system/**`) is the core UI abstraction. Four collaborators
+share the work: `WindowService` owns the open-window list and z-order, `WindowManagerService`
+owns real browser popups, `WindowComponent` is the window frame (resize / drag / close / dock),
+and `DockablePanelsService` + `DockablePanelsComponent` own the dock regions. Every feature
+window renders through an `<app-window>` wrapper (`console.html:1`, `htn-plan.html:1`,
+`htn-explorer.html:1`, `htn-editor.html:1`, `htn-categories.html:1`,
+`connection-string-manager.html:1`, `htn-metadata-menu.html:1`), instantiated by `AppComponent`
+from `WINDOW_REGISTRY` via `ngComponentOutlet` (§4.1). `WindowComponent` implements the
+duck-typed `WindowHandle` contract (`types.ts:147-152`, §4.7).
 
-- `window.service.ts` — the open-window list (a `signal`, persisted under `shiny_window_list`),
-  z-order/activation, `addWindow`/`activateWindow`/`bringToFront`.
-- `window-manager.service.ts` — **real browser popups** (`?spawnType=&spawnName=`), session id
-  `shiny_session_id`, and window inheritance (popup spawn lifecycle in §2.5).
-- `window.component.ts` — 8-handle resize + reposition drag + close.
-- `resize/resize.service.ts` — px/percent sizing; `reposition/reposition.component.ts` — a drag
-  longer than ~1.2 s offers docking.
-- `dockable-panels/dockable-panels.service.ts` — dock zones (left/right/top/bottom/center) and
-  a mobile dock mode.
-- `core/services/storage.service.ts` — **sessionStorage** in popups (detected via the `/popup`
-  path, `window.opener`, or `spawnType`), otherwise **localStorage**, with an inheritance
-  fallback that excludes internal keys.
+**`WindowService`** (`window.service.ts:14-113`) — the open-window list & z-order.
+
+State signals: `windows: signal<Window[]>` with `Window { name, type, active, zIndex }`
+(`:4-9,16`); `ZIndexflag` (`:15`) — an integer bumped **only to re-trigger** the floating-window
+z-index `effect`; `container: signal<{width,height}>` (`:17`) — the dashboard's px size, updated
+by `AppComponent.updateContainer` on resize (`app.component.ts:101-110`).
+
+Persistence: the constructor loads `shiny_window_list` (`:22-24,31-47`) and an `effect`
+auto-persists `JSON.stringify(this.windows())` on **every** change (`:26-28`); both via
+`StorageService` (§4.3 — the key is excluded from popup inheritance).
+
+| Method | `:line` | Behaviour |
+|---|---|---|
+| `addWindow(type, name?)` | `:52-68` | `name` given & exists → `activateWindow` and return the existing window; otherwise `name = name \| \`${type}-${Date.now().toString(36)}\``, `zIndex = max(600, maxZindex()+10)` (`:62-63`), appended `active:true` |
+| `activateWindow(name)` | `:70-78` | set `active:true`, then `bringToFront` |
+| `removeWindow(name)` | `:80-83` | filter the name out of the list |
+| `bringToFront(name)` | `:85-93` | `zIndex = maxZindex()+1`, bump `ZIndexflag` |
+| `maxZindex()` | `:95-101` | floors at **600** |
+| `getZIndex(name)` | `:103-106` | z-index, or `0` if unknown |
+| `findWindow(name)` | `:108-112` | the window, or a default empty `Window` |
+
+**`WindowManagerService`** (`window-manager.service.ts:7-34`) — **real browser popups**.
+
+- Session id: `getOrInitSessionId()` reads or creates `shiny_session_id` (`:11-20`); when no name
+  is given, the id seeds the auto-generated instance name (`:24-25`).
+- `spawn(type?, name?)` (`:23-33`): `window.open('/?spawnType=…&spawnName=…' | '/', '_blank',
+  'width=1000,height=800')`, throwing `'Pop-up blocked'` when the browser denies it. The popup
+  re-adds its own window on the other side — full lifecycle in §2.5, detection in
+  `app.component.ts:36-61`.
+
+**`WindowComponent`** (`window.component.ts:39-306`) — a feature window's frame.
+
+- Inputs: `windowName` / `windowType` (`:81-82`); `docked` (input alias `:85`, OR'd with an
+  internal signal `:86-87`); `windowStyle` / `headerStyle` / `coreStyle` (`:93-95`);
+  `windowDefault: [left, top, width, height]` in **%** (`:96`).
+- Geometry model `Ctx` (`:16-30`): `elementPositionPct.{default,discrepancy}` (%), 
+  `elementPositionPx.delta`, `elementSizePct.default`. `defaultCtx` seeds from
+  `windowDefaultComputedPosition`, which derives `right`/`bottom` from the left/top/width/height
+  defaults (`:97-104;151-165`).
+- Effects: an `effect` re-reads `ZIndexflag()` then syncs `zindex` and sets `hostFocus` when the
+  window is topmost (`:42-49`). A dock-transition `effect` saves `lastFloatingCtx` on dock and
+  restores (or resets + normalizes) it on undock (`:51-75,167-168`).
+- `HostBinding` (`:106-133`): docked → relative `100%×100%` inside the panel; mobile mode →
+  `display:none`; floating → `z-index` from the service and `display:flex` **only while active**.
+- `mousedown` anywhere → `bringToFront` (`:135-140`). The header **X** (`handleCloseOnClickOutput`,
+  `:142-149`) sets `active:false` but **keeps the window in the list** — closing ≠ removing; a
+  console/plan button can re-activate it (`app.component.ts:92-99`).
+- Reposition math (`:200-224`): live drag converts px→% and subtracts `discrepancy` (left/top set
+  via `calc()`); on release the four % positions are committed unless docked.
+- Resize math (`:226-268`): mousedown pins the opposite edge; move writes width/height as %; mouseup
+  recomputes all four positions + size from `offsetLeft/Top/Width/Height`, zeroes the discrepancy,
+  and commits `ctx` + `lastFloatingCtx`.
+- The **8 resize handles** are `app-resize` instances (`window.component.html:1-16,18-24,43-48,51-66`)
+  fed by `configRow1Col1 … configRow3Col3` (`:184-191`) — each maps a 3×3 border cell to which of
+  y/x is active and whether it grows **backward** (NW / N / NE / E / SE / S / SW / W).
+- Lifecycle: `ngOnInit` → `dockService.registerWindow(name, el, this)` + `initDefaultValues`
+  (`:270-273`); `ngOnDestroy` removes the element (docking may have reparented it) and unregisters
+  (`:275-282`); `ngAfterViewInit` normalizes the floating geometry (`:302-305`).
+
+**`ResizeService` / `ResizeComponent`** (`resize.service.ts:6-9`, `resize.component.ts:72-190`)
+
+- `ResizeService` holds a single `isResizing` boolean; the heavy lifting is in the component.
+- `ResizeConfig` (`:13-28`): per-axis `{ active, backward }` + `elementSizePx.current` accessors —
+  the 8 variants are built in `WindowComponent`.
+- The component emits `onMouseDownOutput` / `onMouseMoveOutput` / `onMouseUpOutput` (`:78-80`). On
+  mousedown it pins the opposite edge, adds `body.no-select`, and registers global
+  `mousemove`/`mouseup` (`:107-149`); on move it emits the new width/height in **px** (`:153-170`);
+  on mouseup it clears state and removes the global listeners (`:174-183`).
+
+**`RepositionComponent`** (`reposition.component.ts:34-148`)
+
+- Drags in px from `elementPositionPxDefaultInput` (fed by `WindowComponent.repositionInput`, which
+  pre-computes right/bottom so the far edge stays put — `window.component.ts:193-198`), emitting
+  `elementPositionPxDefaultOutput` live and `repositionEnd` in px on release (`:124;129-147`).
+- **Dock offer:** once a single drag exceeds **1200 ms** it flips `dockablePanelsService.showHelper`
+  (the dock helper) (`:101-104`); a 500 ms idle-stop timer clears it (`:76-88`). On mouseup,
+  `lastDroppedZone` (set by dragging over a zone) triggers `dockWindow` (`:129-135`).
+
+**`DockablePanelsService` + `DockablePanelsComponent`** (`dockable-panels.service.ts:8-227`,
+`dockable-panels.component.ts:15-238`, `resize/dock-resize.component.ts:10-71`)
+
+- Zones: left / right / top / bottom / center, each an `active*` signal; left/right width `200` and
+  top/bottom height `150` (`:11-20`).
+- Registry: `Map<name, { el, component: WindowHandle }>` (`:24`). `registerWindow` force-docks
+  `console` to bottom in mobile and otherwise **auto-docks from the saved dock config** (`:124-139`);
+  `unregisterWindow` (`:145-147`).
+- `dockWindow` / `undockWindow` (`:149-180`): mobile rules — `console` → bottom at **40% of viewport
+  height** and cannot be undocked (`:150-155,175-178`); any other window → center, undocking any
+  previous center occupant (`:156-166`). Requests are queued in `dockRequests` / `undockRequests`
+  signals and consumed by the component's `effect`s (`dockable-panels.component.ts:25-43`).
+- The component **reparents** the window's DOM `el` into the zone `@ViewChild` panel, calls
+  `component.setDocked(true/false)`, and persists via `updateDockState` / `removeDockState`
+  (`dockable-panels.component.ts:78-150`). A `MutationObserver` refreshes the `active*` signals from
+  panel children, ignoring `APP-DOCK-RESIZE` (`:58-76,156-179`).
+- Layout: `getLayoutStyles` (`:187-201`) — active zones are flex, inactive collapse (`display:none`),
+  minimum `20px`. `DockResizeComponent` (`dock-resize.component.ts:10-71`) emits the raw drag `delta`
+  with `orientation` `vertical|horizontal`; the parent clamps sizes to ≥20px (`:203-233`).
+- Mobile mode (`:31-122`): auto-detected as **not a desktop OS** AND (mobile UA **or** coarse
+  pointer) AND (portrait **or** ≤900px) (`:67-88`), with `setManualMobileMode` as an override.
+  `enforceMobileLayout` (`:99-122`) raises `bottomHeight` and docks the console.
+
+> **Reality:** docking **reparents the window element** in the DOM (`dockable-panels.component.ts:96-97`).
+> Because `docked` is a read-only input signal, the component reaches into the window instance's
+> `setDocked` method (the `WindowHandle` backdoor, `:118-123` / `window.component.ts:88-90`); Angular
+> bindings keep working after the move because the data context stays with `AppComponent`.
+
+**Persistence & inheritance.** Three keys are involved; **all are excluded** from popup inheritance
+(§4.3), so a spawned popup gets its own values rather than the opener's:
+
+| Key | Writer / reader | Contents |
+|---|---|---|
+| `shiny_window_list` | `WindowService` (`:20,27,32`) | open windows (name/type/active/zIndex) |
+| `shiny_session_id` | `WindowManagerService` (`:14-17`) | spawn session id, created if absent |
+| `shiny_dock_config` | `DockablePanelsService` (`:197-226`) | `{ layout, sizes }` — docked per window + zone sizes |
 
 ### 4.3 Repository, connection & state layer
 
@@ -159,24 +269,54 @@ passes the request through untouched (the client half of §3.4, full exchange in
 > `HtnValidationService.getDefaultContent` (`:73`); which one a new entry gets depends on the code
 > path that created it (§6 item 9).
 
-### 4.4 Feature inventory
+#### Repository layer reference (`core/repository/*.ts`)
 
-The window, dock, and plan terms used below are mapped to code in §2.6.
+Two files: the **port** `HtnRepository` (`htn.repository.ts:4-23`, an `interface` of `Observable`
+methods) and the **HTTP implementation** `HttpHtnRepository` (`http.repository.ts:12-198`,
+`@Injectable({ providedIn: 'root' })`, injecting `HttpClient`, `apiUrl = APP_CONFIG.apiUrl`
+`:13-14`). Every method maps a repository call to one backend route (§3.2) and a JSON→domain
+conversion (§4.7).
 
-| Feature (`src/app/features/…`) | Role |
-|---|---|
-| `graph-lib` | `@swimlane/ngx-graph` wrapper + a single-node prototype patch (`graph.ts`, `config.ts`). |
-| `htn-explorer` | Hierarchical tree view (`tree-utils.ts` `computeMinDepths`/`buildTree`), import/export (`io-utils.ts`), metadata menu. |
-| `htn-editor` | Form editor for node content (`htn-content.service.ts` sanitize + property CRUD). |
-| `htn-plan` | The "plan" view: `plan-state.service.ts`, `plan.types.ts` (`PlanStep`/`PendingAnalysis`), `plan-utils.ts` (`getCustomProperties`), `wire-utils.ts` (bezier), `plan-node-card` (presentational). |
-| `htn-categories` | Category-tree CRUD (`CategoryList`, `core/domain/types.ts:107-116`). |
-| `connection-string-manager` | UI to CRUD connection configs + test the active connection. |
-| `window-system` | The window/dock/resize/reposition system (§4.2). |
-| `console` | The scripting shell (§4.5). |
+| Port method (`htn.repository.ts`) | Impl `:line` | HTTP (against `${apiUrl}`) | JSON → domain / result |
+|---|---|---|---|
+| `getThesisNodes(): Observable<Map<string, HtnNode>>` | `:18-41` | `GET /htn/thesis-nodes` (`:20`) | each row → `new Thesis({…})` (`:25-32`); error **rethrows** (`:38`) |
+| `getCounterthesisNodes()` | `:43-66` | `GET /htn/counterthesis-nodes` (`:45`) | each row → `new Counterthesis({…})` (`:50-57`); **rethrows** (`:63`) |
+| `getThesisGraph(): Observable<Graph>` | `:68-70` | `GET /htn/edges?graph=thesis` (via `getGraph` `:77`) | `Graph` built `:79-93`; **rethrows** (`:99`) |
+| `getCounterthesisGraph(): Observable<Graph>` | `:72-74` | `GET /htn/edges?graph=counterthesis` (`:77`) | same `getGraph` shape; **rethrows** (`:99`) |
+| `getNode(id, graphType)` | `:104-112` | `GET /htn/nodes/{id}?graph=` (`:105`) | raw `HtnNode`; error **swallowed → `of(undefined)`** (`:109`) |
+| `createNode(node)` | `:116-123` | `POST /htn/nodes` body=`node` (`:117`) | error **swallowed → `of(node)`** (`:120`) |
+| `updateNodeContent(id, graphType, content)` | `:125-137` | `POST /htn/nodes/{id}/content` body=`content` (`:130`) | `graphType` **unused**; error **swallowed → `of(void 0)`** (`:134`) |
+| `removeNode(id, graphType)` | `:139-146` | `DELETE /htn/nodes/{id}?graph=` (`:140`) | error **swallowed → `of(void 0)`** (`:143`) |
+| `removeNodes(ids, graphType)` | `:148-155` | `POST /htn/nodes/batch-delete?graph=` body=`ids` (`:149`) | error **swallowed → `of(void 0)`** (`:152`) |
+| `addEdge(sourceId, targetId, graphType)` | `:157-168` | `POST /htn/edges` body=`{fromId,toId,graph}` (`:158-159`) | 409 ignored, others logged (`:161-164`); **swallowed** (`:165`) |
+| `removeEdge(sourceId, targetId, graphType)` | `:170-177` | `DELETE /htn/edges?from=&to=&graph=` (`:171`) | error **swallowed → `of(void 0)`** (`:174`) |
+| *(not on the port)* `getCategoryTree()` | `:181-188` | `GET /htn-categories` (`:182`) | error **swallowed → `of([])`** (`:185`) |
+| *(not on the port)* `saveCategoryTree(tree)` | `:190-197` | `POST /htn-categories` body=`tree` (`:191`) | error **swallowed → `of(void 0)`** (`:194`) |
 
-Domain types live in `core/domain/types.ts` — `GraphType`, `NODE_TYPES` (`data`/`process`/
-`referencer`), `STATE_OPTIONS` (`W`/`B`/`A`/`S`), `EXECUTION_ORDER_OPTIONS` (`unit`/`set`),
-`LayerMetrics`, `CategoryList`, etc. (`types.ts:7-153`); the barrel is `core/domain/htn.ts`.
+**JSON→domain mapping.** `getThesisNodes`/`getCounterthesisNodes` run each row through the domain
+class constructors (`models.ts:9-21`, `:31-45`, §4.7): `graph` is forced by the class (`'thesis'` /
+`'counterthesis'`); the wire's integer `layer` (always sent as `n.layer || 0`) is expanded to a
+`LayerMetrics` `{longestPath, shortestPath, avg}` (`models.ts:20`, `:44`); the flat response fields
+`triggers`/`effects`/`countertheses`/`theses` fill the matching content arrays only when the
+content array is absent or empty (`models.ts:15-17`, `:37-39`); `Counterthesis` further defaults
+`state:'W'`, `executionOrder:'unit'`, `type:'process'` (`models.ts:40-42`). `getGraph` builds
+`Graph{ edges: [[fromId,toId]], ady, inv, type, nodes: new Map(), update$: new Subject<boolean>() }`
+and pre-fills `ady`/`inv` from `edges` (`http.repository.ts:79-93`); the `nodes` map is left empty
+here and attached later by `HtnStateService.refresh` (`htn-state.service.ts:114-115`, §2.2).
+
+**Error behaviour & connection status.** Only the four graph/node **reads** rethrow — these are
+exactly the four `forkJoin` inputs in `HtnStateService.refresh` (`htn-state.service.ts:106-112`) that
+can drive `connectionStatus$` to `'offline'` (`:157-159`). Every other method swallows its error and
+returns a benign value (`undefined` / the input `node` / `[]` / `void 0`), so a failed write is
+silent and does **not** flip the status; the UI proceeds on the optimistic assumption (§2.3).
+
+> **Reality:** `HtnRepository` is **never used as an injection token**. All three consumers inject
+> the concrete `HttpHtnRepository` (`htn.service.ts:20`, `htn-graph.service.ts:12`,
+> `htn-state.service.ts:23`), so the port is a documented contract only — and it **omits**
+> `getCategoryTree`/`saveCategoryTree`, which exist solely on the class (recorded as §6 item 12).
+
+> **Reality:** `updateNodeContent` ignores its `graphType` parameter — the route path and body carry
+> only `{id}` + `content` (`http.repository.ts:125,130`), matching the backend endpoint (§3.2).
 
 ### 4.5 Console & scripting subsystem
 

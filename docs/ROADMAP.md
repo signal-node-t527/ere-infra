@@ -14,7 +14,8 @@ The plan has two parts:
   overview to an **exhaustive reference** — the node-content schema, sequence diagrams,
   per-file/per-class, per-endpoint/per-schema, per-service, per-component, and a complete
   console-command reference — targeting the depth of `LilithsTest/docs/ARCHITECTURE.md` (~830
-  lines). Part II has begun: **T9.1 is `done`**; the remaining tickets are `[ ] todo`.
+  lines). Part II has begun and progressed: **P9, P10 and P11 are `done`** (T11.4 completes P11);
+  the remaining tickets are `[ ] todo`.
 
 This is a **forward-looking plan** — it defines what to document next and tracks progress.
 `ARCHITECTURE.md` is the record of reality and is written/updated only when a documentation
@@ -82,8 +83,8 @@ Remaining work is product, not docs — see `PRODUCTION_CHECKLIST.md`.
 | P9 | ARCHITECTURE (full) — foundations & schemas | 4/4 | done |
 | P10 | ARCHITECTURE (full) — backend reference | 4/4 | done |
 | P10.5 | Documentation file convention & ARCHITECTURE split | 1/1 | done |
-| P11 | ARCHITECTURE (full) — frontend core reference | 3/4 | in_progress |
-| P12 | ARCHITECTURE (full) — frontend feature reference | 0/8 | todo |
+| P11 | ARCHITECTURE (full) — frontend core reference | 4/4 | done |
+| P12 | ARCHITECTURE (full) — frontend feature reference | 3/8 | in_progress |
 | P13 | ARCHITECTURE (full) — infra & operations reference | 0/3 | todo |
 | P14 | ARCHITECTURE (full) — assurance & consistency | 0/4 | todo |
 
@@ -397,8 +398,8 @@ documentation alone. The output is the numbered folder `docs/architecture/` (§1
 sections), keeping every load-bearing claim cited by `file:line` — see **D16** (which superseded
 decision 7's "one file, deepened in place").
 
-**Part II is in progress (P11).** Tickets are taken one at a time `[ ] todo → [x] done` (§ next
-ticket is T11.4); this section remains the plan of record (decision 8). (Phase **P10.5/T10.5** —
+**Part II is in progress (P12).** Tickets are taken one at a time `[ ] todo → [x] done` (next
+ticket is T12.4); this section remains the plan of record (decision 8). (Phase **P10.5/T10.5** —
 the T10.5 split — sits between P10 and P11 and is done.)
 When a ticket is taken, it follows the same one-at-a-time workflow as Part I.
 
@@ -589,45 +590,90 @@ Notes: Done — §4.3 gained a `Services reference` covering all eight `core/ser
        `PwaService` is unwired (**new §6 item 11**); the two `condition` defaults (§6 item 9).
 
 ### T11.4  Repository layer reference
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: T11.1
 Files: `docs/architecture/04_frontend.md` (§4.3 grown)
 Verify: each method maps to a backend endpoint and a domain class
-Notes: the `HtnRepository` port and `HttpHtnRepository` — method → `${apiUrl}/…` route →
-       JSON→domain mapping, plus each method's error-swallowing/optimistic behavior.
+Notes: **Done 2026-10-10.** §4.3 gained a `Repository layer reference`: a port→impl→HTTP→
+        JSON→domain table for all 11 `HtnRepository` methods plus the two class-only category
+        methods (13 rows, each with a resolving `:line`); the `getGraph` shape and the
+        `Thesis`/`Counterthesis` constructor mapping (`models.ts`); and an error-behaviour summary
+        — only the four graph/node reads rethrow (the sole `connectionStatus$ → offline` drivers),
+        all writes swallow. Two realities recorded: `HtnRepository` is never injected (the three
+        consumers bind the concrete `HttpHtnRepository`) and omits the category methods (**new
+        §6 item 12**); `updateNodeContent` ignores its `graphType` argument. This completes **P11**.
 
 ## Phase 12 — Full ARCHITECTURE: frontend feature reference
 
 ### T12.1  Window system reference
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: T11.1
 Files: `docs/architecture/04_frontend.md` (§4.2 grown)
 Verify: matches `features/window-system/**`
-Notes: `WindowService` (list/z-order, `shiny_window_list`), `WindowManagerService` (popups,
-       `shiny_session_id`, inheritance), `WindowComponent` (8-handle resize/drag/close),
-       `ResizeService`/`ResizeComponent`, `RepositionComponent` (dock offer), and dockable-panels
-       service/component + `dock-resize`. Document the persistence/inheritance rules.
+Notes: **Done 2026-10-10.** §4.2 grown from a bullet list into a full reference: `WindowService`
+        (signals, the `addWindow`/`activateWindow`/`bringToFront`/z-index table, `shiny_window_list`
+        auto-persist, the 600 z floor), `WindowManagerService` (`shiny_session_id`, `spawn`), 
+        `WindowComponent` (inputs, `Ctx` geometry model, docked/focus effects, `HostBinding`,
+        close-≠-remove, reposition/resize math, the 8 handle configs, dock registry lifecycle),
+        `ResizeService`/`ResizeComponent` (`ResizeConfig` semantics, 3 outputs), `RepositionComponent`
+        (the 1200 ms dock offer + stop detection), and `DockablePanelsService`/component + 
+        `DockResizeComponent` (5 zones, request queues, DOM reparenting, mobile rules). A persistence
+        & inheritance table (3 keys, all popup-excluded). One inline reality: docking reparents the
+        window element and flips `docked` via the `setDocked` backdoor. **New §6 item 13**: mobile
+        dock enforcement is partial (no systematic reflow; `checkMobileMode` console logs).
 
 ### T12.2  htn-plan reference
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: T11.1
 Files: `docs/architecture/04_frontend.md` (§4.4 grown)
 Verify: matches `features/htn-plan/**`
-Notes: `plan-state.service.ts`, `plan.types.ts` (`PlanStep`/`PendingAnalysis`), `plan-utils.ts`,
-       `wire-utils.ts` (bezier), `plan.constants.ts`, `plan-node-card`.
+Notes: **Done 2026-10-10.** §4.4 gained a full `htn-plan reference`: the `'plan'` window shell +
+        `WINDOW_REGISTRY` mapping (`window-registry.ts:11`), the `PlanStateService` table
+        (signals `:27-33`, per-window `htn_plan_*` keys `:65-71`, bootstrap via
+        `planSearchRequest$` from the explorer/categories `[Open in Plan]`, `generatePlan`
+        pipeline, progress writes with `"Cycle N"` strings, analysis stage/register,
+        `resetPlan`, JSON expansion round-trip), the `PlanStep`/`PendingAnalysis` model table,
+        the `buildTree` loop cuts (recursion / priority-inversion / reference-loop) with
+        `markLoopTargets` + `getCustomProperties` filtering, the `HtnPlanComponent` behaviours
+        (effects, ≤450 px compact breakpoint, ctrl-click relative nav, set-order-only Expand
+        Children, editor delegation + Referencer↔Target picker, `exportQueue` serialization,
+        analysis toggling), the `wire-utils.ts` bezier overlay (ancestor/sibling resolution,
+        `[data-view-id]` DOM lookups, hover highlight), and the `PlanNodeCardComponent`
+        (inputs/outputs + rendering). Two realities recorded inline: the root-singleton
+        `PlanStateService` makes all plan windows share one signal set, and loop progress is
+        stored as `"Cycle N"` display strings (+ a `[LoopDetect]` console.log at
+        `plan-utils.ts:142`).
 
 ### T12.3  htn-explorer reference
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: T11.1
-Files: `docs/architecture/04_frontend.md` (§4.4 grown)
+Files: `docs/architecture/07_frontend_features.md` (new §4.4 owner part) +
+       `docs/architecture/04_frontend.md` (§4.4 moved out), `00_index.md` (+ 07), `DECISIONS.md` (D16)
 Verify: matches `features/htn-explorer/**`
-Notes: `tree-utils.ts` (`computeMinDepths`/`buildTree`), `io-utils.ts` (import/export format), and
-       `htn-metadata-menu`.
+Notes: **Done 2026-10-10.** Split §4.4 (feature deep dives) out of `04_frontend.md` into a new
+       owning part `07_frontend_features.md` (D16 amended into a scalability protocol: owner/ref
+       files, one map row per §, bold chapter bands) and removed §4.4 from 04 (04 now owns
+       §4.1–§4.3, §4.5). 07 carries the moved feature-inventory table + `htn-plan reference`
+       verbatim plus a full `htn-explorer reference`: the `'explorer'` window shell
+       (`window-registry.ts:12`) and companion `'explorer-menu'` menu (`:17`), the per-window
+       `PaneState` + name-prefixed `htn_explorer_*` keys (`htn-explorer.constants.ts:2-5`,
+       `htn-explorer.component.ts:46-53`), `restoreState` + its 3 legacy-key deletions (`:334-336`),
+       the data bootstrap + `htn-config-changed` skip-recursion listener (`:263-298`), `tree-utils.ts`
+       (`computeMinDepths` BFS `maxDepth+1` lookahead, `buildTree` minDepth==depth+1 dedup +
+       `maxSiblings` `+N more` truncation), click routing with ctrl-inverted `effectiveClickAction`
+       and the referencer choice overlay, the three exclusive modes (add-child → `requestEditorSearch`
+       `'create'`; rewire → `connectNodes`/`disconnectNodes`; prune → `window.confirm` +
+       `pruneNodes`), the operations panel (Open in Editor/Plan, Detach, Remove Current/Subtree),
+       the `activeExplorerTrees` signal → metadata menu → `navigationRequest$` path, the `<app-graph>`
+       embed, and `io-utils.ts` import/export (subtree via `collectSubtreeIds` over `ady`; filenames
+       `htn_thesis`/`htn_counterthesis`/`htn_graph`; import id-fill/`nodes` bucketing). Three realities
+       recorded inline: explorer state is **per-window** (vs plan's root singleton), the legacy-key
+       cleanup is deletion-not-migration, and import is fire-and-forget.
 
 ### T12.4  htn-editor & htn-categories reference
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T11.1
-Files: `docs/architecture/04_frontend.md` (§4.4 grown)
+Files: `docs/architecture/07_frontend_features.md` (§4.4 grown)
 Verify: matches `features/htn-editor/**`, `features/htn-categories/**`
 Notes: `htn-content.service.ts` (sanitize + property CRUD) and the editor; categories CRUD and the
        `CategoryList` tree model.
@@ -635,7 +681,7 @@ Notes: `htn-content.service.ts` (sanitize + property CRUD) and the editor; categ
 ### T12.5  graph-lib reference
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T11.1
-Files: `docs/architecture/04_frontend.md` (§4.4 grown)
+Files: `docs/architecture/07_frontend_features.md` (§4.4 grown)
 Verify: matches `features/graph-lib/**`
 Notes: the `@swimlane/ngx-graph` wrapper (`graph.ts`, `config.ts`) and the single-node prototype
        patch.
@@ -643,7 +689,7 @@ Notes: the `@swimlane/ngx-graph` wrapper (`graph.ts`, `config.ts`) and the singl
 ### T12.6  connection-string-manager reference
 Status: [ ] todo  [ ] in_progress  [ ] done
 Blocked by: T11.3
-Files: `docs/architecture/04_frontend.md` (§4.4 grown)
+Files: `docs/architecture/07_frontend_features.md` (§4.4 grown)
 Verify: matches `features/connection-string-manager/**` and `ConnectionService`
 Notes: the CRUD UI, the "test connection" call, and the exact connection-string builder output.
 
