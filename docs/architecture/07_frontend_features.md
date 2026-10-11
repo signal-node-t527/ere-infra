@@ -8,7 +8,7 @@ The window, dock, and plan terms used below are mapped to code in §2.6.
 
 | Feature (`src/app/features/…`) | Role |
 |---|---|
-| `graph-lib` | `@swimlane/ngx-graph` wrapper + a single-node prototype patch (`graph.ts`, `config.ts`). |
+| `graph-lib` | `@swimlane/ngx-graph` wrapper + a single-node prototype patch (`graph.ts`; `config.ts` is commented-out scratch). |
 | `htn-explorer` | Hierarchical tree view (`tree-utils.ts` `computeMinDepths`/`buildTree`), import/export (`io-utils.ts`), metadata menu. |
 | `htn-editor` | Form editor for node content (`htn-content.service.ts` sanitize + property CRUD). |
 | `htn-plan` | The "plan" view: `plan-state.service.ts`, `plan.types.ts` (`PlanStep`/`PendingAnalysis`), `plan-utils.ts` (`getCustomProperties`), `wire-utils.ts` (bezier), `plan-node-card` (presentational). |
@@ -241,8 +241,8 @@ The active-mode overlay (`htn-explorer.html:100-134`) renders mode-specific cont
 confirms (connect when 2 rewires selected, else cancel; prune when ≥ 1, else cancel; add-child
 cancels) and Escape resets (`htn-explorer.component.ts:374-395`).
 
-**Graph embed** (`htn-explorer.html:210-217`) — `<app-graph>` (graph-lib, reference pending
-§4.4) receives `graphData` (the current type's `Graph`), `nodesData` (its `Map`),
+**Graph embed** (`htn-explorer.html:210-217`) — `<app-graph>` (graph-lib; see the graph-lib
+reference below) receives `graphData` (the current type's `Graph`), `nodesData` (its `Map`),
 `referenceNodesData` (**the other graph's** `Map` — the cross-graph `referencers`/refIds
 surface as the foreign nodes), `rootId`, `[selectedNodes]="activeSelection"` (the pane id, or
 the mode's selection when pruning/rewiring, `:67-73`), and `skipRecursionEdges`; node/link
@@ -278,3 +278,285 @@ nodes and default `content` (`label: 'Imported Node <4-hex>'`, `:131-139`), forc
 > local, slightly divergent copy of the plan's filter — it additionally keeps a truthy
 > `justification` key (`:181-182`), so the hover tooltip can show a justification the plan
 > card's details pane would hide (plan copy: `plan-utils.ts:283-305`).
+
+#### htn-editor reference (`features/htn-editor/*`)
+
+**Window & shell** — the editor opens as an `'editor'`-type window: `WINDOW_REGISTRY`
+(`core/config/window-registry.ts:14`) maps it to `HtnEditorComponent`, which wraps
+`<app-window … [windowDefault]="[25, 2, 50, 95]">` (`htn-editor.html:1-2`). The component
+(`htn-editor.component.ts:21`, `AfterViewInit`/`OnDestroy`) takes `windowName`/`windowType`
+inputs defaulting to `'editor'` (`:22-23`) and resolves them from the host `WindowComponent`
+once present (`:28-34`, §4.2).
+
+**Data & request channels** — the constructor subscribes `htnService.getData()` (`:105-137`),
+caching `thesisNodes`/`counterthesisNodes` and building the suggestion options (`:110-116`).
+`editorSearchRequest$` (`:169-180`) filters on `request.targetWindow === this.windowName`
+(`:170-172`) — the window addressed by the caller (§4.2; emitted from the plan/explorer) — and
+dispatches `mode:'create'` → `setupCreation` or `mode:'edit'` → `loadEntity`. `refNodeCreated$`
+(`:182-190`) sets the edited node's `refId` to the freshly created id, logs, and **auto-saves**
+via `save(false)` before activating the window.
+
+> **Reality:** the `getData()` subscription deliberately **does not** overwrite
+> `editableContent` on a background refresh (`:131-135`, commented "CRITICAL FIX") — it swaps only
+> the `localEntity` pointer, so an open form keeps the user's unsaved edits even if the
+> underlying graph changes underneath it.
+
+**Load vs. create** — `loadEntity` (`:231-264`) deep-clones `node.content` (`:248`), seeds
+missing flow entries via `htnService.ensureFlowEntries` (`:252`, §4.3), and fills counterthesis
+defaults `state:'W'`/`executionOrder:'unit'`/`type:'process'` when absent (`:256-260`).
+`setupCreation` (`:208-229`) seeds `editableContent` from `htnService.getDefaultContent` (`:217`,
+§4.3) and binds a mock `localEntity` with placeholder id `'New Node'`.
+
+**`HtnContentService`** (`htn-content.service.ts`, `providedIn:'root'`) — the pure content
+transformations:
+
+| Method | `:line` | Behaviour |
+|---|---|---|
+| `sanitize` | `:9-21` | recursive deep-copy dropping empty keys |
+| `isRefType` / `getNewValueForType` | `:23-36` | `type === 'referencer'`; typed empty (`''`/`0`/`false`/`{}`/`[]`/`null`) |
+| `addProperty` / `removeProperty` / `addArrayItem` / `removeArrayItem` | `:38-61` | key/item CRUD with a has-own guard |
+| `updateField` | `:63-73` | sets a field; clears `refId` when `type` changes away from `referencer` |
+| `shouldShowRow` | `:75-81` | hides `refId` unless the row's `type` is `referencer` |
+| `getSortedKeys` | `:83-115` | order by weight (non-required primitive < non-required object < required primitive < required object), then name; skips the integrity filter for nested (non-root) objects |
+| `cleanupContent` | `:117-165` | drops root `priority`, normalizes `flow[*]` (`priority`→0, `condition`→`'next'` for counterthesis, `completed`/`completedCondition` defaults), strips counterthesis-exclusive keys on thesis, clears a stale `refId` |
+
+**Save pipeline** — `save(shouldClose=true)` (`:270-328`): `sanitize` → `cleanupContent`
+(`:283,291`) → `validateNodeContent` (`:295`, §4.3). On failure it opens the console and logs
+each error without closing (`:298-303`). On success, creating calls `htnService.createNode` with
+an `onCreated` callback that notifies the origin window (`notifyRefNodeCreated`) and closes
+(`:305-320`); editing calls `htnService.updateNodeContent` (`:322`). `onEnter` (`:266-268`) saves
+according to the persisted `enterBehavior`. `exportJson` (`:330-343`) downloads `<id>.json`;
+`importJson` (`:345-381`) sanitizes a picked file into `editableContent` (replacing content only,
+not the id). `cancel`/`close` (`:383-404`) remove the window; on mobile `switchToPlan`
+(`:406-425`) docks/opens the plan window.
+
+> **Reality:** `save()` writes raw `console.log` debug dumps of the graph type, before/after
+> content, and validation result (`:288-296`), and `updateField` logs every keystroke update
+> (`:476-478`) — these bypass the injected `ConsoleLoggerService`, which carries only the
+> validation errors (`:300-301`).
+
+**Rendering** (`htn-editor.html`) — the `☰` menu (`:17-78`) toggles Show Keys, Add Keys, Lock
+Fields (`none`/`expanded`/`contracted`), Auto-Resize, and exposes Save / Confirm (Create when
+creating) / Export / Import / Cancel; an empty-state menu offers Import only (`:72-77`). The body
+is recursive: `jsonEditor` (`:94-234`) renders objects, `arrayEditor` (`:236-274`) arrays, and
+`primitiveArrayTpl` (`:276-319`) primitive items, all path-tracked. Rows use `getSortedKeys`;
+remove buttons hide via `isPropertyRemovable` (`htn-editor.component.ts:520-538`: root-level
+standard keys are protected, and `AnalysisEntry` objects protect `timestamp`/`analysis`). Typed
+widgets: `type` (`NODE_TYPES`), `state` (`STATE_OPTIONS`), `executionOrder`
+(`EXECUTION_ORDER_OPTIONS`) dropdowns; id fields and `refId` get `suggestion-input` completion
+(`getOptions` `:627-640` picks thesis/counterthesis options by path); `refId` also gets a
+"+ New Ref" button (`createRefIdNode`, `:199-206`). An `ngOnInit` guard (`:140-144`) throws when
+`integrityKeys` (`:82-85`) contains a key outside `NODE_ROOT_STANDARD_KEYS`
+(`core/domain/constants.ts:33`).
+
+> **Reality:** booleans persist **immediately** on toggle (`htn-editor.html:219,310`) and
+> `refNodeCreated$` auto-saves (`htn-editor.component.ts:186-188`), whereas text/number fields
+> save only on Enter — so save timing is field-type-dependent.
+
+**Settings & auto-resize** — three `StorageService` keys are read on init
+(`htn_editor_enter_behavior`, `htn_editor_lock_fields`, `htn_editor_auto_resize`, `:147-154`) and
+a `htn-config-changed` window listener applies runtime toggles (`:157-167`); `setLockFields`
+persists and re-broadcasts that event (`:431-438`). Multiline textareas auto-size through
+`requestResize`/`applyAutoResize` (`:560-588`), skipped when the browser supports
+`field-sizing: content` (`:72-75`) and when a textarea belongs to a hidden window (`:576-583`); a
+`ResizeObserver` (`:590-597`) re-triggers on first paint/undock/resize, disconnected in
+`ngOnDestroy` (`:599-606`). Unit coverage in `htn-editor.spec.ts` (auto-resize cases).
+
+#### htn-categories reference (`features/htn-categories/*`)
+
+**Window & shell** — opens as a `'categories'`-type window (`core/config/window-registry.ts:13` →
+`HtnCategoriesComponent`), wrapping `<app-window … [windowDefault]="[5, 5, 80, 80]">`
+(`htn-categories.html:1-2`). Inputs default to `'categories'` (`htn-categories.component.ts:18-19`)
+and resolve from the host `WindowComponent` (`:22-28`, §4.2).
+
+**State & orphans** — `ngOnInit` subscribes `htnService.state$` (`:47-107`): it builds the
+counterthesis suggestion options + id→label map (`:55-63`), clones `state.categories` (`:69-71`),
+and computes **orphans** — counterthesis nodes with no parents per `counterthesisGraph.inv`
+(`:76-84`). A synthesized `default` list (id `'default'`, "Default (Orphans)") is unshifted to the
+top if absent and the orphans are pushed into it (`:86-103`). `save()` (`:109-124`) recursively
+strips the transient UI flags (`isAddingNode`/`isRemoving`/`isRenaming`) then calls
+`htnService.saveCategories` (`:123`, §4.3).
+
+**CRUD actions** — `toggleExpand` (`:128-131`); add-node/remove modes (`:133-150`); inline rename
+(`:152-163`); add/remove node (`:165-177`); `addSiblingList` inserts after the target at the same
+level (`:182-211`); `addChildList` appends a child (`:213-224`); `removeList` refuses the
+`'default'` list (`:226-247`).
+
+**Navigation** — `openInEditor` (`:250-264`) targets the last `'editor'` window or spawns one,
+then `requestEditorSearch(id, 'edit', …, targetName)` + activate. `openInExplorer` (`:266-269`)
+and `openInPlan` (`:271-274`) call the local `handleWindowActivation`, then emit
+`navigationRequest$` / `requestPlanSearch` respectively.
+
+> **Reality:** `handleWindowActivation` (`:276-292`) matches `w.name === command` and never
+> spawns; it is called with the literals `'htn-explorer'`/`'htn-plan'`, but
+> `WindowService.addWindow` names windows `${type}-<timestamp>` (`window.service.ts:62`), so
+> unless a window is explicitly named `htn-explorer`/`htn-plan` the call is a no-op — the request
+> channel still fires, so the target may update without being focused. (The console's `nav`
+> reuses the same literal, `navigation.handler.ts:35`.)
+
+> **Reality:** the component mutates the `CategoryList` objects in place and re-clones
+> `state.categories` on **every** `state$` emit (`:69-71`), so a background refresh mid-edit can
+> overwrite unsaved local changes; the synthesized `default` list re-collects orphans on each
+> load, so a node removed from it is re-added while it remains parentless.
+
+**Template & model** — `htn-categories.html` renders `categories()` through a recursive
+`recursiveList` template (`:9-73`): a header with expand/rename/count and the action row
+(`+` add-node, `L+` sub-list, `-` remove-mode, delete — hidden for `default`, `:22-30`); child
+lists; a node list whose hover actions are editor/explorer/plan/remove (`:50-56`); the add-node
+`suggestion-input` (`:61-65`); and a "shining line" drop-zone for sibling insertion (`:69-71`).
+The model is `CategoryList` (`core/domain/types.ts:107-116`, §2.6): `id`, `name`, `nodeIds`,
+`children`, `expanded`, plus optional transient `isAddingNode`/`isRemoving`/`isRenaming`. Unit
+coverage in `htn-categories.spec.ts` (create only).
+
+#### graph-lib reference (`features/graph-lib/*`)
+
+**Component & shell** — `app-graph` is the standalone wrapper over `@swimlane/ngx-graph`
+(§4.1) defined in `graph.ts` (`:20-27`, importing `CommonModule` + `NgxGraphModule`) with
+`graph.html`/`graph.scss`. It is consumed **only** by the explorer (`htn-explorer.html:210-217`),
+which binds the six inputs and subscribes to all five outputs (`graph.ts:34-44`): `graphData`
+(required `Graph`), `nodesData` (required `Map<string, HtnNode>`), `referenceNodesData?`, `rootId`
+(required), `selectedNodes` (`Set<string>`), `skipRecursionEdges`; outputs `nodeClick`,
+`nodeHoverEvent`, `nodeLeaveEvent`, `linkHoverEvent`, `linkLeaveEvent`.
+
+**Single-node patch** — at module load the file **monkey-patches** ngx-graph (`graph.ts:7-18`):
+it captures `GraphComponent.prototype.ngOnChanges` and wraps it to call `update()` whenever
+`nodes?.length > 0` but `initialized` is still false. ngx-graph's own `ngOnChanges` skips
+`update()` when `links.length === 0`, which leaves `initialized = false` and would hide the graph
+through the template's `*ngIf="initialized && graph"`.
+
+> **Reality:** the patch rewrites `GraphComponent.prototype.ngOnChanges` for **every** ngx-graph
+> instance app-wide, is applied once with no teardown, and must be removed if a future ngx-graph
+> release fixes its zero-link guard.
+
+**Identity & layout** — a static `instanceCounter` gives each instance an `instanceId`
+(`graph.ts:145-147`) that namespaces its link ids and SVG marker ids. `layoutSettings` (`:51-58`)
+sets the dagre orientation to `BT` for a `thesis` graph and `TB` otherwise, `ranker:
+'network-simplex'`, paddings, and `curveDistance: '0'`. `viewDimensions` (default `[500, 500]`,
+`:46`) plus the `panOffsetX`/`panOffsetY`/`zoomLevel` signals (`:120-131`) are bound two-way to
+`<ngx-graph>` with `autoZoom`/`autoCenter` off and `minZoomLevel` 0.4 (`graph.html:1-5`).
+
+**`loadGraph(graph, nodesMap, rootId)`** (`graph.ts:204-329`) — a BFS from `rootId` over the
+graph's **forward `ady`** produces the ngx-graph `nodes`/`links`. Each node (`:252-272`): id
+`n-<id>`, `label`, word-wrapped `labelLines` (≤20 chars/line), `graphType`, `executionOrder`
+(counterthesis only) and `type`, `layerAvg` = `layer.avg.toFixed(1)`, a `references` array of
+cross-graph ref labels resolved via `nodesData` then `referenceNodesData` (`:262-266`), and
+`hasChildren`. Each link (`:313-322`): id `l-<instanceId>-<src>-<tgt>`, `isBackEdge`, and a
+label built from the **target** node's `flow[source]` entry — `[P:<priority>]` and
+` C:<condition>` when present (`:297-322`). Back edges (`neighborDepth < currentDepth`, `:283`)
+are dropped entirely when `skipRecursionEdges` is set (`:286-288`).
+
+> **Reality:** only nodes reachable from `rootId` by following `ady` render; a node's cross-graph
+> references (`theses`/`countertheses`) appear **only** as label bullets and never as graph nodes —
+> `referenceNodesData` is a label lookup, not a second node set.
+
+> **Reality:** `layerAvg` always renders `L:0.0` — it reads `node.layer.avg`, which
+> `computeTopology` never assigns (stays `0`, §4.6), so the node subtitle's layer figure is
+> constant.
+
+**Refresh & lifecycle** — the constructor (`:149-173`) runs an `effect` that reloads via
+`loadGraph` whenever `graphData`/`nodesData`/`rootId` change, pushes `update$.next(true)`, and
+re-subscribes to the graph's `update$` (unsubscribing the previous one first, `:159-170`).
+`ngAfterViewInit` (`:175-193`) attaches a `ResizeObserver` that updates `viewDimensions` and fires
+a one-time `zoomToFit$` (`{force, autoCenter}`) once `graphRef.hasDims()`; `ngOnDestroy`
+(`:195-202`) disconnects the observer and subscription.
+
+**Interactions** — `onNodeClick` (`:28-32`) emits `{ id: node.data.originalId, event }`.
+`onNodeHover` (`:60-96`) builds `highlightedNodes` = the hovered id + its forward `refId` + every
+id whose `refId` points back at it + its forward `ady` children, driving the `reference-highlight`
+class; `onNodeLeave` clears it (`:98-102`). Link hover/leave emit `linkHoverEvent`/`linkLeaveEvent`
+(`:104-118`).
+
+**Template** (`graph.html`) — `nodeTemplate` (`:6-31`) renders an SVG rect whose classes encode
+type (`data`/`process`/`referencer`), `selected`, `execution-set`/`execution-unit`, and
+`reference-highlight`, plus the wrapped label, an `n-<id>`/`layerAvg` subtitle, and reference
+bullets. `defsTemplate` (`:32-83`) defines the per-instance arrow markers (forward + reverse-start
+for thesis, with OR/AND/back-edge colors). `linkTemplate` (`:84-106`) draws a wide transparent
+hit-area, the line (back edges stroked `#b53c24`), and a `textPath` label. Type colors are in
+`graph.scss:11-50` (data purple, process grey, referencer orange; execution-set dashed; selection
+light-grey).
+
+**Model / unit** — `config.ts` holds only commented-out sample `links`/`nodes` and is imported
+nowhere. Unit coverage in `graph.spec.ts:1-23` (create only).
+
+#### connection-string-manager reference (`features/connection-string-manager/*`)
+
+**Window & shell** — `ConnectionStringManager` is registered under the window type
+`'connection-manager'` (`window-registry.ts:16`) with selector `app-connection-string-manager`
+(`connection-string-manager.ts:10-16`). Its template wraps everything in `<app-window>` with custom
+header/core styles and default geometry `[30, 20, 40, 60]` (`connection-string-manager.html:1`).
+The component takes `windowName`/`windowType` inputs defaulting to `'connection-manager'`
+(`connection-string-manager.ts:17-18`) and resolves the effective values through the inner
+`WindowComponent` (`:25-31`); `AppComponent` mounts every window instance through a generic
+`ngComponentOutlet` loop that passes `{ windowName: win.name, windowType: win.type }`
+(`app.component.html:12-13`).
+
+**Opening** — the console `help` table advertises a `connection-manager` command
+(`config-utility.handler.ts:43`), but **no factory registers it** (no
+`map.set('connection-manager', …)` exists). It still opens the window: because
+`connection-manager` is a `WINDOW_REGISTRY` key (`window-registry.ts:16`), the dispatcher's
+window-type fallback opens a new instance (`console.handler.ts:190-202`), exactly like typing
+`explorer`/`plan`/`console`. The generic paths `dock connection-manager <zone> --open`
+(`view.handler.ts:188,220-235` → `WindowService.addWindow`) and `spawn connection-manager`
+(`view.handler.ts:193`) reach the same window.
+
+> **Reality:** `connection-manager` has no dedicated `CommandAction` registration, but it is not a
+> dead command — the console dispatcher opens it through the window-type fallback
+> (`console.handler.ts:190-202`) since it is a registered window type
+> (`window-registry.ts:16`).
+
+**Two views** (`connection-string-manager.html:3-88`). The **list view** iterates
+`connectionService.connections()` (`:10`), highlights the row whose id equals
+`activeConnectionId()` (`:11`), and offers Add / Switch (disabled on the active row) / Edit / Del,
+with an empty-state message (`:25-27`). The **edit view** (`:30-87`) is a template-driven
+`FormsModule` form (`:34`) with required `name`/`server`/`database` (`:37,42,47`), a conditional
+User ID/Password pair shown only when `!integratedSecurity` (`:55-64`), `encrypt` and
+`trustServerCertificate` checkboxes (`:67,72`), a success/error test banner (`:76-78`), and a
+`Save` button disabled until `connForm.form.valid` (`:84`).
+
+**Component actions** (`connection-string-manager.ts:39-78`) — `editConnection` either clones the
+passed config or seeds a new one with `crypto.randomUUID()` and
+`integratedSecurity`/`encrypt`/`trustServerCertificate` all `true` (`:39-54`); `cancelEdit` clears
+the editor and test status (`:56-59`); `saveConnection` delegates to
+`ConnectionService.saveConnection` (`:61-67`); `deleteConnection` is gated by a blocking
+`confirm()` (`:69-73`); `activateConnection` calls `setActiveConnection(id)` **then
+`htnService.refresh()`** so the graph reloads against the new target (`:75-78`).
+
+**Test connection** (`connection-string-manager.ts:80-104`) — builds a string from the **in-editor**
+config via `ConnectionService.buildConnectionString(config)`, base64-encodes it with `btoa` into a
+manually constructed `X-Connection-String` header (`:86-87`), and GETs
+`${APP_CONFIG.apiUrl}/htn/ping` with the raw `HttpClient` (not through the graph services,
+`:89`). It maps the ping body: `database === 'Online'` → `'Connection Successful!'`, otherwise
+`Database Offline: <message>`, and transport errors → `Backend Unreachable: <err.message>`
+(`:90-102`). The ping wire keys are PascalCase `Backend`/`Database`/`Message`
+(`HtnController.cs:60-84`); the component reads the camelCase form with a PascalCase fallback
+(`:91-92`). Full ping contract in §3.2, exchange in §2.4.
+
+> **Reality:** `testConnection()` tests the **unsaved** `editingConnection()` (not the persisted
+> active connection) and hand-builds the `X-Connection-String` header itself, so it deliberately
+> bypasses the `ConnectionService.getActiveConnectionString()` path used by
+> `connection.interceptor.ts` — you can prove a database works before saving it.
+
+**Builder** — `ConnectionService.buildConnectionString` (`connection.service.ts:95-109`) is
+documented verbatim in §4.3 (`04_frontend.md:248-249`); its exact output is
+`Data Source=<server>;Initial Catalog=<database>;` + (`Integrated Security=True;` |
+`User ID=<user>;Password=<password>;`) + `Encrypt=<True|False>;` +
+`TrustServerCertificate=<True|False>;` + `MultipleActiveResultSets=true;`. Example (integrated
+security):
+`Data Source=localhost\SQLEXPRESS;Initial Catalog=ResolutionEngineDb;Integrated Security=True;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=true;`.
+MARS is appended **unconditionally**.
+
+> **Reality:** connection credentials are stored in **cleartext** — `persist()`
+> (`connection.service.ts:81-83`) writes the whole `connections` array (including any
+> `user`/`password`) as JSON to `localStorage` under `shiny_connections`, and passwords travel
+> `btoa`-encoded only (not encrypted) in `X-Connection-String`. This is the client half of the
+> per-request connection seam (**B1**); see `PRODUCTION_CHECKLIST.md`.
+
+**Persistence & active-selection** — `saveConnection` upserts by `id` and `persist()`s
+(`connection.service.ts:51-61,81-83`); `deleteConnection` filters the list and, if the deleted id
+was active, clears `activeConnectionId` and removes `shiny_active_connection_id` (`:63-70`);
+`setActiveConnection` writes/removes that key (`:72-79`); the constructor auto-selects the first
+config when the stored active id no longer exists (`:41-48`). Keys and the interceptor contract are
+in §4.3.
+
+**Styles / unit** — `connection-string-manager.scss:1-192` (list/edit views, buttons, and the
+green/red test banner); unit coverage in `connection-string-manager.spec.ts:1-23` (create only).

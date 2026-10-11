@@ -320,22 +320,117 @@ silent and does **not** flip the status; the UI proceeds on the optimistic assum
 
 ### 4.5 Console & scripting subsystem
 
-- **Parser** (`features/console/console.parser.ts`): quoted sections, `--flags`, `key=value`,
-  positionals → `ParsedCommand`.
-- **Dispatch** (`features/console/console.handler.ts`): a `Map<string, CommandAction>` built
-  from handler factories (`console.handler.ts:121-136`): node-crud, navigation, graph,
-  bulk-data, category, integrity, view, config-utility, referencer, **script**
-  (`console.handler.ts:13-22`). Unknown commands that match a window type open a window;
-  otherwise they activate an existing window or log an error (`console.handler.ts:183-209`).
-  The handler context exposes the services + live state mirrors + log helpers
-  (`console.handler.ts:139-172`).
-- **Logger** (`features/console/console-logger.service.ts`): level-tagged output
-  (info/success/warn/error/header/usage), HTML escaping, id formatting.
-- **Script engine** (`features/console/handlers/script.handler.ts`): runs
-  `{ name, description, vars, steps[] }` (or bare steps); guards `online|offline|exists:<id>|
-  missing:<id>`; `${var}` interpolation; options `--confirm`/`--dry-run`/`--continue-on-error`/
-  `--settle=<ms>`. A manifest (`public/scripts/index.json`, cache-busted) is generated at build
-  by `tools/build-script-index.mjs` and wired through the `scripts:index` npm script
-  (`package.json:6-13`). The shipped reference is
-  `shiny-computing-machine/docs/console_script_syntax.md` — this doc does not duplicate it.
+The console is a terminal window (`features/console/*`): input is parsed to a `ParsedCommand`,
+dispatched against a command map (with a window-type fallback), and output is appended to a
+line buffer rendered as trusted HTML.
+
+**Parser** (`features/console/console.parser.ts`). `parseCommand(input)` (`:5-54`) tokenizes with
+`/(?:[^\s"']+|"[^"]*"|'[^']*')+/g` (`:9`), which keeps `key="value with spaces"` a single token;
+quoted sections (`QUOTED_SECTION`, `:3`) are stripped inside each token (`:14`) so quotes are
+syntactic, not data. The first token is `shift`ed as `command` (`:17`); the rest classify as
+`--flags` (bare → `true`; `--k=v` → string, `:25-37`), `key=value` pairs (split on the first `=`,
+remainder rejoined, `:40-47`), or `positional[]` (`:50`) — yielding
+`ParsedCommand { command, positional[], keyValues{}, flags{} }`. Covered by
+`console.parser.spec.ts:1-51`.
+
+**Dispatch** (`features/console/console.handler.ts`). At construction the handler builds `ctx`
+(`createContext`, `:139-172`) and merges **ten** handler factories into one
+`Map<string, CommandAction>` (`:122-136`; imports `:13-22`). `handleCommand(parsed)` (`:183-209`)
+resolves the verb: a map hit invokes the action (sync or `Promise`); else if the verb names a
+**window type** (`Object.keys(WINDOW_REGISTRY)`, `:190`) it opens a new window — `--open` first
+activates an existing instance of that type (`:193-200`); else it tries
+`handleWindowActivation` by window **name** (`:211-239`, which docks to `center` in mobile mode
+`:212-218`, bumps zIndex, and re-inits the console's defaults `:228-234`) and finally logs
+`Unknown command` (`:206`).
+
+**Handler contract** (`features/console/handlers/handler-context.ts`). `HandlerContext`
+(`:3-32`) supplies log helpers, `escapeHtml`/`formatNodeId`/`print`, the injected services, the
+**live state mirrors** (`currentThesisNodes`/`currentCounterthesisNodes`/`current*Graph`/
+`currentCategories`, getters over the latest `HtnState`) and the `checkConfig`/`cleanConfig`/
+`explorerConfig`/`editorConfig` records. `CommandAction` is
+`(parsed) => void | Promise<void>` (`:34`).
+
+**Logger** (`features/console/console-logger.service.ts`). A `Subject<string[]>` carries HTML
+fragments (`:8-9`); the level helpers wrap a message in a
+`log-info|success|warn|error|header` span (`:32-50`), `clear()` emits the sentinel `__CLEAR__`
+(`:15-17`), and `logUsage` HTML-escapes then re-emits as an error (`:52-54`). `escapeHtml`
+(`:19-26`) and `formatNodeId` (id + copy button, `:28-30`) are the shared output helpers.
+
+**Commands** — **44 verbs / 45 registrations** across ten factory modules (the `nav` verb is
+also registered as `navigate`; `navigation.handler.ts:8-9`):
+
+| Group | Command | Effect |
+| --- | --- | --- |
+| node-crud | `mknode <type> [parentId] [key=value]…` | Create a node (orphan if `parentId` omitted); pairs seed content. |
+| | `rmnode <type> <id>` | Delete one node. |
+| | `rmnodes <type> <id…>` / `rmnodes <id…>` | Delete many; type auto-detected when omitted. |
+| | `modnode <type> <id> [key=value]…` | Patch node content. |
+| | `rmsubtree <type> <rootId>` | Delete a node and its whole subtree. |
+| navigation | `nav <id>` (alias `navigate`) | Focus `htn-explorer` and emit `navigationRequest$`. |
+| | `shownode <id>` | Log the node's raw JSON. |
+| | `list-nodes [type]` | List nodes, optionally filtered by type. |
+| | `list-orphans` | List nodes with no parent. |
+| graph | `list-edges <thesis\|counterthesis>` | List a graph's edges. |
+| | `mkedge <thesis\|counterthesis> <from> <to>` | Add an edge. |
+| | `rmedge <thesis\|counterthesis> <from> <to>` | Remove an edge. |
+| | `migrate-graph --confirm` | Rewrite `graph="antithesis"` → `"counterthesis"` on nodes/edges. |
+| | `test-backend` | Ping the backend API. |
+| bulk-data | `purge-prop <prop> --confirm` | Delete a property from every node (schema keys rejected). |
+| | `replace-value <propKey> <cur> <new> --confirm` | Replace matching property values across nodes. |
+| | `find-value <propKey> <value>` | Read-only; list nodes whose property matches. |
+| | `migrate-prop <from> <to> --confirm` | Copy a property to a new key (source kept). |
+| category | `list-cats` | Print the category tree. |
+| | `mkcat <name> [parent]` | Create a category. |
+| | `rmcat <name>` | Delete a category. |
+| | `cat <cat> <nodeId>` | Add a node to a category. |
+| | `uncat <cat> <nodeId>` | Remove a node from a category. |
+| integrity | `check-integrity [key]` | Report dangling edges / refs / flow issues (per `checkConfig`). |
+| | `clean-integrity [key]` | Delete the issues found (per `cleanConfig`). |
+| | `config-check-integrity <key> <bool> [--list]` | Read/write the check-key toggles. |
+| | `config-clean-integrity <key> <bool> [--list]` | Read/write the clean-key toggles. |
+| view | `dock <name\|type> <zone> [--open] [--force]` | Dock a window to `left/right/top/bottom/center`. |
+| | `undock <windowName>` | Undock a window. |
+| | `mobile-mode <on\|off\|auto>` | Force/release mobile layout. |
+| | `list-windows` | List windows and their dock zone. |
+| | `rmwindow <windowId>` | Close a window instance. |
+| | `spawn [type] [name]` | Open an independent pop-up session. |
+| config-utility | `cls` | Clear the console buffer. |
+| | `help` | Print the hand-maintained command table. |
+| | `config-explorer <key> <bool> [--list]` | Read/write explorer toggles. |
+| | `config-editor <key> <value>` / `toggle-enter-behavior` … | Read/write editor config. |
+| | `clean-workspace` | Wipe all storage and reload the app. |
+| | `refresh` | Reload all data from the backend. |
+| referencer | `list-referencers [rootId] [--save-default]` | Walk a plan tree and list referencer nodes in priority order. |
+| script | `script-run <path\|name> [--confirm] [--dry-run] [--continue-on-error] [--settle=<ms>] [key=value]…` | Execute a JSON script. |
+| | `script-open [--confirm]` | File-pick and run a local `.json` script. |
+| | `script-validate <path\|name>` | Schema-check a script without running it. |
+| | `script-list [--validate]` | List manifest scripts (optionally validate each). |
+
+> **Reality:** the `help` table (`config-utility.handler.ts:5-51`, printed by `handleHelp`
+> `:58-67`) is a **hand-maintained duplicate** of the command map and has drifted: it advertises
+> `connection-manager` (`:43`), which has no dedicated registration and is served only by the
+> window-type fallback, and it omits the `navigate` alias (`navigation.handler.ts:9`) and the
+> `config-check-integrity`/`config-clean-integrity` verbs (`integrity.handler.ts:8-9`).
+> `KNOWN_COMMAND_NAMES` (`:54-56`) derives from the same list and is used to validate scripts.
+
+> **Reality:** offline gating is **advisory only**. `connectionStatus$` toggles the private
+> `isOnline` flag and logs `Console: System is OFFLINE. Modification commands are disabled.`
+> (`console.handler.ts:114-119`), but `isOnline` (`:39`) is never read, so no command is actually
+> blocked; only the script engine's `online|offline` guards consult connection state
+> (`script.handler.ts:69,88-89,384-387`).
+
+> **Reality:** output is rendered as **trusted HTML** — `SafeHtmlPipe` calls
+> `bypassSecurityTrustHtml` (`console.component.ts:12-13`) and the template binds `[innerHTML]`
+> (`console.html:3`); the entry handler appends the raw input line and any async rejection
+> (`console.component.ts:53-72`), and clicks are delegated to copy buttons (`:74-107`). Handlers
+> must therefore escape dynamic text themselves via `ctx.escapeHtml`; only the referencer, script
+> and view handlers do, while most node/category output interpolates DB strings verbatim.
+
+**Script engine** (`features/console/handlers/script.handler.ts`): runs
+`{ name, description, vars, steps[] }` (or bare steps); guards `online|offline|exists:<id>|missing:<id>`;
+`${var}` interpolation; options `--confirm`/`--dry-run`/`--continue-on-error`/`--settle=<ms>`.
+A manifest (`public/scripts/index.json`, cache-busted) is generated at build by
+`tools/build-script-index.mjs` and wired through the `scripts:index` npm script
+(`package.json:6-13`). The shipped reference is
+`shiny-computing-machine/docs/console_script_syntax.md` — this doc does not duplicate it.
 

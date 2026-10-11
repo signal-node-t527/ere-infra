@@ -46,7 +46,7 @@ D16). Rows are grouped under chapter bands.
 | §4.1–§4.3 | Frontend — stack/shell, window system, repository/state | [`04_frontend.md`](./04_frontend.md) |
 | §4.4 | Frontend — feature inventory & per-feature deep dives (owner) | [`07_frontend_features.md`](./07_frontend_features.md) |
 | §4.5 | Frontend — console | [`04_frontend.md`](./04_frontend.md) |
-| §4.6–§4.7 | Frontend — graph algorithms/PWA/tests, core domain model | [`05_frontend_core.md`](./05_frontend_core.md) |
+| §4.6–§4.7 | Frontend — graph algorithms/shared components/PWA/tests, core domain model | [`05_frontend_core.md`](./05_frontend_core.md) |
 
 ### Infrastructure & pointers (§5–§7)
 

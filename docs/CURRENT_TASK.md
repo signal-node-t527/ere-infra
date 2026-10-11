@@ -1,14 +1,16 @@
 # Current Task
 
-## T12.3 done — next ticket T12.4 (2026-10-10)
+## T12.8 done — next ticket T13.1 (2026-10-10)
 
 Part I (P0–P8) is complete and audited. **Part II (P9–P14, full architecture coverage)**: P9 and
 **P10 (backend reference) are complete** (T10.1–T10.4); **the T10.5 split is done** (the reference
 now lives in the numbered `docs/architecture/` folder; **D16**); **P11 (frontend core
-reference) is complete (4/4)**; and **P12 (frontend feature reference) is in progress (3/8)** —
-T12.1 (window system reference → §4.2), T12.2 (htn-plan reference → §4.4) and T12.3 (htn-explorer
-reference → §4.4, in the new owning part `07_frontend_features.md`) are done, T12.4
-(htn-editor & htn-categories reference → §4.4) is next.
+reference) is complete (4/4)**; and **P12 (frontend feature reference) is complete (8/8)** —
+T12.1 (window system reference → §4.2), T12.2 (htn-plan reference → §4.4), T12.3 (htn-explorer
+reference → §4.4, in the new owning part `07_frontend_features.md`), T12.4 (htn-editor &
+htn-categories reference → §4.4), T12.5 (graph-lib reference → §4.4), T12.6
+(connection-string-manager reference → §4.4), T12.7 (console command reference → §4.5) and T12.8
+(shared components & styling reference → §4.6) are done; P13 (infra & operations reference) is next.
 
 ### What this workstream produced
 
@@ -53,15 +55,64 @@ reference → §4.4, in the new owning part `07_frontend_features.md`) are done,
   `+N more` truncation), ctrl-inverted click actions + referencer choice overlay, the three
   exclusive modes (add-child/rewire/prune), the operations panel, `activeExplorerTrees` →
   metadata menu → `navigationRequest$`, the `<app-graph>` embed, and `io-utils.ts` import/export —
-  with three inline realities (per-window state vs the plan singleton; legacy-key deletion not
-  migration; fire-and-forget import).
+   with three inline realities (per-window state vs the plan singleton; legacy-key deletion not
+   migration; fire-and-forget import). P12 continued with the **htn-editor & htn-categories
+   reference** in **§4.4** (T12.4): the `'editor'` window with its option build + deliberate
+   `editableContent` non-refresh, the `editorSearchRequest$`/`refNodeCreated$` channels, the
+   load/create paths, a `HtnContentService` method table (sanitize → `cleanupContent`), the save
+   pipeline (`validateNodeContent` gate, create/update, export/import, `switchToPlan`), the
+   recursive JSON templates + typed widgets, and the settings/auto-resize subsystem; plus the
+   `'categories'` window — the `state$` clone + synthesized `default`/orphans list, `save()`
+   flag-stripping, the CRUD actions, navigation, the recursive template, and the `CategoryList`
+   model — with five inline realities (editor `editableContent` survives refresh; raw
+   `console.log` in the editor's save path; field-type-dependent save timing; categories'
+   name-match window activation that never focuses generated-named windows; in-place list
+   mutation + `state$` re-clone clobber risk). P12 continued with the **graph-lib reference** in
+   **§4.4** (T12.5): the standalone `app-graph` wrapper over `@swimlane/ngx-graph` (`graph.ts:20-27`;
+   consumed only at `htn-explorer.html:210-217`), its six inputs/five outputs (`graph.ts:34-44`), the
+   module-load `GraphComponent.prototype.ngOnChanges` monkey-patch that unblocks zero-link graphs
+   (`:7-18`), `instanceId` namespacing + `layoutSettings` (`BT` thesis / `TB` else, `network-simplex`;
+   `:51-58`), `loadGraph`'s BFS over forward `ady` (node shape incl. `labelLines`/`layerAvg`/
+   `references`, link labels from the target's `flow[source]`, `skipRecursionEdges`; `:204-329`), the
+   constructor `effect` + `update$` re-subscription and the `ResizeObserver` one-time `zoomToFit$`
+   (`:149-202`), the click/hover highlight interactions (`:28-132`), the `graph.html`
+   node/defs/link templates + `graph.scss` type colors, and `config.ts` (commented-out scratch) /
+   `graph.spec.ts` (create only) — with three inline realities (global teardown-less monkey-patch;
+   forward-`ady`-only render with cross-graph refs as label bullets; `layerAvg` always `L:0.0`).
+   P12 continued with the **connection-string-manager reference** in **§4.4** (T12.6): the
+   `'connection-manager'` window shell (`window-registry.ts:16`; `<app-window>` default
+   `[30,20,40,60]`, `connection-string-manager.html:1`; input resolution `:17-31`), the list/edit
+   views (CRUD + template-driven `FormsModule` form, `html:3-88`), the component actions
+   (clone/seed with `crypto.randomUUID()`, save/delete/`confirm()`, `activateConnection` →
+   `setActiveConnection` + `htnService.refresh()`; `:39-78`), `testConnection()` (`:80-104`:
+   `buildConnectionString` + `btoa` header → `/htn/ping` via raw `HttpClient`, PascalCase body
+   mapping), the builder (cross-linked to §4.3, integrated-security example), persistence and
+   active-selection (`connection.service.ts:41-83`), styles + spec — with three inline realities
+   (the `connection-manager` console command is advertised with no dedicated registration but
+   still opens via the dispatcher's window-type fallback; `testConnection()` tests the unsaved
+   editing config and bypasses the interceptor; passwords persist in cleartext in `localStorage`
+   + base64-only header). Also extended `PRODUCTION_CHECKLIST.md` B1 + §5 for the cleartext
+   client-side credentials. P12 continued with the **console command reference** in **§4.5**
+   (T12.7): parser grammar (`console.parser.ts:3-54`), dispatch (`console.handler.ts` ten-factory
+   map `:122-136`, `handleCommand` fallback chain `:183-209`), the `HandlerContext` contract,
+   logger levels/sentinels, a grouped table of all **44 verbs / 45 registrations**, and the script
+   engine (cross-linking `console_script_syntax.md`) — with three inline realities (drifted
+   hand-maintained `help` table; advisory-only offline gating; trusted-HTML output). Corrected the
+   T12.6 record: `connection-manager` is not a dead command. P12 closed with the **shared components
+   & styling reference** in **§4.6** (T12.8): a `suggestion-input` contract table + filtering
+   (cap-50)/keyboard/blur behaviour + its four consumers, the `units-conversion` helpers, the global
+   styling/theming layer (`styles.scss`, `app.component.scss`, per-component SCSS), and the
+   window-chrome conventions (header/core/resize/theme inputs, dock chrome, launcher) — with four
+   inline realities (units default `window.innerWidth` on both axes; dead `.window-test__span`
+   styling; non-signal `inputText` mirror + 200 ms blur timer, no spec; hardcoded-hex theming). §4.6
+   retitled to include "shared components".
 - **`docs/PROJECT_STATE.md`** — final snapshot + the P7 corrections to the entry-point docs.
 - **`docs/DECISIONS.md`** — D1–D16 (decisions and documented realities, each with evidence; D16
   records the doc folder/§ convention — **amended in T12.3 into a scalability protocol** —
   and supersedes locked decision #7).
 - **`docs/PRODUCTION_CHECKLIST.md`** — dev-seam registry (backend B1–B6, frontend F1–F3, infra,
   keys/secrets, smoke tests).
-- **`docs/ROADMAP.md`** — the plan; P0–P10 `done`, **P10.5 done (T10.5)**, P11 **4/4 (T11.1–T11.4)**, P12 **3/8 (T12.1–T12.3)**.
+- **   `docs/ROADMAP.md`** — the plan; P0–P10 `done`, **P10.5 done (T10.5)**, P11 **4/4 (T11.1–T11.4)**, P12 **8/8 (T12.1–T12.8)**.
 - **`README.md`** — corrected in T7.1; the redundant `DOCUMENTATION.md` was **removed** (D15).
 
 No application source, config, or Docker file was changed (D3); the only non-`docs/` edits were
@@ -159,18 +210,85 @@ the T7.1 corrections to the entry-point docs and the D15 removal of `DOCUMENTATI
   faithful: the feature-inventory table + `htn-plan reference` in `07_frontend_features.md` are
   byte-identical to their former `04_frontend.md` text; `04_frontend.md` owns §4.1–§4.3, §4.5;
   `00_index.md` maps every `§` to exactly one row (owner-first), with 07 as the §4.4 owner; every
-  part header reads `Part N of 7`; all files ≤600 lines. Three realities recorded inline
-  (per-window explorer state vs the plan singleton; legacy-key deletion not migration;
-  fire-and-forget import).
+   part header reads `Part N of 7`; all files ≤600 lines. Three realities recorded inline
+   (per-window explorer state vs the plan singleton; legacy-key deletion not migration;
+   fire-and-forget import).
+- T12.4 §4.4: every table row and `:line` resolves against `features/htn-editor/**` and
+  `features/htn-categories/**` — the editor window shell (`window-registry.ts:14`,
+  `htn-editor.html:1-2`); the `getData()` build + non-refresh (`htn-editor.component.ts:105-137`);
+  the `editorSearchRequest$`/`refNodeCreated$` channels (`:169-190`); `loadEntity`/`setupCreation`
+  (`:208-264`, `ensureFlowEntries :252`, `getDefaultContent :217`); the `HtnContentService` table
+  (`htn-content.service.ts:9-165`); the save pipeline (`save :270-328`, `validateNodeContent :295`,
+  `exportJson`/`importJson :330-381`, `close`/`switchToPlan :383-425`); the recursive templates +
+  widgets + `isPropertyRemovable :520-538`; the settings/auto-resize run (`:72-75,147-167,431-438,560-606`).
+  Categories: the window shell (`window-registry.ts:13`, `htn-categories.html:1-2`); the `state$`
+  clone + `default`/orphans synthesis (`htn-categories.component.ts:47-107`); `save :109-124`; the
+  CRUD actions (`:128-247`); navigation (`:250-292`); the template + `CategoryList`
+  (`types.ts:107-116`). Five realities recorded inline (editor `editableContent` survives refresh;
+  editor `console.log` past the logger; field-type-dependent save timing; categories name-match
+   activation never focuses generated names; categories in-place mutation + `state$` re-clone).
+- T12.5 §4.4: every row and `:line` resolves against `features/graph-lib/**` — the component
+  shell (`graph.ts:20-27`; `htn-explorer.html:210-217`); the inputs/outputs (`graph.ts:34-44`);
+  the `ngOnChanges` monkey-patch (`:7-18`); `instanceId` (`:145-147`); `layoutSettings`/`viewDimensions`
+  + pan/zoom signals (`:46,51-58,120-131`) and the `ngx-graph` bindings (`graph.html:1-5`); `loadGraph`
+  node/link construction + forward-`ady` BFS + `flow[source]` labels + `skipRecursionEdges`
+  (`:204-329`, incl. `references :262-266`, back-edge `:283`, skip `:286-288`); the constructor
+  `effect` + `update$` re-subscription (`:149-173`), `ResizeObserver`/one-time `zoomToFit$`
+  (`:175-193`) and teardown (`:195-202`); `onNodeClick`/`onNodeHover`/`onNodeLeave` + link hover
+  (`:28-132`); the `graph.html` node/defs/link templates (`:6-31,32-83,84-106`) and `graph.scss`
+  type colors (`:11-50`); `config.ts` (commented-out scratch) / `graph.spec.ts:1-23`. Three realities
+  recorded inline (global teardown-less monkey-patch; forward-`ady`-only render, cross-graph refs as
+  label bullets only; `layerAvg` always `L:0.0`, cross-linking §4.6). Also fixed the explorer's stale
+  "(graph-lib, reference pending §4.4)" pointer (07:244) and the §4.4 inventory row (07:11).
+- T12.6 §4.4: every row and `:line` resolves against `features/connection-string-manager/**` and
+  `core/services/connection.service.ts` — the window shell (`window-registry.ts:16`;
+  `connection-string-manager.ts:10-31`; `connection-string-manager.html:1`); the list/edit views
+  (`html:3-88`); the component actions (`:39-78`); `testConnection()` (`:80-104`: builder, `btoa`
+  header, raw `HttpClient` GET to `/htn/ping`, PascalCase mapping vs `HtnController.cs:60-84`); the
+  builder (cross-link §4.3 `04_frontend.md:248-249`, example output); persistence/active-selection
+  (`connection.service.ts:41-83`); `connection-string-manager.scss:1-192`;
+   `connection-string-manager.spec.ts:1-23`. The command reality is verified by the exhaustive
+   `connection-manager` search (only `config-utility.handler.ts:43` and the registry/component files;
+   no `map.set`) plus the dispatcher's window-type fallback (`console.handler.ts:190-202`, since
+   `connection-manager` is a `WINDOW_REGISTRY` key), with the open paths
+   `view.handler.ts:188,193,220-235`. Three realities recorded inline (advertised command with a
+   fallback open path rather than a dedicated registration — corrected in T12.7;
+   test-from-unsaved-config bypassing the interceptor; cleartext password persistence + base64-only
+   header). `PRODUCTION_CHECKLIST.md` B1 and §5 now carry the cleartext-credentials note.
+- T12.7 §4.5: every row and `:line` resolves against `features/console/**` — the parser
+  (`console.parser.ts:3-54`; token regex `:9`; flag/key-value/positional classification `:25-50`;
+  `console.parser.spec.ts:1-51`); the dispatcher (`console.handler.ts:13-22` imports, `:122-136`
+  merged map, `:139-172` context, `:183-209` fallback chain, `:211-239` name activation);
+  `handler-context.ts:3-34`; `console-logger.service.ts:8-54`; the `SafeHtmlPipe` binding
+  (`console.component.ts:9-15,43-107`, `console.html:1-10`); the ten modules' `map.set` keys
+  (45 registrations / 44 verbs, `navigation.handler.ts:8-9` alias); and `script.handler.ts`
+  guards (`:69,88-89,384-387`). Three realities recorded inline (drifted `help` table —
+  `connection-manager` listed, `navigate` + `config-*-integrity` omitted; advisory-only offline
+  gating; trusted-HTML output). Also corrected T12.6's "dead command" claim in §4.4. §4.5 grew
+  21 → 118 lines; `04_frontend.md` = 436 ≤ 600.
+- T12.8 §4.6: every row and `:line` resolves against `shared/**`, `src/styles.scss`,
+  `app.component.scss` and the window-system chrome — the suggestion-input contract
+  (`suggestion-input.component.ts:5-42,117-131`; keyboard `:63-115`; 200 ms blur `:56-61`; template
+  `html:1-12`; SCSS `:1-78`) and its four consumers (`htn-editor.html`, `htn-explorer.html`,
+  `htn-plan.html`, `htn-categories.html`; `plan-state.service.ts:8`); `units-conversion.ts:1-7`
+  (window-system-only, `window.component.ts:194-263`, `resize.component.ts:3`); `styles.scss:1-52`
+  (`.scrolling :42-48`, `.no-select :50-52`) + `app.component.scss:1-46`; the window chrome
+  (`window.component.html:27-41`, `window.component.scss:12-70`, `window.table.scss:1-96`, inputs
+  `window.component.ts:93-96`, `console.component.ts:38-39`, `console.html:1`, `dockable-panels.scss:16-146`,
+  `console-btn.scss:1-37`). Four realities recorded inline (units default `window.innerWidth` on both
+  axes; dead `.window-test__span` folded into the §4.6 dead-scaffolding bullet; non-signal `inputText`
+  + 200 ms blur timer with no spec; hardcoded-hex theming, no tokens). §4.6 retitled;
+  `05_frontend_core.md` = 244 → 320 ≤ 600; `00_index.md` topic cell updated.
 - Reality notes recorded, not fixed, in `architecture/` §6 (items 9–13).
 
 ### Next action
 
-**P12 (frontend feature reference) is underway — T12.3 done.** The next documentation ticket is
-**T12.4** (htn-editor & htn-categories reference → `docs/architecture/07_frontend_features.md`
-§4.4), in `ROADMAP.md`. After the Part II documentation work, the remaining **product** follow-up
-is in `PRODUCTION_CHECKLIST.md` (connection-string seam, migrations, auth/CORS, hardcoded API URL)
-and, optionally, a backend test project.
+**P12 (frontend feature reference) is complete — T12.8 done.** The next documentation ticket is
+**T13.1** (container / image reference → `docs/architecture/06_infrastructure.md` §5), opening
+**P13 (infra & operations reference)** in `ROADMAP.md`.
+After the Part II documentation work, the remaining **product** follow-up is in
+`PRODUCTION_CHECKLIST.md` (connection-string seam, migrations, auth/CORS, hardcoded API URL) and,
+optionally, a backend test project.
 
 ## One-ticket-at-a-time loop (the rule)
 

@@ -84,7 +84,7 @@ Remaining work is product, not docs — see `PRODUCTION_CHECKLIST.md`.
 | P10 | ARCHITECTURE (full) — backend reference | 4/4 | done |
 | P10.5 | Documentation file convention & ARCHITECTURE split | 1/1 | done |
 | P11 | ARCHITECTURE (full) — frontend core reference | 4/4 | done |
-| P12 | ARCHITECTURE (full) — frontend feature reference | 3/8 | in_progress |
+| P12 | ARCHITECTURE (full) — frontend feature reference | 8/8 | done |
 | P13 | ARCHITECTURE (full) — infra & operations reference | 0/3 | todo |
 | P14 | ARCHITECTURE (full) — assurance & consistency | 0/4 | todo |
 
@@ -398,8 +398,8 @@ documentation alone. The output is the numbered folder `docs/architecture/` (§1
 sections), keeping every load-bearing claim cited by `file:line` — see **D16** (which superseded
 decision 7's "one file, deepened in place").
 
-**Part II is in progress (P12).** Tickets are taken one at a time `[ ] todo → [x] done` (next
-ticket is T12.4); this section remains the plan of record (decision 8). (Phase **P10.5/T10.5** —
+**Part II is in progress (P13).** Tickets are taken one at a time `[ ] todo → [x] done` (next
+ticket is T13.1); this section remains the plan of record (decision 8). (Phase **P10.5/T10.5** —
 the T10.5 split — sits between P10 and P11 and is done.)
 When a ticket is taken, it follows the same one-at-a-time workflow as Part I.
 
@@ -671,47 +671,111 @@ Notes: **Done 2026-10-10.** Split §4.4 (feature deep dives) out of `04_frontend
        cleanup is deletion-not-migration, and import is fire-and-forget.
 
 ### T12.4  htn-editor & htn-categories reference
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: T11.1
 Files: `docs/architecture/07_frontend_features.md` (§4.4 grown)
 Verify: matches `features/htn-editor/**`, `features/htn-categories/**`
-Notes: `htn-content.service.ts` (sanitize + property CRUD) and the editor; categories CRUD and the
-       `CategoryList` tree model.
+Notes: **Done 2026-10-10.** Grew §4.4 with `#### htn-editor reference` and `#### htn-categories
+       reference`. Editor: the `'editor'` window (`window-registry.ts:14`, default `[25,2,50,95]`),
+       the `getData()` option build + deliberate non-refresh of `editableContent`
+       (`htn-editor.component.ts:105-137`), the `editorSearchRequest$`/`refNodeCreated$` channels
+       (`:169-190`), `loadEntity`/`setupCreation` (`:208-264`, `ensureFlowEntries`/`getDefaultContent`),
+       a `HtnContentService` method table (`htn-content.service.ts:9-165`: sanitize, typed
+       add/remove, `updateField`, `shouldShowRow`, weighted `getSortedKeys`, `cleanupContent`), the
+       save pipeline (`save` `:270-328` → `validateNodeContent` `:295`; export/import `:330-381`;
+       close/`switchToPlan` `:383-425`), the recursive `jsonEditor`/`arrayEditor`/`primitiveArrayTpl`
+       templates + typed widgets + `isPropertyRemovable` (`:520-538`), and the settings/auto-resize
+       subsystem (three storage keys, `htn-config-changed`, `field-sizing` fast path, ResizeObserver).
+       Categories: the `'categories'` window (`window-registry.ts:13`, default `[5,5,80,80]`), the
+       `state$` subscription that clones categories and synthesizes the `default`/orphans list
+       (`htn-categories.component.ts:47-107`), `save()` stripping transient flags (`:109-124`), the
+       CRUD actions (`:128-247`), navigation (`:250-292`), the recursive template + node hover
+       actions + shining-line drop-zone, and the `CategoryList` model (`types.ts:107-116`). Five
+       realities recorded inline: editor `editableContent` survives background refreshes; editor
+       `save()`/`updateField` use raw `console.log` past the logger; boolean + `refNodeCreated$`
+       auto-save while text fields need Enter; categories' `handleWindowActivation` name-matches
+       `'htn-explorer'`/`'htn-plan'` (never the generated `${type}-<ts>` names, so it never focuses);
+       categories mutates lists in place and re-clones on every `state$` emit (can clobber unsaved
+       edits; `default` re-collects orphans).
 
 ### T12.5  graph-lib reference
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: T11.1
 Files: `docs/architecture/07_frontend_features.md` (§4.4 grown)
 Verify: matches `features/graph-lib/**`
-Notes: the `@swimlane/ngx-graph` wrapper (`graph.ts`, `config.ts`) and the single-node prototype
-       patch.
+Notes: **Done 2026-10-10.** Added `#### graph-lib reference` to §4.4. The standalone `app-graph`
+       wrapper (`graph.ts:20-27`; consumed only at `htn-explorer.html:210-217`), its six inputs/five
+       outputs (`graph.ts:34-44`), the module-load `GraphComponent.prototype.ngOnChanges`
+       monkey-patch for zero-link graphs (`:7-18`), `instanceId` namespacing + `layoutSettings`
+       (`BT` thesis / `TB` else, `network-simplex`; `:51-58`), `loadGraph`'s BFS over forward `ady`
+       (node shape incl. `labelLines`/`layerAvg`/`references`, link labels from the target's
+       `flow[source]`, `skipRecursionEdges`; `:204-329`), the constructor `effect` + `update$`
+       re-subscription and the `ResizeObserver` one-time `zoomToFit$` (`:149-202`), the
+       click/hover highlight interactions (`:28-132`), the `graph.html` node/defs/link templates +
+       `graph.scss` type colors, and `config.ts` (commented-out scratch) / `graph.spec.ts` (create
+       only). Three realities recorded inline: the patch is a global, teardown-less monkey-patch;
+       only forward-`ady` descendants of `rootId` render (cross-graph refs are label bullets only);
+       `layerAvg` is always `L:0.0` (`layer.avg` never assigned, §4.6). Also fixed the explorer's
+       stale "(graph-lib, reference pending §4.4)" pointer and the §4.4 inventory row.
 
 ### T12.6  connection-string-manager reference
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: T11.3
 Files: `docs/architecture/07_frontend_features.md` (§4.4 grown)
 Verify: matches `features/connection-string-manager/**` and `ConnectionService`
-Notes: the CRUD UI, the "test connection" call, and the exact connection-string builder output.
+Notes: **Done 2026-10-10.** Added `#### connection-string-manager reference` to §4.4. The
+       `'connection-manager'` window shell (`window-registry.ts:16`; `<app-window>` default
+       `[30,20,40,60]`, `connection-string-manager.html:1`; input resolution `:17-31`), the list/edit
+       views (CRUD over `connectionService.connections()`, template-driven `FormsModule` form with
+       conditional User/Password + Save-until-valid; `html:3-88`), the component actions (clone/seed
+       with `crypto.randomUUID()`, save/delete/`confirm()`, `activateConnection` → `setActiveConnection`
+       + `htnService.refresh()`; `:39-78`), `testConnection()` (`:80-104`: builder + `btoa` header →
+       `/htn/ping` via raw `HttpClient`, PascalCase body mapping, `HtnController.cs:60-84`), the
+       builder (cross-linked to §4.3 `04_frontend.md:248-249`, integrated-security example),
+       persistence/active-selection (`connection.service.ts:41-83`), styles + spec. Three realities
+        recorded inline: the `connection-manager` console command is advertised with no dedicated
+        registration (`config-utility.handler.ts:43`) but still opens via the dispatcher's
+        window-type fallback (`console.handler.ts:190-202`); `testConnection()`
+       tests the unsaved editing config and bypasses the interceptor; passwords persist in
+       **cleartext** in `localStorage` + base64-only header (→ `PRODUCTION_CHECKLIST.md` B1/§5).
+       Also extended `PRODUCTION_CHECKLIST.md` B1 and added a §5 checklist item for the cleartext
+       client-side credentials.
 
 ### T12.7  Console command reference (per-command table)
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: T11.3
 Files: `docs/architecture/04_frontend.md` (§4.5 grown)
-Verify: the command list matches the `Map` keys registered by all 11 handlers; grammar matches
-        `console.parser.ts`
-Notes: document the parser grammar, dispatch/fallback, logger levels, and the `handler-context`
-       contract; then a table of **every command** (~40) with usage string, args/flags, and effect —
-       sourced from `handlers/{node-crud, graph, navigation, referencer, category, integrity, view,
-       config-utility, bulk-data, script}.handler.ts`. Reference, don't duplicate,
-       `console_script_syntax.md`.
+Verify: the command list matches the `Map` keys registered by the ten handler factories (plus the
+        dispatcher's window-type fallback); grammar matches `console.parser.ts`
+Notes: **Done 2026-10-10.** Grew §4.5 from 21 → 118 lines: parser grammar (`console.parser.ts:3-54`,
+       token regex `:9`, flag/key-value/positional classification `:25-50`, tests
+       `console.parser.spec.ts:1-51`); dispatch (`console.handler.ts` — ten factory imports
+       `:13-22`, merged map `:122-136`, `handleCommand` map → window-type → name-activation →
+       error `:183-209`, `handleWindowActivation` `:211-239`, context builder `:139-172`);
+       `HandlerContext`/`CommandAction` contract (`handler-context.ts:3-34`); logger levels +
+       `__CLEAR__` sentinel + `escapeHtml`/`formatNodeId` (`console-logger.service.ts:8-54`); a
+       grouped single table of all **44 verbs / 45 registrations** across the ten modules; and a
+       `SafeHtmlPipe` note (`console.component.ts:9-15,43-107`; `console.html:1-10`). Script engine
+       retained (cross-links `console_script_syntax.md`). Three realities: the `help` table is a
+       drifted hand-maintained duplicate (`connection-manager` listed, `navigate` +
+       `config-*-integrity` omitted); offline gating is advisory-only (`isOnline` set `:114-119`,
+       never read); output is trusted HTML (`bypassSecurityTrustHtml`) so handlers must self-escape.
+       Also corrected T12.6's claim: `connection-manager` is not a dead command — the window-type
+       fallback opens it (`console.handler.ts:190-202`), fixed in §4.4.
 
 ### T12.8  Shared components & styling reference
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: T11.1
 Files: `docs/architecture/05_frontend_core.md` (§4.6 grown)
 Verify: matches `shared/**` and `src/styles.scss`
-Notes: `shared/suggestion-input`, `shared/utils/units-conversion`, global styling/theming, and the
-       window-chrome conventions.
+Notes: §4.6 grown with `#### Shared UI — suggestion-input` (contract table, filter cap 50, keyboard,
+       200 ms blur-close, consumers), `#### Shared utils — units-conversion`, `#### Global styling &
+       theming`, and `#### Window chrome conventions`. Four realities inline: units-conversion
+       defaults to `window.innerWidth` on both axes and is window-system-only; `app.component.scss`
+       dead `.window-test__span` styling (folded into the existing §4.6 dead-scaffolding bullet);
+       suggestion-input's non-signal `inputText` mirror + 200 ms blur timer with no spec; hardcoded
+       hex theming with no tokens/dark-mode. §4.6 heading retitled to include "shared components";
+       `00_index.md` topic cell updated. File 244 → 320 lines (≤ 600).
 
 ## Phase 13 — Full ARCHITECTURE: infra & operations reference
 

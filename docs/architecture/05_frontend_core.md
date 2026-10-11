@@ -2,7 +2,7 @@
 
 > Part 5 of 7 · owns §4.6–§4.7 · index: `00_index.md`
 
-### 4.6 Domain graph algorithms, PWA, styling & tests
+### 4.6 Domain graph algorithms, shared components, PWA, styling & tests
 
 Vocabulary for the terms used here (graph, adjacency, layer, trigger, effect, referencer) is
 mapped to code in §2.6.
@@ -142,15 +142,91 @@ B ──▶ C        shortest(X)= min(0,2)+1 = 1   (A→X)
   (`sw.js:1,38-76`). The service worker is registered inline in `src/index.html:24-30`;
   `core/services/pwa.service.ts` only handles the `beforeinstallprompt`/`appinstalled` install
   prompt. Reference: `shiny-computing-machine/docs/pwa_testing_guide.md`.
-- **Styling**: global Quicksand in `src/styles.scss`, per-component SCSS, black full-viewport
-  workspace.
+- **Styling**: see `#### Global styling & theming` below.
 - **Tests**: **21 spec files** (Jasmine/Karma + Jest coexistence) —
   window.service, window.component, resize.service, resize.component, reposition.component,
   dockable-panels, dockable-panels.service, console, console.parser, console-btn,
   view.handler, script.handler, connection-string-manager, htn-plan, htn-validation.service,
   htn-graph.service, htn-explorer, htn-editor, htn-categories, graph, app.component.
 - **Dead scaffolding to record**: `verify_graph.ts` (+ `tsconfig.verify.json`), top-level
-  `build_error*.log` / `pure.txt` artifacts, and a stray marker in `.eslintrc.js`.
+  `build_error*.log` / `pure.txt` artifacts, a stray marker in `.eslintrc.js`, and the dead
+  `.window-test__span` rule (+ commented-out notes) in `app.component.scss:14-16,45-46`.
+
+#### Shared UI — suggestion-input (`shared/suggestion-input/*`)
+
+`SuggestionInputComponent` (`suggestion-input.component.ts:11-18`) is a standalone autocomplete used
+by four feature windows; it is the only shared component. Its contract (`:5-9,19-25`):
+
+| Member | Kind | Meaning |
+| --- | --- | --- |
+| `SuggestionOption` | interface | `{ value: string; label: string; detail?: string }` (`:5-9`) — the option shape. |
+| `value` / `valueChange` | `@Input` / `@Output` | two-way-bound text (`:19-20`). |
+| `submit` | `@Output` | fires on Enter or option select (`:21`). |
+| `options` | `@Input` | full option list to filter (`:23`). |
+| `placeholder` | `@Input` | input placeholder (`:24`). |
+| `align` | `@Input` | `'left'` (default) or `'right'` for the dropdown (`:25`). |
+
+State is three signals (`filteredOptions`/`isOpen`/`highlightedIndex`, `:27-29`) plus a plain
+**non-signal** `inputText` mirror (`:33`); `ngOnChanges` copies `value`→`inputText` and re-filters on
+`options` changes (`:35-42`). `filter()` lowercases the query, matches `value`/`label`/`detail`, and
+**caps the result at 50** with no "more" indicator (`:117-131`). Keyboard: ArrowDown/Up wrap and
+scroll the highlighted row (`:63-77,109-115`), Enter selects the highlighted row or submits the raw
+text (`:78-86`), Escape closes (`:87-91`). The template renders the input plus an `*ngIf` list
+(`suggestion-input.component.html:1-12`); the SCSS is a transparent underline input with a `#4CAF50`
+focus rule and a 300×200 absolute dropdown at `z-index:1000` (`:1-78`).
+
+Consumers: `htn-editor.html:13-14,104-105,155-156,184-186,281-282` (search + flow-key/reference/array
+pickers), `htn-explorer.html:92-94` (`align="right"`), `htn-plan.html:5-6` and
+`htn-categories.html:62-64`; `SuggestionOption` is also imported as a type by
+`plan-state.service.ts:8`.
+
+> **Reality:** `inputText` is a plain property updated by both `ngOnChanges` and `onInput`, a second
+> source of truth beside the `value` input; and `onBlur` closes the list on a **200 ms `setTimeout`**
+> (`:56-61`) purely so a click can land before the dropdown hides. There is **no `suggestion-input`
+> spec** (it is absent from the 21-file list above).
+
+#### Shared utils — units-conversion (`shared/utils/units-conversion.ts`)
+
+Two pure functions (`:1-7`): `toPixels(value, reference = window.innerWidth)` (`:1-3`) and
+`toPercentage(value, reference = window.innerWidth)` (`:5-7`). They are used **only** by the window
+system, converting the percent-based `Ctx` geometry to/from pixels against the container size —
+`window.component.ts:194-263` (reposition/resize) and `resize.component.ts:3` (import).
+
+> **Reality:** the default reference is `window.innerWidth` for *both* axes (even where a height is
+> converted), and no call site relies on the default — every caller passes `containerWidth()` /
+> `containerHeight()` explicitly. Sizing outside the window system uses raw `%` with no helper.
+
+#### Global styling & theming
+
+`src/styles.scss` (`:1-52`) is the only global stylesheet: it imports Quicksand/Raleway (`:2`), locks
+`html, body` to the viewport (`overflow:hidden`, `overscroll-behavior:none`, `position:fixed` on
+`body` for mobile — `:4-19`), applies universal `box-sizing:border-box` and thin auto-hiding
+scrollbars (`:21-40`), and defines two global utility classes — `.scrolling` (`:42-48`), toggled by
+`app.component.ts:74,78`, and `.no-select` (`:50-52`), applied to `<body>` during drags
+(`resize.component.ts:109,176`; `dock-resize.component.ts:34,64`). `app.component.scss:1-46` is the
+shell: `.dashboard` (black, relative, `overflow:hidden`), `.dashboard-with-panel-expanded`
+(`width: calc(100vw - 50px)` — `:10-12`, a hardcoded coupling to the 50 px console button), and the
+centered `.warning` status overlay (`:28-43`). All other styling is **collocated per component**
+(19 `*.scss` files under `src/`).
+
+> **Reality:** there is no theme layer — no CSS custom properties, tokens, or dark-mode toggle; every
+> color is a hardcoded hex/rgba literal per component (`#000` workspace, `#4CAF50` suggestion focus,
+> `#007acc` dock hover, `#fff` focus outlines). Restyling means editing each file.
+
+#### Window chrome conventions
+
+Every window renders through the shared `WindowComponent` shell, so its chrome is uniform: a 20 px
+`.header` bar (window-name span + the `app-reposition` drag overlay + a `.close` "X") shown only when
+floating, over a `.core` content slot (`window.component.html:27-41`; styles
+`window.component.scss:12-70` — `.core` is `calc(100% - 20px)`, header monospace 12px, close 20×20).
+The 4 px resize gutters and the rounded dark `rgba(10,10,10,.9)` panel with a `#fff` focused outline
+come from `window.table.scss:1-96`. Callers theme via the `headerStyle`/`coreStyle`/`windowStyle`/
+`windowDefault` inputs (`window.component.ts:93-96`): the console passes
+`headerStyle={'background-color':'#222','color':'#fff'}` + a black `coreStyle` (`console.component.ts:38-39`)
+and `[10,10,80,50]` `windowDefault` (`console.html:1`) — a pattern mirrored by each feature window.
+Dock chrome (translucent 1 px panel borders + the 3×3 `#007acc` dock-guide grid) is
+`dockable-panels.scss:16-146`; the floating launcher is `console-btn.scss:1-37`. The window-system
+internals are in §4.2 — not restated here.
 
 ### 4.7 Core domain model (`core/domain`)
 

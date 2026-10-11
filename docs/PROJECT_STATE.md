@@ -9,9 +9,12 @@
 > **Note (D16).** The architecture reference is a **folder** of ≤600-line files with a stable `§`
 > numbering; `docs/architecture/00_index.md` maps every `§` to its file. The split (**T10.5**) is
 > done, as are **T11.3** (services reference → §4.3), **T11.4** (repository layer reference → §4.3),
-> **T12.1** (window system reference → §4.2), **T12.2** (htn-plan reference → §4.4) and **T12.3**
+> **T12.1** (window system reference → §4.2), **T12.2** (htn-plan reference → §4.4), **T12.3**
 > (htn-explorer reference → §4.4, in the new owning part `07_frontend_features.md`; D16 amended into
-> a scalability protocol); the next work item is **T12.4**.
+> a scalability protocol), **T12.4** (htn-editor & htn-categories reference → §4.4), **T12.5**
+> (graph-lib reference → §4.4), **T12.6** (connection-string-manager reference → §4.4), **T12.7**
+> (console command reference → §4.5) and **T12.8** (shared components & styling reference → §4.6);
+> the next work item is **T13.1**.
 
 ## Snapshot — stable build vs. documented reality
 
@@ -72,9 +75,13 @@ of the corrections:
 - **P11** ARCHITECTURE (full) — frontend core reference — **done (4/4)**: T11.1 (domain-layer
   reference → §4.7), T11.2 (graph algorithms → §4.6), T11.3 (services reference → §4.3) and T11.4
   (repository layer reference → §4.3).
-- **P12** ARCHITECTURE (full) — frontend feature reference — **in progress (3/8)**: T12.1 (window
-  system reference → §4.2), T12.2 (htn-plan reference → §4.4) and T12.3 (htn-explorer reference →
-  §4.4, in `07_frontend_features.md`); T12.4 (htn-editor & htn-categories reference → §4.4) is next.
+- **P12** ARCHITECTURE (full) — frontend feature reference — **done (8/8)**: T12.1 (window
+  system reference → §4.2), T12.2 (htn-plan reference → §4.4), T12.3 (htn-explorer reference →
+  §4.4, in `07_frontend_features.md`), T12.4 (htn-editor & htn-categories reference → §4.4),
+  T12.5 (graph-lib reference → §4.4), T12.6 (connection-string-manager reference → §4.4),
+  T12.7 (console command reference → §4.5) and T12.8 (shared components & styling reference → §4.6).
+- **P13** ARCHITECTURE (full) — infra & operations reference — **next**: T13.1 (container / image
+  reference → §5).
 
 The T8.1 audit fixed three drifts: backend seed counts (17 thesis nodes / 17 thesis edges),
 the service-worker registration location (`src/index.html:24-30`, not `pwa.service.ts`), and the
@@ -89,10 +96,12 @@ P9 is done, and **P10 (backend reference) is complete — T10.1 (per-file / per-
 numbered `docs/architecture/` folder; D16). **Phase 11 is complete (4/4): T11.1 (domain-layer
 reference → §4.7), T11.2 (graph algorithms deep-dive → §4.6), T11.3 (services reference → §4.3) and
 T11.4 (repository layer reference → §4.3) are done.** **Phase 12 (frontend feature reference) is
-in progress (3/8): T12.1 (window system reference → §4.2), T12.2 (htn-plan reference → §4.4) and
-T12.3 (htn-explorer reference → §4.4, in the new owning part `07_frontend_features.md`) are done.**
-The next documentation ticket
-is **T12.4 (htn-editor & htn-categories reference → §4.4)**, in `ROADMAP.md`.
+complete (8/8): T12.1 (window system reference → §4.2), T12.2 (htn-plan reference → §4.4), T12.3
+(htn-explorer reference → §4.4, in the new owning part `07_frontend_features.md`), T12.4
+(htn-editor & htn-categories reference → §4.4), T12.5 (graph-lib reference → §4.4), T12.6
+(connection-string-manager reference → §4.4), T12.7 (console command reference → §4.5) and T12.8
+(shared components & styling reference → §4.6) are done.** The next documentation ticket
+is **T13.1 (container / image reference → §5)**, opening P13, in `ROADMAP.md`.
 
 Separately, *product* work surfaced by the docs remains:
 
