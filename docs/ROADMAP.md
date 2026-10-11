@@ -10,12 +10,11 @@ The plan has two parts:
 - **Part I — Initial buildout (P0–P8): DONE.** Produced a verified **overview** of the system:
   `ARCHITECTURE.md` (~400 lines) with `file:line` evidence, plus `PROJECT_STATE.md`,
   `DECISIONS.md`, `PRODUCTION_CHECKLIST.md`, `CURRENT_TASK.md`, and corrected entry-point docs.
-- **Part II — Full ARCHITECTURE coverage (P9–P14): PLANNED.** Raises `ARCHITECTURE.md` from an
+- **Part II — Full ARCHITECTURE coverage (P9–P14): DONE.** Raises `ARCHITECTURE.md` from an
   overview to an **exhaustive reference** — the node-content schema, sequence diagrams,
   per-file/per-class, per-endpoint/per-schema, per-service, per-component, and a complete
   console-command reference — targeting the depth of `LilithsTest/docs/ARCHITECTURE.md` (~830
-  lines). Part II has begun and progressed: **P9, P10 and P11 are `done`** (T11.4 completes P11);
-  the remaining tickets are `[ ] todo`.
+  lines). Part II is **complete: P9–P14 are all `done`** (see the progress table below).
 
 This is a **forward-looking plan** — it defines what to document next and tracks progress.
 `ARCHITECTURE.md` is the record of reality and is written/updated only when a documentation
@@ -85,8 +84,8 @@ Remaining work is product, not docs — see `PRODUCTION_CHECKLIST.md`.
 | P10.5 | Documentation file convention & ARCHITECTURE split | 1/1 | done |
 | P11 | ARCHITECTURE (full) — frontend core reference | 4/4 | done |
 | P12 | ARCHITECTURE (full) — frontend feature reference | 8/8 | done |
-| P13 | ARCHITECTURE (full) — infra & operations reference | 0/3 | todo |
-| P14 | ARCHITECTURE (full) — assurance & consistency | 0/4 | todo |
+| P13 | ARCHITECTURE (full) — infra & operations reference | 3/3 | done |
+| P14 | ARCHITECTURE (full) — assurance & consistency | 4/4 | done |
 
 Last updated: 2026-10-10
 
@@ -398,10 +397,10 @@ documentation alone. The output is the numbered folder `docs/architecture/` (§1
 sections), keeping every load-bearing claim cited by `file:line` — see **D16** (which superseded
 decision 7's "one file, deepened in place").
 
-**Part II is in progress (P13).** Tickets are taken one at a time `[ ] todo → [x] done` (next
-ticket is T13.1); this section remains the plan of record (decision 8). (Phase **P10.5/T10.5** —
-the T10.5 split — sits between P10 and P11 and is done.)
-When a ticket is taken, it follows the same one-at-a-time workflow as Part I.
+**Part II is complete (P9–P14).** All tickets are `[x] done`; this section remains the plan of
+record (decision 8). (Phase **P10.5/T10.5** — the T10.5 split — sits between P10 and P11 and is
+done.) The one-at-a-time workflow is now closed; the remaining work is **product**, not docs
+(`PRODUCTION_CHECKLIST.md`).
 
 **Scope inventory (what "full coverage" must eventually touch).**
 
@@ -780,62 +779,123 @@ Notes: §4.6 grown with `#### Shared UI — suggestion-input` (contract table, f
 ## Phase 13 — Full ARCHITECTURE: infra & operations reference
 
 ### T13.1  Container / image reference
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: —
 Files: `docs/architecture/06_infrastructure.md` (§5 grown)
 Verify: matches the Dockerfiles + `nginx.conf`
-Notes: each build stage of `resolution-engine/Dockerfile` and `shiny-computing-machine/Dockerfile`
-       (+ `Dockerfile.dev`), the nginx SPA/caching rules, `EXPOSE`/non-root/entrypoints, and the
-       `(localdb)`-in-container warning.
+Notes: **Done 2026-10-10.** Added **§5.3** ("Container image reference — Dockerfiles & nginx"):
+per-stage tables for `resolution-engine/Dockerfile` (sdk:9.0 build → aspnet:9.0 final) and
+`shiny-computing-machine/Dockerfile` (node:20-alpine → nginx:stable-alpine) plus `Dockerfile.dev`,
+each row citing the source `:line`; a `nginx.conf` rule table (SPA fallback, 6-month asset cache,
+exact-match `no-store` `/scripts/index.json`, 50x page); and the `EXPOSE`/non-root (`USER $APP_UID`),
+entrypoint/CMD, `.dockerignore`-exclusion, hardcoded-API-URL (F1) and `(localdb)`-in-container
+(B3) facts. §5.1's duplicated Dockerfile prose was trimmed to a summary that points at §5.3 (§5.1
+stays the topology owner for T13.2). File 142 → 194 lines (≤ 600); § map unchanged (§5 row already
+covers §5.1–§5.3).
 
 ### T13.2  Compose topology & container diagram
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: T13.1
 Files: `docs/architecture/06_infrastructure.md` (§5 grown)
 Verify: matches `docker-compose.yml`
-Notes: services, profiles (`dev`/`prod`), the `ere-network` bridge, `mssql_data` + `./backups`, env
-       wiring, `depends_on` order, and a container-level diagram.
+Notes: **Done 2026-10-10.** Grew **§5.1** in place with `####` subsections: **File anatomy**
+(one Compose-Spec file, no `version:`/override/`.env`; `services:1`/`networks:63`/`volumes:67`),
+**Service reference** (per-service key→value→`line` tables for `db`/`backend`/`frontend-prod`/
+`frontend-dev`), **Profiles & start order** (the README run commands, the always-on `db`+`backend`,
+the three start-only `depends_on` edges), **Network & volumes** (`ere-network` bridge, `mssql_data`,
+`./backups` + `.gitignore:1`), **Environment wiring** (`${MSSQL_SA_PASSWORD:-…}` → `db:7` +
+backend `:24`; `Server=db` via network DNS), a **Mermaid container diagram**, and **Compose
+realities** (no `healthcheck:` → start-order-only `depends_on`; fixed `container_name`s; no
+`restart:`; unpinned `:latest`/default password/published `1433` → PRODUCTION_CHECKLIST §4; dev
+anonymous `node_modules`). Also corrected a §5.2 drift ("the compose override" → the real `db:7` +
+`:24` consumers). File 194 → 310 lines (≤ 600); no § renumbering, index unchanged.
 
 ### T13.3  Build tooling & PWA reference
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: T12.7
 Files: `docs/architecture/05_frontend_core.md` (§4.6 grown)
 Verify: matches `tools/build-script-index.mjs`, `package.json` scripts, tsconfigs, karma/jest,
         `public/{manifest.json, sw.js}`
-Notes: the script-index generation (`npm run scripts:index`); the test setup (Karma/Jasmine + Jest
-       coexistence, tsconfigs); `.eslintrc`; the PWA lifecycle (manifest + service-worker caching
-       strategies + inline registration). Reference `pwa_testing_guide.md`.
+Notes: **Done 2026-10-10.** Grew **§4.6** with four `####` subsections in place of the old PWA/
+       Tests bullets: **Script & build tooling** (npm-script table + a script-index-generator
+       deep-dive — scan/summary/tolerant shapes/`parseError`-reporting/`--strict`, the 5 shipped
+       scripts, and the `angular.json` build/serve config), **Test setup** (the Jest builder
+       `angular.json:82-89`, `tsconfig.spec.json`, the 21 spec files, and the reality that Karma/
+       Jasmine deps exist but no `karma.conf.js`/karma target makes it dead config — D14),
+       **Lint** (`.eslintrc.js` rules + the reality that line 9's stray backticks make it
+       syntactically invalid and no `lint` script/target exists), and **PWA lifecycle** (manifest,
+       a per-strategy SW table from `sw.js`, the inline registration `index.html:24-30`, the dead
+       `PwaService` install prompt, and three realities — stale "MiApp" title, origin-relative
+       `/api/` bypass, manual cache-version bump — plus the `pwa_testing_guide.md` reference).
+       Also added §6 item 14 to `06_infrastructure.md` (broken/unwired `.eslintrc.js`).
+       `05_frontend_core.md` 320 → 418 lines (≤ 600), `06_infrastructure.md` 310 → 315;
+       § map unchanged. **This completes P13.**
 
 ## Phase 14 — Full ARCHITECTURE: assurance & consistency
 
 ### T14.1  Gaps, assumptions & unknowns register
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: P9–P13
 Files: `docs/architecture/06_infrastructure.md` (§6 grown)
 Verify: each item is a real observation, not speculation
-Notes: fold the deep-dive findings into §6; mark anything not verifiable from code as an explicit
-       assumption/unknown; route production-relevant items to `PRODUCTION_CHECKLIST.md`.
+Notes: **Done 2026-10-10.** Recast §6 as the **"Known gaps, assumptions & unknowns register"**
+       (new intro defines the taxonomy: `GAP` / `ASSUMPTION` / `UNKNOWN`, the `→ row Bx/Fx`
+       production route, and that items 1–14 predate it; ✓ mirror-renamed in `00_index.md:55`).
+       Appended seven verified items (each tagged `[GAP]`): trusted-HTML console output
+       (`SafeHtmlPipe`/`bypassSecurityTrustHtml`, `console.html:3` → new row **F4**), cleartext
+       connection credentials (`connection.service.ts:81-83`, `connection-string-manager.ts:86-87`
+       → **B1**), advisory-only offline gating (`console.handler.ts:114-119`), feature-path
+       `console.log` dumps that bypass the logger (`htn-editor.component.ts:288-296,476-478` …
+       → new row **F5**), `layerAvg` always `L:0.0`, Phase-A refresh dropping stored
+       `triggers`/`effects`, and legacy-key cleanup being deletion-not-migration. **PRODUCTION_
+       CHECKLIST.md** gained rows **F4** and **F5** (frontend seams). `06_infrastructure.md`
+       315 → 352 lines (≤ 600). **P14: 1/4.**
 
 ### T14.2  Full ARCHITECTURE-vs-code audit
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: T14.1
 Files: all `docs/*`
 Verify: every `file:line` citation resolves; every inventory file appears; no intent-over-reality
-Notes: re-run the T8.1 method across the expanded document (per-file, per-endpoint, per-command);
-        fix drift and citations.
+Notes: **Done 2026-10-10.** Re-ran the T8.1 method across `docs/architecture/`. Programmatic
+       citation pass (disposable script): **666 `file:line` tokens — 0 out-of-bounds, 0 missing,
+       13 ambiguous**, all thirteen adjudicated to the verified file (backend `Dockerfile` for
+       `:17,:18,:25-27`, shiny `Dockerfile` for `:28`; root `README.md` for `:1,:9-10,:14,:41,:44,
+       :51`; root `.gitignore:1` = `backups/`). Inventory-vs-disk: 21 spec files = §4.6 list; 5
+       `public/scripts/*.json`; 15 endpoints = §3.2 route table + line ranges; §3.6 lists all 11
+       backend `.cs` files; § map (D16) one-row-per-§, all parts ≤ 600 lines; checklist B1–B6/F1–F5
+       ↔ §6 register (15→F4, 16→B1, 18→F5). Intent-over-reality sweep clean. Two fixes, both in
+       `docs/`: (1) `06_infrastructure.md` §5.3 backend-table `ENTRYPOINT` citation `:26` → `:28`
+       (the line is the final stage's `ENTRYPOINT`); (2) `PROJECT_STATE.md` § "Entry-point doc
+       corrections": dropped the stale pre-correction README/DOCUMENTATION `file:line` cites from
+       the "Was claimed before T7.1" column (lines no longer carry those claims; `DOCUMENTATION.md`
+       is D15-removed). Re-verified clean (666/0/0/13) and `git status` is docs-only. **P14: 2/4.**
 
 ### T14.3  Entry-point doc symmetry
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: T14.2
 Files: `README.md`
 Verify: it agrees with the expanded `docs/architecture/`; pointers correct
-Notes: refresh the entry-point doc's summaries/pointers to the deeper sections (docs-only edit,
-       consistent with D3/P7).
+Notes: **Done 2026-10-10.** Refreshed `README.md` (root entry doc; the D15-sanctioned non-`docs/`
+       edit). Terminology: the three "Antithesis" spots (intro, Core Concepts bullet, Dialectic
+       bullet) now read **Counterthesis** — matching the canonical code term (D4; §2.6/§3.2 keep
+       the `antithesis` read-alias). Quick Start: added `# Access the application at
+       http://localhost:4200 (nginx)` inside the prod bash block (the dev `:4250` access line was
+       already explicit). Pointers (Documentation section) already correct. Also fixed two
+       blank-line citation slips the T14.2 audit could not catch (bounds-only): `06_infrastructure.md`
+       §5.1 run-command table cited the blank lines (old `:48`/`:34`) instead of the block commands —
+       now `README.md:44,46` (dev) and `README.md:51,52` (prod). Re-verified: cited README lines
+       `:1,:9-10,:14,:41,:44,:51` unchanged; audit 666/0/0; `git status` = `README.md` + `docs/`
+       only. README 73 → 74 lines. **P14: 3/4.**
 
 ### T14.4  Final state refresh
-Status: [ ] todo  [ ] in_progress  [ ] done
+Status: [ ] todo  [ ] in_progress  [x] done
 Blocked by: T14.3
 Files: `docs/PROJECT_STATE.md`, `docs/CURRENT_TASK.md`, `docs/ROADMAP.md`
 Verify: `PROJECT_STATE.md` is the final snapshot; `CURRENT_TASK.md` names the next action; the
         progress table matches statuses
-Notes: close out Part II the same way T8.2 closed Part I.
+Notes: **Done 2026-10-10.** Closed out Part II the way T8.2 closed Part I. `PROJECT_STATE.md` is now
+       the final snapshot (Part II complete; the P14 line reads **4/4 done**, the P7 corrections
+       table is retained as history); `CURRENT_TASK.md` is reset to **"Part II complete — no open
+       ticket"**, naming the remaining *product* work; the progress table above matches every ticket
+       status. **All of P0–P14 is done.** Remaining work is product, not docs — see
+       `PRODUCTION_CHECKLIST.md`.

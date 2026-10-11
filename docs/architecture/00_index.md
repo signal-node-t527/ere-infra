@@ -52,7 +52,7 @@ D16). Rows are grouped under chapter bands.
 
 | Section | Topic | File |
 | --- | --- | --- |
-| §5–§7 | Infrastructure & deployment, known limits/gaps, pointers | [`06_infrastructure.md`](./06_infrastructure.md) |
+| §5–§7 | Infrastructure & deployment, gaps / assumptions / unknowns register, pointers | [`06_infrastructure.md`](./06_infrastructure.md) |
 
 Each part file begins with a one-line header stating the `§` range it owns. Part boundaries:
 `01` §1–§2 · `02` §3.1–§3.4 · `03` §3.5–§3.6 · `04` §4.1–§4.3 + §4.5 · `05` §4.6–§4.7 ·

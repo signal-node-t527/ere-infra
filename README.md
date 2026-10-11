@@ -1,6 +1,6 @@
 # ERE - Explicit Resolution Engine
 
-Explicit Resolution Engine (ERE) is a comprehensive system designed to model and resolve complex real-life problems represented as graph data structures. It employs a dialectic approach, utilizing **Thesis** and **Antithesis** nodes to represent structures and processes, respectively.
+Explicit Resolution Engine (ERE) is a comprehensive system designed to model and resolve complex real-life problems represented as graph data structures. It employs a dialectic approach, utilizing **Thesis** and **Counterthesis** nodes to represent structures and processes, respectively.
 
 *The source code is intentionally private because it has not yet been audited for public release.*
 
@@ -14,8 +14,8 @@ Explicit Resolution Engine (ERE) is a comprehensive system designed to model and
 ERE uses a Hierarchical Task Network (HTN) inspired model:
 
 *   **Thesis Nodes**: Represent structures, regularities, or static elements.
-*   **Antithesis Nodes**: Represent processes, conditions, data flows, or dynamic elements.
-*   **Dialectic Approach**: Problems are resolved by analyzing the tension and relationships between Thesis and Antithesis nodes.
+*   **Counterthesis Nodes**: Represent processes, conditions, data flows, or dynamic elements.
+*   **Dialectic Approach**: Problems are resolved by analyzing the tension and relationships between Thesis and Counterthesis nodes.
 
 ## Architecture
 
@@ -49,6 +49,7 @@ docker-compose --profile dev up frontend-dev
 For production-like frontend (served via Nginx):
 ```bash
 docker-compose --profile prod up frontend-prod
+# Access the application at http://localhost:4200 (nginx)
 ```
 
 ## Development

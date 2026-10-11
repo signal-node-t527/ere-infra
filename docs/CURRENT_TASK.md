@@ -1,16 +1,16 @@
 # Current Task
 
-## T12.8 done — next ticket T13.1 (2026-10-10)
+## Part II complete — no open ticket (2026-10-10)
 
-Part I (P0–P8) is complete and audited. **Part II (P9–P14, full architecture coverage)**: P9 and
-**P10 (backend reference) are complete** (T10.1–T10.4); **the T10.5 split is done** (the reference
-now lives in the numbered `docs/architecture/` folder; **D16**); **P11 (frontend core
-reference) is complete (4/4)**; and **P12 (frontend feature reference) is complete (8/8)** —
-T12.1 (window system reference → §4.2), T12.2 (htn-plan reference → §4.4), T12.3 (htn-explorer
-reference → §4.4, in the new owning part `07_frontend_features.md`), T12.4 (htn-editor &
-htn-categories reference → §4.4), T12.5 (graph-lib reference → §4.4), T12.6
-(connection-string-manager reference → §4.4), T12.7 (console command reference → §4.5) and T12.8
-(shared components & styling reference → §4.6) are done; P13 (infra & operations reference) is next.
+**All of P0–P14 is done.** Part I (P0–P8) produced the verified overview; **Part II (P9–P14,
+full architecture coverage) deepened it into the exhaustive numbered reference in
+`docs/architecture/`** (D16) — foundations/schemas (P9), the backend reference (P10 + the T10.5
+split), the frontend core reference (P11), the frontend feature reference (P12), the infra &
+operations reference (P13), and **P14 (assurance & consistency)**: T14.1 (gaps, assumptions &
+unknowns register → §6), T14.2 (full ARCHITECTURE-vs-code audit — 666 citations, 0 out-of-bounds,
+0 missing after fixes), T14.3 (entry-point doc symmetry → `README.md`) and T14.4 (this final state
+refresh). There is **no open ticket**; the remaining work is **product**, not docs
+(`PRODUCTION_CHECKLIST.md`).
 
 ### What this workstream produced
 
@@ -106,13 +106,56 @@ htn-categories reference → §4.4), T12.5 (graph-lib reference → §4.4), T12.
    inline realities (units default `window.innerWidth` on both axes; dead `.window-test__span`
    styling; non-signal `inputText` mirror + 200 ms blur timer, no spec; hardcoded-hex theming). §4.6
    retitled to include "shared components".
+   **P13 opened with the container / image reference** in **§5.3** (T13.1): per-stage tables for
+   `resolution-engine/Dockerfile` and `shiny-computing-machine/Dockerfile` (+ `Dockerfile.dev`),
+   a `nginx.conf` rule table (SPA fallback, 6-month asset cache, exact-match `no-store`
+   `/scripts/index.json`, 50x page), and the `EXPOSE`/non-root (`USER $APP_UID`)/entrypoint/CMD,
+   `.dockerignore`-exclusion, hardcoded-URL (F1) and `(localdb)`-in-container (B3) facts; §5.1's
+   duplicated Dockerfile prose was trimmed to point at §5.3. **P13 continued with the compose
+   topology reference** grown into **§5.1** (T13.2): per-service key→value→`line` tables for
+   `db`/`backend`/`frontend-prod`/`frontend-dev`, the profiles/run-commands matrix + three
+   `depends_on` edges, the `ere-network`/`mssql_data`/`./backups` facts, the
+   `${MSSQL_SA_PASSWORD}` env-wiring flow, a Mermaid container diagram, and inline realities (no
+   `healthcheck:` → start-order-only `depends_on`; fixed `container_name`s; no `restart:`; unpinned
+   `:latest`/default password/published `1433`; dev anonymous `node_modules`). Also fixed a §5.2
+   drift ("the compose override"). **P13 closed with the build tooling & PWA reference** grown into
+   **§4.6** (T13.3): the npm-script table + the `build-script-index.mjs` generator deep-dive (scan /
+   record shape / tolerant parse / `parseError` + `--strict`, the 5 shipped scripts), the `angular.json`
+   build/serve config, the **Test setup** subsection (Jest builder `angular.json:82-89`,
+   `tsconfig.spec.json`, the 21 spec files, and the reality that the Karma/Jasmine deps are dead
+   config — D14), the **Lint** subsection (`.eslintrc.js` rules + the reality that line 9's stray
+   backticks make it invalid and unwired), the **PWA lifecycle** subsection (manifest, per-strategy
+   SW table from `sw.js`, inline registration, dead `PwaService` prompt, and the realities: stale
+   "MiApp" title, origin-relative `/api/` bypass, manual cache-version bump) and a consolidated
+   **Dead scaffolding** list. Also added **§6 item 14** (broken/unwired `.eslintrc.js`) to
+   `06_infrastructure.md`. **P14 opened with the gaps, assumptions & unknowns register** (T14.1):
+   §6 recast with a GAP/ASSUMPTION/UNKNOWN taxonomy intro (mirror-renamed in `00_index.md`), seven
+   new `[GAP]` items (trusted-HTML console output, cleartext credentials, advisory-only offline
+gating, feature-path `console.log` dumps, `layerAvg` always `L:0.0`, Phase-A trigger/effect
+    drop, legacy-key deletion), and **PRODUCTION_CHECKLIST rows F4/F5** added.
+- **T14.2 (full ARCHITECTURE-vs-code audit) done.** Ran the T8.1 method across the expanded
+  reference: programmatic citation pass (666 `file:line` tokens; 0 out-of-bounds, 0 missing after
+  fixes, 13 ambiguous — all adjudicated to the verified file), inventory-vs-disk (21 specs, 5
+  scripts, 15 endpoints, §3.6 file list, § map, checklist B/F rows), and an intent-over-reality
+  sweep (clean). **Docs-only fixes:** §5.3 backend `ENTRYPOINT` citation `:26`→`:28` in
+  `06_infrastructure.md`; dropped the stale pre-correction `README`/`DOCUMENTATION` line cites from
+  `PROJECT_STATE.md`'s corrections table. Re-verified clean.
+- **T14.3 (entry-point doc symmetry) done.** `README.md` (the D15-sanctioned root entry doc): the
+  three "Antithesis" spots now read **Counterthesis** (canonical per D4; alias stays in §2.6/§3.2)
+  and the prod bash block gained `# Access the application at http://localhost:4200 (nginx)`.
+  Pointers already correct. Also fixed two bounds-invisible blank-line cite slips in
+  `06_infrastructure.md` (§5.1 run-command table: old `:48`/`:34` → `README.md:44,46`/`:51,52`).
+  Verified cited README lines unchanged; audit 666/0/0; git = README + docs only.
+- **T14.4 (final state refresh) done.** Closed out Part II the way T8.2 closed Part I:
+  `PROJECT_STATE.md` is the final snapshot, `CURRENT_TASK.md` is reset to "Part II complete — no
+  open ticket", and the ROADMAP progress table matches every ticket status (**all of P0–P14 done**).
 - **`docs/PROJECT_STATE.md`** — final snapshot + the P7 corrections to the entry-point docs.
 - **`docs/DECISIONS.md`** — D1–D16 (decisions and documented realities, each with evidence; D16
   records the doc folder/§ convention — **amended in T12.3 into a scalability protocol** —
   and supersedes locked decision #7).
-- **`docs/PRODUCTION_CHECKLIST.md`** — dev-seam registry (backend B1–B6, frontend F1–F3, infra,
+- **`docs/PRODUCTION_CHECKLIST.md`** — dev-seam registry (backend B1–B6, frontend F1–F5, infra,
   keys/secrets, smoke tests).
-- **   `docs/ROADMAP.md`** — the plan; P0–P10 `done`, **P10.5 done (T10.5)**, P11 **4/4 (T11.1–T11.4)**, P12 **8/8 (T12.1–T12.8)**.
+- **   `docs/ROADMAP.md`** — the plan; P0–P10 `done`, **P10.5 done (T10.5)**, P11 **4/4 (T11.1–T11.4)**, P12 **8/8 (T12.1–T12.8)**, P13 **3/3 (T13.1–T13.3)**, P14 **4/4 (T14.1–T14.4)** — all phases `done`.
 - **`README.md`** — corrected in T7.1; the redundant `DOCUMENTATION.md` was **removed** (D15).
 
 No application source, config, or Docker file was changed (D3); the only non-`docs/` edits were
@@ -280,15 +323,16 @@ the T7.1 corrections to the entry-point docs and the D15 removal of `DOCUMENTATI
   + 200 ms blur timer with no spec; hardcoded-hex theming, no tokens). §4.6 retitled;
   `05_frontend_core.md` = 244 → 320 ≤ 600; `00_index.md` topic cell updated.
 - Reality notes recorded, not fixed, in `architecture/` §6 (items 9–13).
+- T14.2 audit: a programmatic pass over `docs/architecture/` found **666** `file:line` tokens with
+  **0 out-of-bounds and 0 missing** (17 ambiguous, all adjudicated to the verified file); T14.4: the
+  progress table matches every ticket status and **all of P0–P14 is `done`**.
 
 ### Next action
 
-**P12 (frontend feature reference) is complete — T12.8 done.** The next documentation ticket is
-**T13.1** (container / image reference → `docs/architecture/06_infrastructure.md` §5), opening
-**P13 (infra & operations reference)** in `ROADMAP.md`.
-After the Part II documentation work, the remaining **product** follow-up is in
-`PRODUCTION_CHECKLIST.md` (connection-string seam, migrations, auth/CORS, hardcoded API URL) and,
-optionally, a backend test project.
+**Buildout complete — no open ticket.** Every ticket in `docs/ROADMAP.md` (P0–P14) is `done`; the
+one-at-a-time loop is closed. The remaining **product** follow-up is in `PRODUCTION_CHECKLIST.md`
+(connection-string seam, migrations, auth/CORS, hardcoded API URL) and, optionally, a backend test
+project.
 
 ## One-ticket-at-a-time loop (the rule)
 

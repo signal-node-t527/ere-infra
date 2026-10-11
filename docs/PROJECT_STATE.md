@@ -1,10 +1,10 @@
 # Project State
 
-> **Status: Part I final + Part II in progress (2026-10-10).** Part I
+> **Status: Part I + Part II final (2026-10-10).** Part I
 > (P0–P8) is complete and audited: every load-bearing claim lives in `docs/architecture/` with
 > `file:line` evidence. The former single `docs/ARCHITECTURE.md` has been **split into
-> `docs/architecture/`** (numbered parts, entered via `00_index.md`; D16), and Part II now deepens
-> those files in place. This file is the running snapshot and session log.
+> `docs/architecture/`** (numbered parts, entered via `00_index.md`; D16), and Part II (P9–P14)
+> deepened those files in place — it is now complete. This file is the running snapshot and session log.
 
 > **Note (D16).** The architecture reference is a **folder** of ≤600-line files with a stable `§`
 > numbering; `docs/architecture/00_index.md` maps every `§` to its file. The split (**T10.5**) is
@@ -14,7 +14,11 @@
 > a scalability protocol), **T12.4** (htn-editor & htn-categories reference → §4.4), **T12.5**
 > (graph-lib reference → §4.4), **T12.6** (connection-string-manager reference → §4.4), **T12.7**
 > (console command reference → §4.5) and **T12.8** (shared components & styling reference → §4.6);
-> the next work item is **T13.1**.
+> P13 (infra & operations reference) closed with **T13.1** (container / image reference → §5.3),
+> **T13.2** (compose topology & container diagram → §5.1) and **T13.3** (build tooling & PWA
+> reference → §4.6); **P14 (assurance & consistency) closed with T14.1 (gaps, assumptions &
+> unknowns register → §6), T14.2 (full ARCHITECTURE-vs-code audit), T14.3 (entry-point doc
+> symmetry → `README.md`) and T14.4 (final state refresh) done** — **all of P0–P14 is done**.
 
 ## Snapshot — stable build vs. documented reality
 
@@ -41,24 +45,25 @@ frontend profile) run through the root `docker-compose.yml`. Reality, honestly s
 
 Both `README.md` and `DOCUMENTATION.md` were stale on arrival and were corrected in T7.1.
 `DOCUMENTATION.md` was later **removed** (D15) as redundant; the table below is kept as history
-of the corrections:
+of the corrections (the pre-correction line numbers are omitted — they no longer exist in the
+corrected docs):
 
 | Was claimed before T7.1 | Reality (now documented) |
 |---|---|
-| .NET 8 (`README.md:9,32`; `DOCUMENTATION.md:26`) | **.NET 9** (`ResolutionEngine.csproj:4`) |
-| Angular 18 (`README.md:10`; `DOCUMENTATION.md:63`) | **Angular 20** (`package.json:18`) |
-| "custom polymorphic converters" (`DOCUMENTATION.md:29`) | **None** — untyped JSON `ContentJson` (D8) |
-| `GET /api/Htn/antithesis-nodes` (`DOCUMENTATION.md:49`) | `counterthesis-nodes` (with `antithesis` alias) (D4) |
-| Topological analysis in the backend (`DOCUMENTATION.md:83-84`) | In the frontend (`core/domain/graph.utils.ts`) (D6) |
-| Frontend dev on `:4200` (`README.md:46,65`) | Dev server `:4250`; `:4200` is the prod nginx port |
+| .NET **8** (claimed by both entry-point docs) | **.NET 9** (`ResolutionEngine.csproj:4`) |
+| Angular **18** (claimed by `README.md`) | **Angular 20** (`package.json:18`) |
+| "custom polymorphic converters" in node content (claimed by `DOCUMENTATION.md`) | **None** — untyped JSON `ContentJson` (D8) |
+| `GET /api/Htn/antithesis-nodes` (claimed by `DOCUMENTATION.md`) | `counterthesis-nodes` (with `antithesis` alias) (D4) |
+| Topological analysis in the backend (claimed by `DOCUMENTATION.md`) | In the frontend (`core/domain/graph.utils.ts`) (D6) |
+| Frontend dev on `:4200` (claimed by `README.md`) | Dev server `:4250`; `:4200` is the prod nginx port |
 
-## Buildout status (P0–P8 done; P9–P14 in progress)
+## Buildout status (P0–P14 done)
 
 - **P0** scaffolding — done.
 - **P1–P3** `architecture/` (infra, backend, frontend) — done, audited in T8.1.
 - **P4** `PROJECT_STATE.md` — done (this file).
 - **P5** `DECISIONS.md` backfill — done (D1–D16).
-- **P6** `PRODUCTION_CHECKLIST.md` — done (B1–B6, F1–F3, infra, smoke tests).
+- **P6** `PRODUCTION_CHECKLIST.md` — done (B1–B6, F1–F5, infra, smoke tests).
 - **P7** root-doc reconciliation — done.
 - **P8** consistency audit + final state — done (T8.1 audit; T8.2 this file).
 - **P9** ARCHITECTURE (full) — foundations & schemas — **done (4/4)**: T9.1 (node-content
@@ -80,8 +85,16 @@ of the corrections:
   §4.4, in `07_frontend_features.md`), T12.4 (htn-editor & htn-categories reference → §4.4),
   T12.5 (graph-lib reference → §4.4), T12.6 (connection-string-manager reference → §4.4),
   T12.7 (console command reference → §4.5) and T12.8 (shared components & styling reference → §4.6).
-- **P13** ARCHITECTURE (full) — infra & operations reference — **next**: T13.1 (container / image
-  reference → §5).
+- **P13** ARCHITECTURE (full) — infra & operations reference — **done (3/3)**: T13.1
+  (container / image reference → §5.3), T13.2 (compose topology & container diagram → §5.1) and
+  T13.3 (build tooling & PWA reference → §4.6, incl. §6 item 14) done.
+- **P14** ARCHITECTURE (full) — assurance & consistency — **done (4/4)**: T14.1 (gaps,
+  assumptions & unknowns register → §6 recast + seven new `[GAP]` items; PRODUCTION_CHECKLIST rows
+  F4/F5 added), **T14.2 (full ARCHITECTURE-vs-code audit)** — 666 citations, 0 out-of-bounds, 0
+  missing after fixes; inventories match disk; fixed the §5.3 `ENTRYPOINT` citation and the stale
+  corrections-table cites — **T14.3 (entry-point doc symmetry)** — `README.md` uses the canonical
+  Counterthesis term, gained the prod `:4200` access line, and two blank-line cite slips in
+  `06_infrastructure.md` (§5.1 run-command table) were fixed — and **T14.4 (final state refresh)**.
 
 The T8.1 audit fixed three drifts: backend seed counts (17 thesis nodes / 17 thesis edges),
 the service-worker registration location (`src/index.html:24-30`, not `pwa.service.ts`), and the
@@ -89,19 +102,12 @@ now-obsolete "entry-point docs are stale" note in `architecture/` §6.
 
 ## What remains / next logical action
 
-Part I (P0–P8) is **complete**. **Part II (P9–P14, full ARCHITECTURE coverage) is in progress**:
-P9 is done, and **P10 (backend reference) is complete — T10.1 (per-file / per-class reference →
-§3.6), T10.2 (endpoint reference → §3.2), T10.3 (persistence & seed dataset → §3.3) and T10.4
-(cross-cutting behaviours → §3.4)**. **The T10.5 split is done** (the reference now lives in the
-numbered `docs/architecture/` folder; D16). **Phase 11 is complete (4/4): T11.1 (domain-layer
-reference → §4.7), T11.2 (graph algorithms deep-dive → §4.6), T11.3 (services reference → §4.3) and
-T11.4 (repository layer reference → §4.3) are done.** **Phase 12 (frontend feature reference) is
-complete (8/8): T12.1 (window system reference → §4.2), T12.2 (htn-plan reference → §4.4), T12.3
-(htn-explorer reference → §4.4, in the new owning part `07_frontend_features.md`), T12.4
-(htn-editor & htn-categories reference → §4.4), T12.5 (graph-lib reference → §4.4), T12.6
-(connection-string-manager reference → §4.4), T12.7 (console command reference → §4.5) and T12.8
-(shared components & styling reference → §4.6) are done.** The next documentation ticket
-is **T13.1 (container / image reference → §5)**, opening P13, in `ROADMAP.md`.
+**The documentation buildout is complete — all of P0–P14 is done, no open ticket.** Part I (P0–P8)
+produced the verified overview; Part II (P9–P14, full ARCHITECTURE coverage) deepened it into the
+numbered reference `docs/architecture/` (D16). The final phase, **P14 (assurance & consistency)**,
+closed with T14.1 (gaps/assumptions/unknowns register → §6 + PRODUCTION_CHECKLIST rows F4/F5), T14.2
+(the full ARCHITECTURE-vs-code audit — 666 citations, 0 out-of-bounds, 0 missing after two docs-only
+fixes), T14.3 (entry-point doc symmetry → `README.md`) and T14.4 (this final state refresh).
 
 Separately, *product* work surfaced by the docs remains:
 
@@ -109,4 +115,5 @@ Separately, *product* work surfaced by the docs remains:
   B2, auth/CORS B4, hardcoded frontend API URL F1, …).
 - Optionally add a backend test project (currently none).
 
-Resume documentation via the one-ticket-at-a-time workflow in `ROADMAP.md`.
+If further documentation work is ever needed, resume via the one-ticket-at-a-time workflow in
+`ROADMAP.md` — nothing is currently queued.

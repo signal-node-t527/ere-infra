@@ -136,21 +136,119 @@ A ──▶ X        A=(0,0)  B=(1,1)  C=(2,2)  X=(3,1)
 B ──▶ C        shortest(X)= min(0,2)+1 = 1   (A→X)
 ```
 
-- **PWA**: `public/manifest.json` (name "ResolutionEngine", standalone, `#111` background);
-  `public/sw.js` with cache `resolution-engine-v3` — cache-first static, network-first
-  navigations (fallback `/index.html`), network-only `/api/`, and a bypass for Vite/HMR paths
-  (`sw.js:1,38-76`). The service worker is registered inline in `src/index.html:24-30`;
-  `core/services/pwa.service.ts` only handles the `beforeinstallprompt`/`appinstalled` install
-  prompt. Reference: `shiny-computing-machine/docs/pwa_testing_guide.md`.
-- **Styling**: see `#### Global styling & theming` below.
-- **Tests**: **21 spec files** (Jasmine/Karma + Jest coexistence) —
-  window.service, window.component, resize.service, resize.component, reposition.component,
-  dockable-panels, dockable-panels.service, console, console.parser, console-btn,
-  view.handler, script.handler, connection-string-manager, htn-plan, htn-validation.service,
-  htn-graph.service, htn-explorer, htn-editor, htn-categories, graph, app.component.
-- **Dead scaffolding to record**: `verify_graph.ts` (+ `tsconfig.verify.json`), top-level
-  `build_error*.log` / `pure.txt` artifacts, a stray marker in `.eslintrc.js`, and the dead
-  `.window-test__span` rule (+ commented-out notes) in `app.component.scss:14-16,45-46`.
+#### Script & build tooling
+
+| Script | Command / effect | Source |
+|---|---|---|
+| `scripts:index` | `node tools/build-script-index.mjs` — regenerates `public/scripts/index.json` | `package.json:6` |
+| `prestart` / `prebuild` / `prewatch` / `pretest` | hooks run `scripts:index` first | `package.json:7,9,11,13` |
+| `start` | `ng serve --host 0.0.0.0 --port 4250` (dev server, `:4250`) | `package.json:8` |
+| `build` | `ng build` (production default) | `package.json:10` |
+| `watch` | `ng build --watch --configuration development` | `package.json:12` |
+| `test` | `ng test` (Jest builder — see Test setup) | `package.json:14` |
+
+**The script-index generator** (`tools/build-script-index.mjs`). The console's `script-list` / `script-run`
+commands read `public/scripts/index.json`; a browser cannot enumerate a directory, so the manifest
+is derived from disk before every serve/build/test (`:2-18`; consumed by `handlers/script.handler.ts`, §4.5):
+
+- Scans `public/scripts/*.json`, excluding `index.json` itself (`:65`), sorted so repeated runs
+  produce a stable file (`:71-72`).
+- Recorded per script: `{path, file, name, description, steps, guards, vars, bytes, parseError}`
+  (`:49-59`) — deliberately minimal so the schema stays authoritative in `script.handler.ts`
+  (`:10-14`).
+- Tolerates both accepted root shapes (an object with `steps`, or a bare array of steps) so a
+  malformed-but-parseable script still appears in the listing (`:36-40`); `guards` counts steps with
+  a non-empty `if` (`:41-43`); `vars` lists the `container.vars` keys (`:45-47`).
+- A file that is unreadable or invalid JSON is recorded with a `parseError` rather than failing the
+  build (`:80-92,96-100`); the non-strict run only warns about `parseError` / missing-`steps`
+  scripts (`:114-126`), while `--strict` (`:16-17`) exits non-zero when any exist (`:124-126`).
+- Writes `{generated: <ISO-timestamp>, scripts}` to `public/scripts/index.json` (`:103,112`).
+  The shipped tree currently holds **5 scripts**: `example-guarded.json`, `example-seed.json`,
+  `selftest.json`, `smoke-test.json`, `workbench-layout.json`.
+
+**Angular build config** (`angular.json`). `build` uses the `@angular-devkit/build-angular:application`
+builder (`:18`); `public/**` is copied wholesale as an assets glob (`:28-33`), so `index.html`'s
+`<link rel="manifest">` plus `sw.js`/icons land in the bundle. Production configuration: budgets
+`initial` 1 MB/2 MB and `anyComponentStyle` 15 kB/30 kB, `outputHashing: all`, optimization only in
+`development` (`:40-59`), `defaultConfiguration: production` (`:61`). `serve` binds the dev-server to
+port `4250` with `development` as the default (`:63-76`; §5.2).
+
+#### Test setup
+
+`ng test` runs the **Jest** builder `@angular-devkit/build-angular:jest` (`angular.json:82-89`) against
+`tsconfig.spec.json` with `zone.js` + `zone.js/testing` polyfills (`:83-88`). `tsconfig.spec.json`
+extends the root and turns on `resolveJsonModule`, sets `types: ["jest"]`, and includes
+`src/**/*.spec.ts` (`:5-15`). The Jest toolchain (`jest`, `ts-jest`, `jest-environment-jsdom`,
+`@types/jest`; `package.json:27,37,41,46`) executes the **21 spec files**:
+
+window.service, window.component, resize.service, resize.component, reposition.component,
+dockable-panels, dockable-panels.service, console, console.parser, console-btn,
+view.handler, script.handler, connection-string-manager, htn-plan, htn-validation.service,
+htn-graph.service, htn-explorer, htn-editor, htn-categories, graph, app.component.
+
+> **Reality (D14):** the **Karma/Jasmine** toolchain is still declared in `devDependencies`
+> (`jasmine-core`, `karma-chrome-launcher`, `karma-coverage`, `karma-jasmine`,
+> `karma-jasmine-html-reporter`, `@types/jasmine`; `package.json:36,40,42-45`) but there is **no**
+> `karma.conf.js` and **no** `@angular-devkit/build-angular:karma` target — only Jest is wired into
+> `ng test`. The Jasmine-styled specs run through ts-jest under the Jest builder; the Karma side is
+> **dead configuration**. `tsconfig.verify.json` (a `commonjs`/`node` variant, `:4-6`) exists only to
+> compile the root `verify_graph.ts` scaffold (§ Dead scaffolding).
+
+#### Lint
+
+`.eslintrc.js` (`:1-8`) extends `eslint:recommended` + `plugin:@typescript-eslint/recommended` with
+`parser: '@typescript-eslint/parser'`, `semi: ['error', 'never']` and `quotes: ['error', 'single']`.
+
+> **Reality:** the config is **syntactically invalid** — the file ends in a stray pair of backticks
+> on line 9, so Node cannot `require()` it — and there is **no `lint` script** in `package.json` and
+> **no `lint` target** in `angular.json`, so ESLint is configured but never invoked. It is dead
+> scaffolding (§ Dead scaffolding; recorded as §6 item 14).
+
+#### PWA lifecycle
+
+**Manifest** (`public/manifest.json:1-22`): `name`/`short_name` **"ResolutionEngine"**, `start_url`/
+`scope` `/`, `display: standalone`, `background_color #111111`, `theme_color #000000`, icons `192`
+and `512`. It is linked from `<head>` at `src/index.html:19` and, being a `.json`, is served by nginx
+under the 6-month static-asset cache rule (§5.3).
+
+**Service worker** (`public/sw.js:1-77`):
+
+| Concern | Behaviour | Line |
+|---|---|---|
+| cache namespace | `CACHE_NAME = 'resolution-engine-v3'` | `:1` |
+| app shell | `ASSETS_TO_CACHE` = `/`, `/index.html`, `/manifest.json`, `/icon-192.png`, `/icon-512.png`, `favicon.ico`, `favicon.png` | `:2-10` |
+| install | caches the app shell, then `skipWaiting()` | `:12-21` |
+| activate | deletes caches ≠ current name, then `clients.claim()` | `:23-36` |
+| devtools guard | passes through `only-if-cached` non-same-origin requests (DevTools "Disable cache") | `:39-42` |
+| Vite/HMR bypass | passes through `/@vite/`, `/@fs/`, `/ng-cli-ws` paths | `:46-53` |
+| navigations | **network-first**, offline fallback to `/index.html` | `:55-64` |
+| `/api/` | **network-only** pass-through | `:66-69` |
+| everything else | **cache-first**, network fallback | `:71-76` |
+
+**Registration** is inline in `src/index.html:24-30` — unconditional when `'serviceWorker' in
+navigator`. Separately, `core/services/pwa.service.ts` implements only the
+`beforeinstallprompt`/`appinstalled` install prompt and is **dead code** (§4.3; §6 item 11).
+
+> **Realities.** (a) The `apple-mobile-web-app-title` meta is stale copy — **"MiApp"**
+> (`src/index.html:14`) — while the manifest name is "ResolutionEngine". (b) The `/api/` bypass
+> (`sw.js:66-69`) matches `url.pathname` on the **same origin**; the API lives on
+> `localhost:5250` (hardcoded, §5.2 / row F1), so the SW never intercepts API traffic anyway — the
+> network-only clause would only matter if the API were ever served same-origin. (c) The cache
+> version is a manual bump on release (row F2).
+>
+> **Reference:** `shiny-computing-machine/docs/pwa_testing_guide.md` — browsers require a **Secure
+> Context** (valid HTTPS, or `localhost`) for SW registration and install; self-signed `ng serve
+> --ssl` certs are rejected on mobile, and the guide's two workarounds are the Chrome
+> "Insecure origins treated as secure" flag (`chrome://flags`) or USB port-forwarding to a
+> phone-local `http://localhost:4200`.
+
+#### Dead scaffolding
+
+- `verify_graph.ts` + `tsconfig.verify.json` — a `commonjs`/`node` tsconfig whose only purpose is
+  compiling that root helper (`.gitignore`/F3).
+- Top-level `build_error*.log` / `pure.txt` artifacts (committed; row **F3**).
+- `.eslintrc.js` stray backticks — § Lint / §6 item 14.
+- The dead `.window-test__span` rule (+ commented-out notes) in `app.component.scss:14-16,45-46`.
 
 #### Shared UI — suggestion-input (`shared/suggestion-input/*`)
 
