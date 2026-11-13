@@ -110,6 +110,9 @@ production risk it is also a `PRODUCTION_CHECKLIST.md` row.
   edit in Part II and extends D3.
 
 ### D16 — The architecture reference is a numbered folder with stable `§` IDs
+> *Historical note (T15.3): all part files named below were renamed in T15.1 — see **D17** /
+> `docs/architecture/00_index.md` for the current `<range>_<description>.md` names. The body is kept
+> verbatim as the record of the pre-D17 convention.*
 - A single `docs/ARCHITECTURE.md` had reached **1477 lines** (over 2× the quality-bar doc), making
   it slow to navigate and edit. It is **split into `docs/architecture/`** — a folder of parts entered
   via **`00_index.md`**. **Amended (T12.3)** into a *scalability protocol*: the §→file map must
@@ -158,3 +161,44 @@ production risk it is also a `PRODUCTION_CHECKLIST.md` row.
   `PROJECT_STATE.md` and `PRODUCTION_CHECKLIST.md` entry points now point at `00_index.md`. This
   **supersedes ROADMAP locked decision #7** ("one `ARCHITECTURE.md` deepened in place"); heavy
   tickets (T11.3 onward) re-point their `Files:` at the owning part. It extends D3/D15 (docs only).
+- **Note (T15.1):** the `NN_<…>` naming rule, its "reading sequence" wording, the `Part N of M`
+  header, and the "increment `M`" split step above are **superseded by D17**; D16's `§`-stability,
+  size budget, and ownership rules still apply.
+
+### D17 — Parts are named by `§` range; reading order is the sorted file order
+- **Context.** D16 named parts `NN_<descriptive_snake_case>.md` and treated the `NN` as the reading
+  order, with `00_index.md` holding a map of "one row per §". In practice the `NN` was an **append
+  order**, not `§` order: `§4.4` lived in part `07`, so a linear read reached it last, and `§4.5`
+  was stranded in part `04`. The file name neither stated nor preserved the `§` order, and the map
+  had to be re-derived by hand to navigate.
+- **Decision.** A part's file name is **`<start>-<end>_<description>.md`**, where `<start>`/`<end>`
+  are `§` positions `M.N` (`.0` = the chapter section itself). The name **states the `§` range the
+  part owns** and **sorts into reading order**; ranges are contiguous and non-overlapping. `§x.y`
+  remains the stable, append-only citation (D16) — a part is **renamed** when its owned range
+  changes, and file names are never relied on for stability. Because the range is in the name,
+  `00_index.md` drops the "one row per §" map in favour of a **one row per file** list in reading
+  order.
+- **Supersedes (parts of D16):** the `NN_<…>` naming rule; the per-file header
+  `> Part N of M · owns §a–§b · index: …`, which becomes `> owns §a–§b · index: …` (no `N`/`M` to
+  maintain); and the split step "increment `M` in every `Part N of M` header".
+- **Consequences (T15.1).** The folder is `00_index.md` +
+  `1.0-2.6_overview.md` (§1–§2), `3.0-3.4_backend.md` (§3), `3.5-3.6_backend_reference.md`
+  (§3.5–§3.6), `4.0-4.3_frontend_shell.md` (§4.1–§4.3), `4.4-4.4_frontend_features.md` (§4.4),
+  `4.5-4.7_frontend_core.md` (§4.5–§4.7), `5.0-5.3_infrastructure.md` (§5),
+  `6.0-7.0_register.md` (§6–§7). `§` citations throughout `docs/` remain valid unchanged. Extends
+  D3/D15/D16 (docs only).
+
+### D18 — `state: 'D'` (Disabled) is a visual-only counterthesis state
+- **Context.** The counterthesis `state` property is a free-form string in the backend
+  (`HtnNode.ContentJson`), typed in the frontend as `StateOption` from `STATE_OPTIONS`
+  (`W`/`B`/`A`/`S`); only the plan's referencer cards render it
+  (`plan-node-card.component.html:35-39`), and no planner, validation or integrity code reads it.
+  A "disabled" state was requested for referencers.
+- **Decision.** Append `'D'` (Disabled) to `STATE_OPTIONS` (`core/domain/types.ts:17`) and render
+  referencer steps with `state:'D'` in dark grey (`plan-node-card.component.scss:121-130`).
+  `D` is **visual only** — the planner still expands disabled referencers and their
+  targets/children; the editor dropdown, the console `list-referencers` tag and the JSON
+  round-trip pick the value up generically.
+- **Consequences.** No backend, validation, integrity or migration change; existing nodes keep
+  `W`/`B`/`A`/`S`. Turning `D` into planner semantics (e.g. skipping disabled referencers) is a
+  separate decision. New coverage in `plan-node-card.component.spec.ts`.

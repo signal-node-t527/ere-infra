@@ -1,15 +1,45 @@
 # Current Task
 
-## Part II complete — no open ticket (2026-10-10)
+## Referencer state `D` (Disabled) — plan colours (2026-11-03)
 
-**All of P0–P14 is done.** Part I (P0–P8) produced the verified overview; **Part II (P9–P14,
+**Done.** Added the `D` state and the dark-grey plan rendering for referencer steps.
+
+- `core/domain/types.ts:17` — `STATE_OPTIONS = ['W','B','A','S','D']`; `StateOption` and
+  `NodeContentRootCounterthesis.state` widen automatically, and the htn-editor `state` dropdown
+  (`htn-editor.html:160-165`) offers `D` without further changes.
+- `plan-node-card.component.html:39` — `state-d` binding, gated on `step().isReferencer` like the
+  other state classes.
+- `plan-node-card.component.scss:121-130` — dark-grey palette (`#555` border, `#777` label,
+  `#999` text on `#2b2b2b` badge). `state-s` (`:108-119`) now mirrors its previously inherited
+  referencer colours explicitly, so `S` looks unchanged.
+- `plan-node-card.component.spec.ts` — new spec for the state class bindings (22 specs total).
+
+**Visual only** (D18) — no planner, validation, integrity or backend change; `buildTree` still
+expands disabled referencers.
+
+**Verify.** `npm run build` passes (pre-existing 1 MB budget warning). `npm test`: the new suites
+pass (card class bindings + `buildTree` state propagation); the 9 failing suites are pre-existing
+jsdom `window.matchMedia` / missing `HttpClient` environment failures (13 failed / 141 passed,
+154 total).
+
+**Next action.** Optional product follow-up: make `D` skip disabled referencers in the planner — a
+separate decision under `DECISIONS.md`.
+
+## Part III complete — no open documentation ticket (2026-10-10)
+
+**All of P0–P15 is done.** Part I (P0–P8) produced the verified overview; **Part II (P9–P14,
 full architecture coverage) deepened it into the exhaustive numbered reference in
 `docs/architecture/`** (D16) — foundations/schemas (P9), the backend reference (P10 + the T10.5
 split), the frontend core reference (P11), the frontend feature reference (P12), the infra &
 operations reference (P13), and **P14 (assurance & consistency)**: T14.1 (gaps, assumptions &
 unknowns register → §6), T14.2 (full ARCHITECTURE-vs-code audit — 666 citations, 0 out-of-bounds,
-0 missing after fixes), T14.3 (entry-point doc symmetry → `README.md`) and T14.4 (this final state
-refresh). There is **no open ticket**; the remaining work is **product**, not docs
+0 missing after fixes), T14.3 (entry-point doc symmetry → `README.md`) and T14.4 (final state
+refresh). **Part III (`P15 — Reference organization & navigation`) is complete**: three tickets
+(T15.1–T15.3) reorganized the physical layout of `docs/architecture/` — parts are now named
+`<start>-<end>_<description>.md` by the `§` range they own (so reading order = sorted file order;
+**D17**), the `§6–§7` register is its own part, headers drop the `Part N of M` tax, the index is a
+one-row-per-file list, and the historical log references were normalized with `(now …)` markers —
+without changing any `§` content. The remaining work is **product**, not docs
 (`PRODUCTION_CHECKLIST.md`).
 
 ### What this workstream produced
@@ -46,9 +76,11 @@ refresh). There is **no open ticket**; the remaining work is **product**, not do
   overlay, and the presentational `PlanNodeCardComponent` — with two inline realities
   (root-singleton plan windows share one signal set; `"Cycle N"` cycle strings + `[LoopDetect]`
   console.log). P12 continued with the **htn-explorer reference** in **§4.4** (T12.3):
-  `§4.4` was **split into a new owning part `07_frontend_features.md`** (04 now owns §4.1–§4.3,
+  `§4.4` was **split into a new owning part `07_frontend_features.md`** (now
+  `4.4-4.4_frontend_features.md`; `04` (now `4.0-4.3_frontend_shell.md`) now owns §4.1–§4.3,
   §4.5; `00_index.md` re-mapped with bold chapter bands + one row per §; **D16 amended** into a
-  scalability protocol — owner/ref files, split-at-subsection rules). 07 carries the moved feature
+  scalability protocol — owner/ref files, split-at-subsection rules). `07` (now
+  `4.4-4.4_frontend_features.md`) carries the moved feature
   inventory + `htn-plan reference` verbatim plus the explorer reference: the `'explorer'` window
   shell + `'explorer-menu'` companion (`window-registry.ts:12,17`), per-window `PaneState` +
   name-prefixed `htn_explorer_*` keys, `tree-utils.ts` (`computeMinDepths`/`buildTree` +
@@ -122,40 +154,57 @@ refresh). There is **no open ticket**; the remaining work is **product**, not do
    **§4.6** (T13.3): the npm-script table + the `build-script-index.mjs` generator deep-dive (scan /
    record shape / tolerant parse / `parseError` + `--strict`, the 5 shipped scripts), the `angular.json`
    build/serve config, the **Test setup** subsection (Jest builder `angular.json:82-89`,
-   `tsconfig.spec.json`, the 21 spec files, and the reality that the Karma/Jasmine deps are dead
+   `tsconfig.spec.json`, the 21 spec files (now 22), and the reality that the Karma/Jasmine deps are dead
    config — D14), the **Lint** subsection (`.eslintrc.js` rules + the reality that line 9's stray
    backticks make it invalid and unwired), the **PWA lifecycle** subsection (manifest, per-strategy
    SW table from `sw.js`, inline registration, dead `PwaService` prompt, and the realities: stale
    "MiApp" title, origin-relative `/api/` bypass, manual cache-version bump) and a consolidated
    **Dead scaffolding** list. Also added **§6 item 14** (broken/unwired `.eslintrc.js`) to
-   `06_infrastructure.md`. **P14 opened with the gaps, assumptions & unknowns register** (T14.1):
+   `06_infrastructure.md` (now `5.0-5.3_infrastructure.md`). **P14 opened with the gaps, assumptions & unknowns register** (T14.1):
    §6 recast with a GAP/ASSUMPTION/UNKNOWN taxonomy intro (mirror-renamed in `00_index.md`), seven
    new `[GAP]` items (trusted-HTML console output, cleartext credentials, advisory-only offline
 gating, feature-path `console.log` dumps, `layerAvg` always `L:0.0`, Phase-A trigger/effect
     drop, legacy-key deletion), and **PRODUCTION_CHECKLIST rows F4/F5** added.
 - **T14.2 (full ARCHITECTURE-vs-code audit) done.** Ran the T8.1 method across the expanded
   reference: programmatic citation pass (666 `file:line` tokens; 0 out-of-bounds, 0 missing after
-  fixes, 13 ambiguous — all adjudicated to the verified file), inventory-vs-disk (21 specs, 5
+  fixes, 13 ambiguous — all adjudicated to the verified file), inventory-vs-disk (21 specs (now 22), 5
   scripts, 15 endpoints, §3.6 file list, § map, checklist B/F rows), and an intent-over-reality
   sweep (clean). **Docs-only fixes:** §5.3 backend `ENTRYPOINT` citation `:26`→`:28` in
-  `06_infrastructure.md`; dropped the stale pre-correction `README`/`DOCUMENTATION` line cites from
+  `06_infrastructure.md` (now `5.0-5.3_infrastructure.md`); dropped the stale pre-correction `README`/`DOCUMENTATION` line cites from
   `PROJECT_STATE.md`'s corrections table. Re-verified clean.
 - **T14.3 (entry-point doc symmetry) done.** `README.md` (the D15-sanctioned root entry doc): the
   three "Antithesis" spots now read **Counterthesis** (canonical per D4; alias stays in §2.6/§3.2)
   and the prod bash block gained `# Access the application at http://localhost:4200 (nginx)`.
   Pointers already correct. Also fixed two bounds-invisible blank-line cite slips in
-  `06_infrastructure.md` (§5.1 run-command table: old `:48`/`:34` → `README.md:44,46`/`:51,52`).
+  `06_infrastructure.md` (now `5.0-5.3_infrastructure.md`; §5.1 run-command table: old `:48`/`:34` → `README.md:44,46`/`:51,52`).
   Verified cited README lines unchanged; audit 666/0/0; git = README + docs only.
 - **T14.4 (final state refresh) done.** Closed out Part II the way T8.2 closed Part I:
   `PROJECT_STATE.md` is the final snapshot, `CURRENT_TASK.md` is reset to "Part II complete — no
   open ticket", and the ROADMAP progress table matches every ticket status (**all of P0–P14 done**).
+- **Part III (T15.1–T15.3) done.** **T15.1 (adopt `§`-range part filenames) + T15.2 (simplify the
+  index):** the `docs/architecture/` parts are renamed to `<start>-<end>_<description>.md` —
+  `1.0-2.6_overview`, `3.0-3.4_backend`, `3.5-3.6_backend_reference`, `4.0-4.3_frontend_shell`,
+  `4.4-4.4_frontend_features`, `4.5-4.7_frontend_core`, `5.0-5.3_infrastructure`,
+  `6.0-7.0_register` — so ascending file sort is `§` reading order with contiguous chapters; `§4.5`
+  moved into the core part; `§6–§7` split into the register part; headers drop `Part N of M`;
+  **D17** recorded (supersedes D16's `NN_<…>` naming, the `Part N of M` header, and the "increment
+  `M`" step); `00_index.md` rewritten as a one-row-per-file list; live cross-links
+  (`1.0-2.6_overview` listing, core/register refs, `PRODUCTION_CHECKLIST` F3) updated. **T15.3
+  (normalize historical part-name references):** inline `` (now `X.md`) `` markers added to the
+  dated-log/live mentions in `CURRENT_TASK.md` / `PROJECT_STATE.md` (and the T15.1 note here), plus a
+  single historical pointer atop the D16 body (kept verbatim); the Part III findings and D17
+  rationale still quote the old names by design. `§` citations unchanged.
 - **`docs/PROJECT_STATE.md`** — final snapshot + the P7 corrections to the entry-point docs.
 - **`docs/DECISIONS.md`** — D1–D16 (decisions and documented realities, each with evidence; D16
   records the doc folder/§ convention — **amended in T12.3 into a scalability protocol** —
   and supersedes locked decision #7).
 - **`docs/PRODUCTION_CHECKLIST.md`** — dev-seam registry (backend B1–B6, frontend F1–F5, infra,
   keys/secrets, smoke tests).
-- **   `docs/ROADMAP.md`** — the plan; P0–P10 `done`, **P10.5 done (T10.5)**, P11 **4/4 (T11.1–T11.4)**, P12 **8/8 (T12.1–T12.8)**, P13 **3/3 (T13.1–T13.3)**, P14 **4/4 (T14.1–T14.4)** — all phases `done`.
+- **`docs/ROADMAP.md`** — forward-looking plan, **pruned 2026-10-10** to remove the completed P0–P14
+  ticket bodies (their record is git history + this file): it now holds the purpose, workflow +
+  ticket template, locked decisions, the progress table (all P0–P15 `done`), and the now-complete
+  Part III section (three tickets T15.1–T15.3). The repo-wide citation audit is now **628** (was 666 while the history was
+  present); `docs/architecture/` is unchanged.
 - **`README.md`** — corrected in T7.1; the redundant `DOCUMENTATION.md` was **removed** (D15).
 
 No application source, config, or Docker file was changed (D3); the only non-`docs/` edits were
@@ -165,8 +214,9 @@ the T7.1 corrections to the entry-point docs and the D15 removal of `DOCUMENTATI
 
 - Every `file:line` citation in `docs/architecture/` resolves against the tree (T8.1 for Part I;
   re-checked for the T9.1–T10.4 additions).
-- T10.5: the split is byte-faithful — concatenating `docs/architecture/01…06_*.md` (minus the added
-  one-line headers) reproduces the former `docs/ARCHITECTURE.md` body exactly (every `§1–§7` present
+- T10.5: the split is byte-faithful — concatenating `docs/architecture/01…06_*.md` (pre-T15.1 parts; now
+  `1.0-2.6_overview.md`…`5.0-5.3_infrastructure.md`, minus the added one-line headers) reproduces the
+  former `docs/ARCHITECTURE.md` body exactly (every `§1–§7` present
   once, no drops/dupes, all `file:line` intact); every `docs/architecture/*.md` is ≤600 lines;
   `00_index.md` maps every `§`; the only remaining mentions of `docs/ARCHITECTURE.md` are historical.
 - T9.2 sequences: each actor/message maps to a verified call site — bootstrap (`main.ts:5`,
@@ -234,7 +284,7 @@ the T7.1 corrections to the entry-point docs and the D15 removal of `DOCUMENTATI
   `executionOrder==='set'` → `childrenCollapsed` default at `:276`; the component behaviours match
   `htn-plan.component.ts:54-63,96-118,169-181,197-274,276-342,373-413`; wire geometry matches
   `wire-utils.ts:26-37,74-137` and `plan.constants.ts:1-7`; the card matches
-  `plan-node-card.component.ts:13-32` and `plan-node-card.component.html:24-132`. The only inbound
+  `plan-node-card.component.ts:13-32` and `plan-node-card.component.html:24-134`. The only inbound
   plan channel cited (`planSearchRequest$`, a `Subject` on `htn-state.service.ts:54-55,73-75`
   re-exposed at `htn.service.ts:37,48`) is emitted only by the explorer's/categories' `openInPlan`
   (`htn-explorer.component.ts:697-698`, label `htn-explorer.html:229`;
@@ -250,10 +300,13 @@ the T7.1 corrections to the entry-point docs and the D15 removal of `DOCUMENTATI
   (`:366-441`); the modes (`:501-662`); the operations panel (`:467-732`); `activeExplorerTrees`
   → metadata menu → `navigationRequest$` (`:235-245`, `htn-metadata-menu.component.ts:24-30`);
   the `<app-graph>` embed (`htn-explorer.html:210-217`); `io-utils.ts:5-177`. The §4.4 split is
-  faithful: the feature-inventory table + `htn-plan reference` in `07_frontend_features.md` are
-  byte-identical to their former `04_frontend.md` text; `04_frontend.md` owns §4.1–§4.3, §4.5;
-  `00_index.md` maps every `§` to exactly one row (owner-first), with 07 as the §4.4 owner; every
-   part header reads `Part N of 7`; all files ≤600 lines. Three realities recorded inline
+  faithful: the feature-inventory table + `htn-plan reference` in `07_frontend_features.md` (now
+  `4.4-4.4_frontend_features.md`) are byte-identical to their former `04_frontend.md` (now
+  `4.0-4.3_frontend_shell.md`) text; `04_frontend.md` (now `4.0-4.3_frontend_shell.md`) owns
+  §4.1–§4.3, §4.5;
+  `00_index.md` maps every `§` to exactly one row (owner-first), with `07` (now
+  `4.4-4.4_frontend_features.md`) as the §4.4 owner; every
+   part header reads `Part N of 7` (superseded — headers now read `owns §a–§b`; T15.1); all files ≤600 lines. Three realities recorded inline
    (per-window explorer state vs the plan singleton; legacy-key deletion not migration;
    fire-and-forget import).
 - T12.4 §4.4: every table row and `:line` resolves against `features/htn-editor/**` and
@@ -288,7 +341,7 @@ the T7.1 corrections to the entry-point docs and the D15 removal of `DOCUMENTATI
   `connection-string-manager.ts:10-31`; `connection-string-manager.html:1`); the list/edit views
   (`html:3-88`); the component actions (`:39-78`); `testConnection()` (`:80-104`: builder, `btoa`
   header, raw `HttpClient` GET to `/htn/ping`, PascalCase mapping vs `HtnController.cs:60-84`); the
-  builder (cross-link §4.3 `04_frontend.md:248-249`, example output); persistence/active-selection
+   builder (cross-link §4.3 `4.0-4.3_frontend_shell.md:248-249`, example output); persistence/active-selection
   (`connection.service.ts:41-83`); `connection-string-manager.scss:1-192`;
    `connection-string-manager.spec.ts:1-23`. The command reality is verified by the exhaustive
    `connection-manager` search (only `config-utility.handler.ts:43` and the registry/component files;
@@ -308,7 +361,7 @@ the T7.1 corrections to the entry-point docs and the D15 removal of `DOCUMENTATI
   guards (`:69,88-89,384-387`). Three realities recorded inline (drifted `help` table —
   `connection-manager` listed, `navigate` + `config-*-integrity` omitted; advisory-only offline
   gating; trusted-HTML output). Also corrected T12.6's "dead command" claim in §4.4. §4.5 grew
-  21 → 118 lines; `04_frontend.md` = 436 ≤ 600.
+  21 → 118 lines; `04_frontend.md` (now `4.0-4.3_frontend_shell.md`) = 436 ≤ 600.
 - T12.8 §4.6: every row and `:line` resolves against `shared/**`, `src/styles.scss`,
   `app.component.scss` and the window-system chrome — the suggestion-input contract
   (`suggestion-input.component.ts:5-42,117-131`; keyboard `:63-115`; 200 ms blur `:56-61`; template
@@ -321,7 +374,7 @@ the T7.1 corrections to the entry-point docs and the D15 removal of `DOCUMENTATI
   `console-btn.scss:1-37`). Four realities recorded inline (units default `window.innerWidth` on both
   axes; dead `.window-test__span` folded into the §4.6 dead-scaffolding bullet; non-signal `inputText`
   + 200 ms blur timer with no spec; hardcoded-hex theming, no tokens). §4.6 retitled;
-  `05_frontend_core.md` = 244 → 320 ≤ 600; `00_index.md` topic cell updated.
+  `05_frontend_core.md` (now `4.5-4.7_frontend_core.md`) = 244 → 320 ≤ 600; `00_index.md` topic cell updated.
 - Reality notes recorded, not fixed, in `architecture/` §6 (items 9–13).
 - T14.2 audit: a programmatic pass over `docs/architecture/` found **666** `file:line` tokens with
   **0 out-of-bounds and 0 missing** (17 ambiguous, all adjudicated to the verified file); T14.4: the
@@ -329,10 +382,12 @@ the T7.1 corrections to the entry-point docs and the D15 removal of `DOCUMENTATI
 
 ### Next action
 
-**Buildout complete — no open ticket.** Every ticket in `docs/ROADMAP.md` (P0–P14) is `done`; the
-one-at-a-time loop is closed. The remaining **product** follow-up is in `PRODUCTION_CHECKLIST.md`
+**No open documentation ticket — `docs/ROADMAP.md` (`P0–P15`) is fully `done`.** Part III closed
+with **T15.3** (normalize historical part-name references); the reference folder now equals its
+target layout (D17). The remaining **product** follow-up is in `PRODUCTION_CHECKLIST.md`
 (connection-string seam, migrations, auth/CORS, hardcoded API URL) and, optionally, a backend test
-project.
+project. Resume any documentation work via the one-ticket-at-a-time loop below (add a new ticket to
+`ROADMAP.md` first).
 
 ## One-ticket-at-a-time loop (the rule)
 
