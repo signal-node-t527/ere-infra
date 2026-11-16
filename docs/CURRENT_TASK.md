@@ -1,5 +1,37 @@
 # Current Task
 
+## `search-content` console command (2026-11-13)
+
+**Done.** New read-only console verb that lists nodes whose content contains a text match.
+
+- `features/console/handlers/search.handler.ts` — registers
+  `search-content <text> [--type=thesis|counterthesis] [--field=propKey] [--case] [--ids] [--limit=n]`.
+  It fetches both node collections from the API per invocation (`X-Connection-String` header) and
+  deep-scans every string in `content` (nested objects, `flow.<id>.*`, `analyzes[]`, string arrays);
+  case-insensitive substring by default (D19). Output: one table row per matched node —
+  Graph | ID | Field | Match — with the first hit's escaped snippet (match highlighted) and `(+N)`
+  when more fields match; default 100 rows plus a truncation warning.
+- `console-logger.service.ts:28-32` — `formatNodeId(id, label?)` adds the label as a `title`
+  tooltip and escapes the id/label; the copy button (`data-id`) is unchanged, so hovering the ID
+  shows the label and clicking the ❐ button copies the ID.
+- `handler-context.ts` widened `formatNodeId`; `console.handler.ts` forwards the label and merges
+  the new factory; `referencer.handler.ts` dropped its local `idWithTitle` duplicate;
+  `config-utility.handler.ts` gained the `help` row (feeds `KNOWN_COMMAND_NAMES`).
+- `console.scss` — `.search-hit` / `.search-field` / `.search-more` styles.
+- `search.handler.spec.ts` — 15 tests covering the deep scan, case sensitivity, `--field`,
+  `--ids`, the `nodeContent` alias and snippet truncation.
+
+**Verify.** `npm run build` passes (pre-existing 1 MB budget warning). `npm test`: the new suite
+passes; the 9 pre-existing failing suites are unchanged (jsdom `window.matchMedia` / missing
+`HttpClient` providers) — 13 failed / 156 passed of 169. Docs updated: §4.5 (command table, counts,
+citations), §4.4 + §6 citation shifts, spec counts (23), `PROJECT_STATE.md`, `DECISIONS.md` D19.
+
+**Unfinished.** Nothing in this change. Not attempted: a click-to-navigate action on search-result
+IDs (the console only delegates copy clicks today).
+
+**Next action.** Optional product follow-up: make search-result IDs clickable to `nav` the node,
+reusing the existing `navigationRequest$` channel.
+
 ## Referencer state `D` (Disabled) — plan colours (2026-11-03)
 
 **Done.** Added the `D` state and the dark-grey plan rendering for referencer steps.

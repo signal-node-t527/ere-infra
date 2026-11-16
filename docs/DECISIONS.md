@@ -202,3 +202,21 @@ production risk it is also a `PRODUCTION_CHECKLIST.md` row.
 - **Consequences.** No backend, validation, integrity or migration change; existing nodes keep
   `W`/`B`/`A`/`S`. Turning `D` into planner semantics (e.g. skipping disabled referencers) is a
   separate decision. New coverage in `plan-node-card.component.spec.ts`.
+
+### D19 - `search-content` queries the backend, not the local state mirror
+- **Context.** The console can list nodes (`list-nodes`, `list-orphans`) and match exact property
+  values (`find-value <propKey> <value>`), but there was no way to find nodes by free text anywhere
+  in their content. Two data sources were available: the live `HtnState` mirrors in `HandlerContext`
+  (`currentThesisNodes`/`currentCounterthesisNodes`) and the backend node endpoints.
+- **Decision.** Add a read-only `search-content <text>` console verb
+  (`features/console/handlers/search.handler.ts`) that **fetches** `/htn/thesis-nodes` and
+  `/htn/counterthesis-nodes` on each invocation (same `X-Connection-String` header as the other
+  console commands) instead of reading the local mirrors, so results reflect the database even when
+  the UI state is stale. Matching is a **case-insensitive substring** over every string value in a
+  node's `content` (recursive: `flow` conditions, `analyzes`, arrays), with `--case`, `--field=<key>`,
+  `--ids`, `--type=thesis|counterthesis` and `--limit=<n>` modifiers.
+- **Consequences.** The command depends on backend availability; a fetch failure logs an error
+  instead of silently degrading to local state. It is read-only and does not refresh `HtnState`.
+  IDs are rendered through `formatNodeId(id, label)`, which now escapes the id/label and adds the
+  label as a `title` tooltip (the referencer handler's local duplicate was removed). The verb is in
+  the hand-maintained `help` table and therefore in `KNOWN_COMMAND_NAMES` for script validation.

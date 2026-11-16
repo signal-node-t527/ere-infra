@@ -38,7 +38,7 @@ frontend profile) run through the root `docker-compose.yml`. Reality, honestly s
   `X-Connection-String` header (base64 or raw) with config/LocalDB fallbacks — the defining
   multi-database seam.
 - **Frontend (`shiny-computing-machine` / `purgatory-ui`, Angular 20).** Signal-heavy SPA with a
-  custom window system; **22 spec files** (Jasmine/Karma + Jest coexist). The router is empty
+  custom window system; **23 spec files** (Jasmine/Karma + Jest coexist). The router is empty
   and the outlet is dead — the app is a single shell. The API base URL is **hardcoded** to
   `localhost:5250`. **The graph algorithms (topological layering, cross-references) live here,
   not in the backend** (D6).
@@ -126,6 +126,32 @@ the service-worker registration location (`src/index.html:24-30`, not `pwa.servi
 now-obsolete "entry-point docs are stale" note in `architecture/` §6.
 
 ## Product work (post-P15)
+
+### 2026-11-13 — `search-content` console command
+
+New read-only console verb that finds nodes by free text in their content:
+`search-content <text> [--type=thesis|counterthesis] [--field=propKey] [--case] [--ids] [--limit=n]`
+(`features/console/handlers/search.handler.ts`). Each invocation fetches
+`/htn/thesis-nodes` + `/htn/counterthesis-nodes` (with the usual `X-Connection-String` header) and
+deep-scans every string value in `content` — `label`, `justification`, `flow.<id>.condition`,
+`analyzes[]`, triggers/effects arrays — case-insensitively by default (D19).
+
+Output is a `help-table` with one row per matched node: **Graph | ID | Field | Match**. The ID cell
+is `formatNodeId(id, label)`, so hovering shows the label as a tooltip and the existing copy button
+puts the ID on the clipboard; the snippet is HTML-escaped and the matched text is wrapped in
+`.search-hit`. A node with several matching fields shows its first hit plus `(+N)`. The default
+`--limit` is 100 rows and a truncation warning is logged past it.
+
+Supporting changes: `formatNodeId` (`console-logger.service.ts:28-32`) gained an optional label and
+now escapes the id and tooltip; `HandlerContext.formatNodeId` widened to `(id, label?)`; the
+referencer handler's local `idWithTitle` was deleted in favour of it; `createSearchCommands` joined
+the eleven factory modules (`console.handler.ts:128`), and the `help` table row feeds
+`KNOWN_COMMAND_NAMES` (now **45 verbs / 46 registrations**). New
+`handlers/search.handler.spec.ts` (15 tests) brings the frontend to **23 spec files**.
+
+`npm run build` passes (pre-existing 1 MB budget warning). `npm test`: the new suite passes; the
+same 9 pre-existing suites fail (jsdom `window.matchMedia` / missing `HttpClient` providers),
+13 failed / 156 passed (169 total).
 
 ### 2026-11-03 — referencer state `D` (Disabled)
 
